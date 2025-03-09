@@ -1,20 +1,17 @@
 package com.example.wifimapping.screens.home
 
 import android.util.Log
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,16 +25,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wifimapping.MainActivity
 import com.example.wifimapping.components.InputField
 import com.example.wifimapping.navigation.Screens
-import com.example.wifimapping.screens.chooseWifi.ChooseWifiScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController){
+fun HomeScreen(navController: NavController, context: MainActivity){
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Wifi Mapping", color = Color.White) },
-            colors = TopAppBarDefaults.topAppBarColors(Color(0xFF001D55))
+        TopAppBar(title = { Text("Pendeteksi SSID WiFi", color = Color.Black) },
+            colors = TopAppBarDefaults.topAppBarColors(Color(0xFFFFFFFF)
+            )
         )
     }) { innerPadding ->
         Surface(modifier = Modifier.padding(innerPadding)) {
@@ -75,6 +73,12 @@ fun MainContent(
         .padding(start = 20.dp, end = 20.dp)) {
         Spacer(modifier = Modifier
             .height(5.dp))
+
+        Text("Input Data",
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier
+                .padding(bottom = 15.dp))
+
         Card(modifier = Modifier
             .fillMaxWidth()) {
             InputField(valueState = inputLength,

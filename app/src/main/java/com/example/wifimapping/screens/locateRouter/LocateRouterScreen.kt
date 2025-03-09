@@ -1,12 +1,10 @@
-package com.example.wifimapping.screens.previewGrid
+package com.example.wifimapping.screens.locateRouter
 
-
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -25,14 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.wifimapping.MainActivity
 import com.example.wifimapping.components.CanvasGrid
-import com.example.wifimapping.navigation.Screens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PreviewGridScreen(navController: NavController, inputData: List<String?>, context: MainActivity){
+fun LocateRouterScreen(
+    navController: NavController,
+    inputData: List<String?>,
+    context: MainActivity
+){
     Scaffold(topBar = {
         TopAppBar(title = { Text("Pendeteksi SSID WiFi", color = Color.Black) },
-            colors = TopAppBarDefaults.topAppBarColors(Color(0xFFFFFFFF)
+            colors = TopAppBarDefaults.topAppBarColors(
+                Color(0xFFFFFFFF)
             )
         )
     }) { innerPadding ->
@@ -42,17 +44,15 @@ fun PreviewGridScreen(navController: NavController, inputData: List<String?>, co
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            Spacer(
-                modifier = Modifier
-                    .height(10.dp)
-            )
+
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Preview Grid",
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ){
+                Text("Locate Router Position",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp))
+
                 Text("Panjang ${inputData[0]} m")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier
@@ -63,18 +63,20 @@ fun PreviewGridScreen(navController: NavController, inputData: List<String?>, co
                     CanvasGrid(length = inputData[0]?.toFloat(),
                         width = inputData[1]?.toFloat(),
                         grid = inputData[2]?.toInt())
-                    }
+                }
                 Button(shape = RoundedCornerShape(5.dp),
                     onClick = {
-                        var length = inputData[0]
-                        var width = inputData[1]
-                        var grid = inputData[2]
-                        navController.navigate(route = Screens.ChooseWifiScreen.name+"/$length/$width/$grid"
-                        )
+                        Toast.makeText(context, "Fitur masih didevelop", Toast.LENGTH_LONG).show()
+                    }) {
+                    Text("Tambah Lokasi Router")
+                }
+
+                Button(shape = RoundedCornerShape(5.dp),
+                    onClick = {
+                        Toast.makeText(context, "Fitur masih didevelop", Toast.LENGTH_LONG).show()
                     }) {
                     Text("Selanjutnya")
                 }
-
             }
         }
     }

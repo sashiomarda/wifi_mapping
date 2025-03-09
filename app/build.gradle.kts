@@ -68,4 +68,27 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.compose.runtime:runtime-livedata:1.7.8")
+
+    // Jetpack Compose BOM (Bill of Materials)
+    implementation ("androidx.compose:compose-bom:2024.02.00")
+
+// Jetpack Compose UI
+    implementation("androidx.compose.ui:ui")
+    implementation ("androidx.compose.material3:material3")
+    implementation ("androidx.compose.ui:ui-tooling-preview")
+
+// ViewModel untuk Compose
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+
+// Activity Compose
+    implementation ("androidx.activity:activity-compose:1.8.2")
+
+// Kotlin Coroutines untuk latar belakang
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    implementation ("com.google.android.gms:play-services-location:21.3.0")
+
 }
