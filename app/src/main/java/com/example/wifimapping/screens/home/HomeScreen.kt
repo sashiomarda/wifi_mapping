@@ -112,7 +112,7 @@ fun MainContent(
         Card(modifier = Modifier
             .fillMaxWidth()) {
             InputField(valueState = inputGrid,
-                labelId = "Jarak Grid (m)",
+                labelId = "Jarak Grid (cm)",
                 enabled = true,
                 isSingleLine = true,
                 onAction = KeyboardActions{
