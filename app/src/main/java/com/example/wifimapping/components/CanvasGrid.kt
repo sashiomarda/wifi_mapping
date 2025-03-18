@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalConfiguration
@@ -27,9 +28,9 @@ import androidx.compose.ui.unit.dp
 
 @Preview
 @Composable
-fun CanvasGrid(length: Float?,
-               width: Float?,
-               grid: Int?){
+fun CanvasGrid(length: Float? = 6.0f,
+               width: Float? = 4.0f,
+               grid: Int? = 100){
 
     val localDensity = LocalDensity.current
     var gridCmToM = grid?.toFloat()?.div(100)
@@ -51,9 +52,9 @@ fun CanvasGrid(length: Float?,
     }
     val context = LocalContext.current
     val gridHeight = canvasWidth * gridCmToM!! / width
-    val gridWidth = canvasHeight * gridCmToM!! / length
-    val gridVerticalAmount = width / gridCmToM!!
-    val gridHorizontalAmount = length / gridCmToM!!
+    val gridWidth = canvasHeight * gridCmToM / length
+    val gridVerticalAmount = width / gridCmToM
+    val gridHorizontalAmount = length / gridCmToM
     Log.d("gridHeight", gridHeight.toString())
     Log.d("gridWidth", gridWidth.toString())
     Log.d("gridVerticalAmount", gridVerticalAmount.toString())
@@ -76,7 +77,7 @@ fun CanvasGrid(length: Float?,
                         val gridHeightPx = localDensity.run { gridHeight.dp.toPx() }
                         val gridWidthPx = localDensity.run { gridWidth.dp.toPx() }
                         val canvasQuadrantSize =
-                            _root_ide_package_.androidx.compose.ui.geometry.Size(
+                            Size(
                                 gridHeightPx * i,
                                 gridWidthPx * j
                             )
