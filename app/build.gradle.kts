@@ -1,16 +1,18 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
     namespace = "com.example.wifimapping"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.wifimapping"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -79,16 +81,21 @@ dependencies {
     implementation ("androidx.compose.material3:material3")
     implementation ("androidx.compose.ui:ui-tooling-preview")
 
-// ViewModel untuk Compose
+        // ViewModel untuk Compose
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
 
-// Activity Compose
+    // Activity Compose
     implementation ("androidx.activity:activity-compose:1.8.2")
 
-// Kotlin Coroutines untuk latar belakang
+    // Kotlin Coroutines untuk latar belakang
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
     implementation ("com.google.android.gms:play-services-location:21.3.0")
+
+    //Room
+    implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
+    implementation("androidx.core:core-ktx:1.15.0")
+    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
 }

@@ -10,9 +10,12 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +25,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +54,7 @@ import com.example.wifimapping.navigation.Screens
 
 
 val PERMISSIONS_REQUEST_CODE = 1
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChooseWifiScreen(navController: NavController, inputData: List<String?>, context: MainActivity){
@@ -82,14 +92,25 @@ fun ChooseWifiScreen(navController: NavController, inputData: List<String?>, con
                         Log.d("ChooseWifiScreen", "$width")
                         Log.d("ChooseWifiScreen", "$grid")
                         Log.d("ChooseWifiScreen", ssid)
-                        navController.navigate(route = Screens.LocateRouterScreen.name+"/$length/$width/$grid/$ssid")
+//                        navController.navigate(route = Screens.LocateRouterScreen.name+"/$length/$width/$grid/$ssid")
                     }
+                }
+                Button(shape = RoundedCornerShape(5.dp),
+                    onClick = {
+                        var length = inputData[0]
+                        var width = inputData[1]
+                        var grid = inputData[2]
+                        var ssid = "ini harus diganti ssid"
+                        navController.navigate(route = Screens.LocateRouterScreen.name+"/$length/$width/$grid/$ssid")
+                    }) {
+                    Text("Selanjutnya")
                 }
             }
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ScanWifi(context: Context, onItemClick: (String) -> Unit = {}){
     val wifiManager: WifiManager  = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -114,24 +135,41 @@ fun ScanWifi(context: Context, onItemClick: (String) -> Unit = {}){
         val results = wifiManager.scanResults
         Log.d("scanwifi",results.toString())
         Card(modifier = Modifier
-            .padding(10.dp),
+            .padding(10.dp)
+            .height(500.dp),
             shape = RoundedCornerShape(corner = CornerSize(16.dp))
         ) {
             LazyColumn(modifier = Modifier
                 .padding(10.dp)) {
                 items(items = results) {
+                    var isChecked by remember { mutableStateOf(false) }
                     Card(modifier = Modifier
                         .padding(10.dp)
                         .fillMaxWidth()
                         .clickable {
-                            onItemClick(it.SSID)
+                            onItemClick(it.wifiSsid.toString())
+                            isChecked = !isChecked
                         }) {
-                        if (it.SSID == ""){
-                            Text("Hidden SSID")
-                        }else {
-                            Text(it.SSID)
+                        Row(modifier = Modifier
+                            .fillMaxWidth()) {
+                            Column {
+                                if (it.wifiSsid.toString() == ""){
+                                    Text("Hidden SSID")
+                                }else {
+                                    Text(it.wifiSsid.toString())
+                                }
+                                Text("Strength: ${it.level} dBm")
+                            }
+                            Column(modifier = Modifier
+                                .fillMaxWidth(),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { isChecked = it }
+                                )
+                            }
                         }
-                        Text("Strength: ${it.level} dBm")
                     }
                     HorizontalDivider(color = Color.LightGray,
                         modifier = Modifier
