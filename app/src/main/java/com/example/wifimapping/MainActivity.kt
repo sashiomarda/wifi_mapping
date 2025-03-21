@@ -1,6 +1,7 @@
 package com.example.wifimapping
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -12,10 +13,12 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
-import com.example.wifimapping.navigation.Navigation
-import com.example.wifimapping.screens.chooseWifi.PERMISSIONS_REQUEST_CODE
+import com.example.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
 import com.example.wifimapping.ui.theme.WifiMappingTheme
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
@@ -23,16 +26,21 @@ import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsStatusCodes
+import kotlin.apply
 
 class MainActivity : ComponentActivity() {
-    val context = this
+    @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             WifiMappingTheme {
-                askTurnOnLocation(PRIORITY_HIGH_ACCURACY, context)
-                Navigation(context)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    askTurnOnLocation(PRIORITY_HIGH_ACCURACY, this)
+                    WifiMappingApp()
+                }
             }
         }
     }
@@ -51,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        askTurnOnLocation(PRIORITY_HIGH_ACCURACY, context)
+        askTurnOnLocation(PRIORITY_HIGH_ACCURACY, this)
     }
 }
 
@@ -68,7 +76,8 @@ fun askTurnOnLocation(PRIORITY_HIGH_ACCURACY: Int, context: Context) {
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.ACCESS_NETWORK_STATE),
+                    Manifest.permission.ACCESS_NETWORK_STATE
+                ),
                 PERMISSIONS_REQUEST_CODE
             );
         }
@@ -95,13 +104,3 @@ fun askTurnOnLocation(PRIORITY_HIGH_ACCURACY: Int, context: Context) {
             }
         }
 }
-
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun NavigationPreview() {
-//    WifiMappingTheme {
-//        Navigation(context)
-//    }
-//}

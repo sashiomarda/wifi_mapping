@@ -25,6 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlin.run
+import kotlin.toString
 
 @Preview
 @Composable
@@ -72,7 +74,7 @@ fun CanvasGrid(length: Float? = 6.0f,
             Canvas(modifier = Modifier
                 .fillMaxSize(),
             ) {
-                repeat(10) {  i -> //To-do change the value 10
+                repeat(10) { i -> //To-do change the value 10
                     repeat(5) { j -> //To-do change the value 5
                         val gridHeightPx = localDensity.run { gridHeight.dp.toPx() }
                         val gridWidthPx = localDensity.run { gridWidth.dp.toPx() }
@@ -93,11 +95,12 @@ fun CanvasGrid(length: Float? = 6.0f,
         }
 
         Column {
-            repeat(gridVerticalAmount.toInt()){i ->
-                Row(modifier = Modifier
-                    .height(gridHeight.dp)
+            repeat(gridVerticalAmount.toInt()) { i ->
+                Row(
+                    modifier = Modifier
+                        .height(gridHeight.dp)
                 ) {
-                    repeat(gridHorizontalAmount.toInt()){j ->
+                    repeat(gridHorizontalAmount.toInt()) { j ->
                         OutlinedButton(
                             modifier = Modifier
                                 .fillMaxHeight()

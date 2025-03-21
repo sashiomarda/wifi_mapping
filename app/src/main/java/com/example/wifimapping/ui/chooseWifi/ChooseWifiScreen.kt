@@ -1,6 +1,7 @@
-package com.example.wifimapping.screens.chooseWifi
+package com.example.wifimapping.ui.chooseWifi
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -11,7 +12,6 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,25 +43,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.navigation.NavController
-import com.example.wifimapping.MainActivity
-import com.example.wifimapping.navigation.Screens
+import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.R
+import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.navigation.NavigationDestination
+import kotlin.toString
 
+object ChooseWifiDestination : NavigationDestination {
+    override val route = "choose_wifi"
+    override val titleRes = R.string.choose_wifi_title
+}
 
 val PERMISSIONS_REQUEST_CODE = 1
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChooseWifiScreen(navController: NavController, inputData: List<String?>, context: MainActivity){
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Pendeteksi SSID WiFi", color = Color.Black) },
-            colors = TopAppBarDefaults.topAppBarColors(Color(0xFFFFFFFF)
+fun ChooseWifiScreen(
+    canNavigateBack: Boolean = false,
+    navigateToLocateRouter: () -> Unit,
+){
+    Scaffold(
+        topBar = {
+            InventoryTopAppBar(
+                title = stringResource(ItemEntryDestination.titleRes),
+                canNavigateBack = canNavigateBack,
             )
-        )
-    }) { innerPadding ->
+        }
+    ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .padding(innerPadding)
@@ -85,24 +95,12 @@ fun ChooseWifiScreen(navController: NavController, inputData: List<String?>, con
                     .fillMaxWidth()
                     .padding(start = 5.dp, end = 5.dp)) {
                     ScanWifi(LocalContext.current){ssid ->
-                        var length = inputData[0]
-                        var width = inputData[1]
-                        var grid = inputData[2]
-                        Log.d("ChooseWifiScreen", "$length")
-                        Log.d("ChooseWifiScreen", "$width")
-                        Log.d("ChooseWifiScreen", "$grid")
                         Log.d("ChooseWifiScreen", ssid)
-//                        navController.navigate(route = Screens.LocateRouterScreen.name+"/$length/$width/$grid/$ssid")
                     }
                 }
                 Button(shape = RoundedCornerShape(5.dp),
-                    onClick = {
-                        var length = inputData[0]
-                        var width = inputData[1]
-                        var grid = inputData[2]
-                        var ssid = "ini harus diganti ssid"
-                        navController.navigate(route = Screens.LocateRouterScreen.name+"/$length/$width/$grid/$ssid")
-                    }) {
+                    onClick = navigateToLocateRouter
+                ) {
                     Text("Selanjutnya")
                 }
             }
@@ -110,6 +108,7 @@ fun ChooseWifiScreen(navController: NavController, inputData: List<String?>, con
     }
 }
 
+@SuppressLint("MissingPermission")
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ScanWifi(context: Context, onItemClick: (String) -> Unit = {}){
@@ -189,10 +188,12 @@ private fun scanSuccess(wifiManager: WifiManager, context: Context, activity: Ac
         ) != PackageManager.PERMISSION_GRANTED
     ) {
         requestPermissions(activity,
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.ACCESS_NETWORK_STATE),
+                Manifest.permission.ACCESS_NETWORK_STATE
+            ),
             PERMISSIONS_REQUEST_CODE);
         return
     } else {
@@ -207,10 +208,12 @@ private fun scanFailure(wifiManager: WifiManager, context: Context, activity: Ac
         ) != PackageManager.PERMISSION_GRANTED
     ) {
         requestPermissions(activity,
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.ACCESS_NETWORK_STATE),
+                Manifest.permission.ACCESS_NETWORK_STATE
+            ),
             PERMISSIONS_REQUEST_CODE);
         return
     } else {

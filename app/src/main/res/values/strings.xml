@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">Wifi Mapping</string>
+    <string name="attention">Attention</string>
+    <string name="back_button">Back</string>
+    <string name="delete">Delete</string>
+    <string name="delete_question">Are you sure you want to delete?</string>
+    <string name="no_item_description">Oops!\nNo items in the inventory.\nTap + to add.</string>
+    <string name="edit_item_title">Edit Item</string>
+    <string name="item">Item</string>
+    <string name="item_detail_title">Item Details</string>
+    <string name="room_params_entry_title">Pendeteksi SSID WiFi</string>
+    <string name="preview_grid_title">Preview Grid</string>
+    <string name="choose_wifi_title">Choose Wifi</string>
+    <string name="locate_router_title">Locate Router</string>
+    <string name="room_name">Nama Ruangan*</string>
+    <string name="room_length">Panjang (m)*</string>
+    <string name="room_width">Lebar (m)*</string>
+    <string name="grid_distance">Jarak Grid (cm)*</string>
+    <string name="layer_distance">Jarak Layer (cm)*</string>
+    <string name="no">No</string>
+    <string name="price">Price</string>
+    <string name="quantity_in_stock">Quantity in stock</string>
+    <string name="in_stock">%d in stock</string>
+    <string name="save_action">Selanjutnya</string>
+    <string name="sell">Sell</string>
+    <string name="yes">Yes</string>
+    <string name="required_fields">*required fields</string>
 </resources>
