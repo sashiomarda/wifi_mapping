@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.wifimapping.ui.home
+package com.example.wifimapping.ui.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

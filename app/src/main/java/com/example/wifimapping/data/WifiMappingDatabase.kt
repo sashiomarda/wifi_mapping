@@ -7,9 +7,10 @@ import androidx.room.RoomDatabase
 import kotlin.also
 import kotlin.jvm.java
 
-@Database(entities = [RoomParams::class], version = 3, exportSchema = false)
+@Database(entities = [RoomParams::class, Wifi::class], version = 1, exportSchema = false)
 abstract class WifiMappingDatabase : RoomDatabase() {
     abstract fun roomParamsDao(): RoomParamsDao
+    abstract fun wifiDao(): WifiDao
 
     companion object {
         @Volatile

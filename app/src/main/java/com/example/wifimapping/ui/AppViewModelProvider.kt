@@ -23,8 +23,9 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.wifimapping.WifiMappingApplication
-import com.example.wifimapping.ui.home.RoomParamsEntryViewModel
-import com.example.wifimapping.ui.previewGrid.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
+import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.WifiViewModel
 
 /**
  * Provides Factory to create instance of ViewModel for the entire Inventory app
@@ -41,6 +42,11 @@ object AppViewModelProvider {
                 this.createSavedStateHandle(),
                 inventoryApplication().container.roomParamsRepository
             )
+        }
+
+        // Initializer for ItemEntryViewModel
+        initializer {
+            WifiViewModel(inventoryApplication().container.wifiRepository)
         }
     }
 }

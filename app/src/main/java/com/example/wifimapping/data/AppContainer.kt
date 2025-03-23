@@ -23,6 +23,7 @@ import android.content.Context
  */
 interface AppContainer {
     val roomParamsRepository : RoomParamsRepository
+    val wifiRepository : WifiRepository
 }
 
 /**
@@ -34,5 +35,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
      */
     override val roomParamsRepository : RoomParamsRepository by lazy {
         OfflineRoomParamsRepository(WifiMappingDatabase.getDatabase(context).roomParamsDao())
+    }
+
+    override val wifiRepository : WifiRepository by lazy {
+        OfflineWifiRepository(WifiMappingDatabase.getDatabase(context).wifiDao())
     }
 }

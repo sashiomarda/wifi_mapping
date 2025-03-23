@@ -26,7 +26,7 @@ import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.navigation.NavigationDestination
-import com.example.wifimapping.ui.previewGrid.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
 
 object LocateRouterDestination : NavigationDestination {
     override val route = "locate_router"

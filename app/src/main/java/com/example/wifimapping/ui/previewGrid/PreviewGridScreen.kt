@@ -26,6 +26,7 @@ import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
 
 object PreviewGridDestination : NavigationDestination {
     override val route = "preview_grid"

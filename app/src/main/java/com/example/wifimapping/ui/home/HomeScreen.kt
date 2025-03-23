@@ -16,6 +16,7 @@
 
 package com.example.wifimapping.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -47,6 +48,9 @@ import com.example.wifimapping.R
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.theme.WifiMappingTheme
+import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
+import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsUiState
 import kotlinx.coroutines.launch
 
 object ItemEntryDestination : NavigationDestination {
@@ -83,8 +87,6 @@ fun ItemEntryScreen(
             },
             modifier = Modifier
                 .padding(
-                    start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
-                    end = innerPadding.calculateEndPadding(LocalLayoutDirection.current),
                     top = innerPadding.calculateTopPadding()
                 )
                 .verticalScroll(rememberScrollState())
@@ -101,7 +103,6 @@ fun RoomParamsEntryBody(
     modifier: Modifier = Modifier
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_large)),
         modifier = modifier.padding(dimensionResource(id = R.dimen.padding_medium))
         ) {
         Text("Input Data",
@@ -135,7 +136,7 @@ fun RoomParamsInputForm(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_medium))
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_small))
     ) {
         OutlinedTextField(
             value = roomParamsDetails.roomName,
