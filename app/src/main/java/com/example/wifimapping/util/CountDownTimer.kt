@@ -15,7 +15,7 @@ class CountDownTimer(
         private set
 
     suspend fun run() {
-        while (currentTime > minTime) {
+        while (currentTime >= minTime) {
             delay(timeDelayMillis)
             currentTime -= timeDecrement
         }
