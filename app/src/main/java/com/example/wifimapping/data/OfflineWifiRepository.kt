@@ -21,11 +21,15 @@ import kotlinx.coroutines.flow.Flow
 class OfflineWifiRepository(private val wifiDao: WifiDao) : WifiRepository {
     override fun getAllWifiStream(): Flow<List<Wifi>> = wifiDao.getAllWifi()
 
+    override fun getWifiCheckedStream(): Flow<List<Wifi>> = wifiDao.getWifiChecked()
+
     override fun getWifiStream(ssid: String): Flow<Wifi?> = wifiDao.getWifi(ssid)
 
-    override suspend fun insertWifi(item: Wifi) = wifiDao.insert(item)
+    override suspend fun insertWifi(wifi: Wifi) = wifiDao.insert(wifi)
 
-    override suspend fun deleteWifi(item: Wifi) = wifiDao.delete(item)
+    override suspend fun deleteWifi(wifi: Wifi) = wifiDao.delete(wifi)
 
-    override suspend fun updateWifi(item: Wifi) = wifiDao.update(item)
+    override suspend fun updateWifi(wifi: Wifi) = wifiDao.update(wifi)
+
+    override suspend fun resetCheckedWifi() : Int = wifiDao.resetCheckedWifi()
 }

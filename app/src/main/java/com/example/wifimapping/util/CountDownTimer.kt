@@ -1,4 +1,4 @@
-package com.example.wifimapping.ui.chooseWifi
+package com.example.wifimapping.util
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,7 +7,7 @@ import kotlinx.coroutines.delay
 
 class CountDownTimer(
     private val initialTime: Int = 30,
-    val minTime: Int = 1,
+    val minTime: Int = 0,
     private val timeDecrement: Int = 1,
     val timeDelayMillis: Long = 1000L,
 ) {

@@ -16,17 +16,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
+import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.WifiViewModel
+import kotlin.Boolean
 
 object LocateRouterDestination : NavigationDestination {
     override val route = "locate_router"
@@ -36,17 +44,25 @@ object LocateRouterDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocateRouterScreen(
-    viewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    navigateToCollectData: () -> Unit,
+    previewGridViewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    canNavigateBack: Boolean = true,
+    onNavigateUp: () -> Unit,
 ){
+    val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var data = viewModel.roomParamsUiState.roomParamsDetails
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Pendeteksi SSID WiFi", color = Color.Black) },
-            colors = TopAppBarDefaults.topAppBarColors(
-                Color(0xFFFFFFFF)
+    var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
+    Scaffold(
+        topBar = {
+            InventoryTopAppBar(
+                title = stringResource(LocateRouterDestination.titleRes),
+                canNavigateBack = canNavigateBack,
+                navigateUp = onNavigateUp
             )
-        )
-    }) { innerPadding ->
+        }
+    ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .padding(innerPadding)

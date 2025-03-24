@@ -64,6 +64,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.example.wifimapping.util.CountDownTimer
+import com.example.wifimapping.util.getCountDown
 import kotlinx.coroutines.*
 
 object ChooseWifiDestination : NavigationDestination {
@@ -82,17 +84,19 @@ fun ChooseWifiScreen(
     navigateToLocateRouter: () -> Unit,
     viewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
-    val wifiUiStateList by viewModel.wifiUiStateList.collectAsState()
+    val wifiUiStateList by viewModel.allWifiUiStateList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var wifiList by remember { mutableStateOf(scanWifi(context)) }
     val buttonCounter = remember {
         CountDownTimer(
-            initialTime = 26,
+            initialTime = 27,
             minTime = 1,
         )
     }
-    var isButtonDisabled by remember { mutableStateOf(false) }
+    var isWifiRefreshButtonDisabled by remember { mutableStateOf(false) }
+    var isNextButtonDisabled by remember { mutableStateOf(true) }
+
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -135,6 +139,14 @@ fun ChooseWifiScreen(
                             coroutineScope.launch {
                                 viewModel.updateWifi()
                             }
+                        },
+                        isNextButtonDisabled = {
+                            isNextButtonDisabled = it
+                        },
+                        resetWifiChecked = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                viewModel.resetCheckedWifi()
+                            }
                         }
                     )
                 }
@@ -144,20 +156,20 @@ fun ChooseWifiScreen(
                         modifier = Modifier
                             .padding(1.dp)
                             .padding(5.dp),
-                        enabled = !isButtonDisabled,
+                        enabled = !isWifiRefreshButtonDisabled,
                         onClick = {
-                            isButtonDisabled = true
+                            isWifiRefreshButtonDisabled = true
                             var scanWifiResult = scanWifi(context)
                             if (scanWifiResult.isNotEmpty()) {
                                 wifiList = scanWifiResult
                             }else{
                                 Toast.makeText(context,
-                                    "Terlalu cepat pencetnya",
+                                    "Too fast clicking!",
                                     Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {
-                        if (!isButtonDisabled) {
+                        if (!isWifiRefreshButtonDisabled) {
                             Text("Refresh Wifi")
                         }else{
                             Text("Tunggu ${buttonCounter.getCountDown} s")
@@ -166,6 +178,7 @@ fun ChooseWifiScreen(
                     Button(
                         shape = RoundedCornerShape(5.dp),
                         onClick = navigateToLocateRouter,
+                        enabled = !isNextButtonDisabled,
                         modifier = Modifier
                             .padding(1.dp)
                             .padding(5.dp)
@@ -173,7 +186,7 @@ fun ChooseWifiScreen(
                         Text("Selanjutnya")
                     }
                 }
-                if (isButtonDisabled) {
+                if (isWifiRefreshButtonDisabled) {
                     LaunchedEffect(buttonCounter) {
                         coroutineScope {
                             launch {
@@ -182,8 +195,8 @@ fun ChooseWifiScreen(
                         }
                     }
                 }
-                if (buttonCounter.getCountDown == 1){
-                    isButtonDisabled = false
+                if (buttonCounter.getCountDown == 0){
+                    isWifiRefreshButtonDisabled = false
                     buttonCounter.reset()
                 }
             }
@@ -237,6 +250,8 @@ fun WifiList(
     addUpdateWifi: (WifiDetails) -> Unit,
     insertWifi: () -> Unit,
     updateWifi: () -> Unit,
+    isNextButtonDisabled: (Boolean) -> Unit,
+    resetWifiChecked: () -> Unit,
 ){
     var ssidListDb : MutableList<String> = ArrayList()
     var idListDb : MutableList<Int> = ArrayList()
@@ -244,7 +259,12 @@ fun WifiList(
         ssidListDb.add(wifi.ssid)
         idListDb.add(wifi.id)
     }
-//    var results = wifiManager.scanResults
+    var isResetWifiChecked by remember { mutableStateOf(true) }
+    var checkedCount by remember { mutableIntStateOf(0) }
+    if (isResetWifiChecked){
+        resetWifiChecked()
+        isResetWifiChecked = false
+    }
     if (wifiList.isNotEmpty()) {
         var wifiListDisplay: MutableList<Wifi> = ArrayList()
         if (ssidListDb.isNotEmpty()) {
@@ -312,6 +332,19 @@ fun WifiList(
                             .fillMaxWidth()
                             .clickable {
                                 isChecked = !isChecked
+                                if (isChecked) {
+                                    checkedCount = checkedCount + 1
+                                }else{
+                                    if (checkedCount > 0) {
+                                        checkedCount = checkedCount - 1
+                                    }
+                                }
+                                if (checkedCount > 0){
+                                    isNextButtonDisabled(false)
+                                }else{
+                                    isNextButtonDisabled(true)
+                                }
+
                                 addUpdateWifi(wifiUiState
                                     .wifiDetails.copy(
                                         id = ssidId,
@@ -340,6 +373,18 @@ fun WifiList(
                                         checked = isChecked,
                                         onCheckedChange = {
                                             isChecked = it
+                                            if (isChecked) {
+                                                checkedCount = checkedCount + 1
+                                            }else{
+                                                if (checkedCount > 0) {
+                                                    checkedCount = checkedCount - 1
+                                                }
+                                            }
+                                            if (checkedCount > 0){
+                                                isNextButtonDisabled(false)
+                                            }else{
+                                                isNextButtonDisabled(true)
+                                            }
                                             addUpdateWifi(wifiUiState
                                                 .wifiDetails.copy(
                                                     id = ssidId,

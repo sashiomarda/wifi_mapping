@@ -11,6 +11,7 @@
     <string name="room_params_entry_title">Pendeteksi SSID WiFi</string>
     <string name="preview_grid_title">Preview Grid</string>
     <string name="choose_wifi_title">Choose Wifi</string>
+    <string name="collect_data_title">Collect Data</string>
     <string name="locate_router_title">Locate Router</string>
     <string name="room_name">Nama Ruangan*</string>
     <string name="room_length">Panjang (m)*</string>

@@ -27,6 +27,8 @@ import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
 import com.example.wifimapping.screens.locateRouter.LocateRouterScreen
 import com.example.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.example.wifimapping.ui.chooseWifi.ChooseWifiScreen
+import com.example.wifimapping.ui.collectData.CollectDataDestination
+import com.example.wifimapping.ui.collectData.CollectDataScreen
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.home.ItemEntryScreen
 import com.example.wifimapping.ui.previewGrid.PreviewGridDestination
@@ -67,8 +69,15 @@ fun WifiMappingNavHost(
 
         composable(route = LocateRouterDestination.route) {
             LocateRouterScreen(
-//                navigateToLocateRouter = { navController.navigate(PreviewGridDestination.route) },
-////                onNavigateUp = { navController.navigateUp() }
+                navigateToCollectData= { navController.navigate(CollectDataDestination.route) },
+                onNavigateUp = { navController.navigateUp() }
+            )
+        }
+
+        composable(route = CollectDataDestination.route) {
+            CollectDataScreen(
+//                navigateToCollectData= { navController.navigate(PreviewGridDestination.route) },
+                onNavigateUp = { navController.navigateUp() }
             )
         }
     }

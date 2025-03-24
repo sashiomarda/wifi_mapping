@@ -34,6 +34,8 @@ interface WifiRepository {
      */
     fun getWifiStream(ssid: String): Flow<Wifi?>
 
+    fun getWifiCheckedStream(): Flow<List<Wifi>>
+
     /**
      * Insert item in the data source
      */
@@ -48,4 +50,6 @@ interface WifiRepository {
      * Update item in the data source
      */
     suspend fun updateWifi(wifi: Wifi)
+
+    suspend fun resetCheckedWifi(): Int
 }

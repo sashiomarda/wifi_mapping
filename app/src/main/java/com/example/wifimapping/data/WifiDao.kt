@@ -24,4 +24,10 @@ interface WifiDao {
 
     @Query("SELECT * from wifi ORDER BY ssid ASC")
     fun getAllWifi(): Flow<List<Wifi>>
+
+    @Query("SELECT * from wifi WHERE isChecked = 1")
+    fun getWifiChecked(): Flow<List<Wifi>>
+
+    @Query("UPDATE wifi SET isChecked = 0")
+    fun resetCheckedWifi() : Int
 }

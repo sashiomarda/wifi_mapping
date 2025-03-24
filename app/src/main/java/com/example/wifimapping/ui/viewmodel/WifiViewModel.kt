@@ -51,7 +51,7 @@ class WifiViewModel(
         wifiRepository.updateWifi(wifiUiState.wifiDetails.toWifi())
     }
 
-    val wifiUiStateList: StateFlow<WifiUiStateList> =
+    val allWifiUiStateList: StateFlow<WifiUiStateList> =
         wifiRepository.getAllWifiStream().map { WifiUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -59,9 +59,17 @@ class WifiViewModel(
                 initialValue = WifiUiStateList()
             )
 
-//    val uiState: StateFlow<WifiUiState> =
-//        wifiRepository.getWifiStream(wifiUiState.wifiDetails.ssid)
-//            .filterNotNull()
+    val wifiCheckedUiStateList: StateFlow<WifiUiStateList> =
+        wifiRepository.getWifiCheckedStream().map { WifiUiStateList(it) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = WifiUiStateList()
+            )
+
+    suspend fun resetCheckedWifi() {
+        wifiRepository.resetCheckedWifi()
+    }
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
