@@ -84,12 +84,17 @@ fun WifiMappingNavHost(
             })
         ) {
             LocateRouterScreen(
-                navigateToCollectData= { navController.navigate(CollectDataDestination.route) },
+                navigateToCollectData= { navController.navigate("${CollectDataDestination.route}/${it}") },
                 onNavigateUp = { navController.navigateUp() }
             )
         }
 
-        composable(route = CollectDataDestination.route) {
+        composable(
+            route = CollectDataDestination.routeWithArgs,
+            arguments = listOf(navArgument(CollectDataDestination.idCollectData) {
+                type = NavType.IntType
+            })
+        ) {
             CollectDataScreen(
 //                navigateToCollectData= { navController.navigate(PreviewGridDestination.route) },
                 onNavigateUp = { navController.navigateUp() }

@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,10 +42,12 @@ import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
+import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
+import kotlinx.coroutines.launch
 import kotlin.Boolean
 import kotlin.Unit
 
@@ -58,22 +61,22 @@ object LocateRouterDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocateRouterScreen(
-    navigateToCollectData: () -> Unit,
+    navigateToCollectData: (Int) -> Unit,
     previewGridViewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     canNavigateBack: Boolean = true,
     onNavigateUp: () -> Unit,
 ){
+    val coroutineScope = rememberCoroutineScope()
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
-    val context = LocalContext.current
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     Scaffold(
         topBar = {
             InventoryTopAppBar(
-                title = stringResource(LocateRouterDestination.titleRes),
+                title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )
@@ -120,14 +123,37 @@ fun LocateRouterScreen(
                             gridListDb = gridListDb
                         )
                     }
+                    Row {
+                        Button(modifier = Modifier
+                            .padding(end = 3.dp),
+                            shape = RoundedCornerShape(5.dp),
+                            onClick = {
+                                coroutineScope.launch {
+                                    for (it in gridListDb.gridList) {
+                                        gridViewModel.updateUiState(
+                                            gridViewModel.gridUiState.gridDetails.copy(
+                                                id = it.id,
+                                                idCollectData = it.idCollectData,
+                                                idWifi = 0
+                                            )
+                                        )
+                                        gridViewModel.updateGrid()
+                                    }
+                                }
+                            }) {
+                            Text("Reset Lokasi Router")
+                        }
 
-                    Button(
-                        shape = RoundedCornerShape(5.dp),
-                        onClick = {
-                            Toast.makeText(context, "Fitur masih didevelop", Toast.LENGTH_LONG)
-                                .show()
-                        }) {
-                        Text("Selanjutnya")
+                        Button(
+                            modifier = Modifier
+                                .padding(start = 3.dp),
+                            shape = RoundedCornerShape(5.dp),
+                            onClick = {
+
+                                navigateToCollectData(gridListDb.gridList[0].id)
+                            }) {
+                            Text("Selanjutnya")
+                        }
                     }
                 }
             }
@@ -145,8 +171,6 @@ fun WifiCheckedList(
         modifier = Modifier
             .padding(10.dp)
     ) {
-        Log.d("wifiCheckListDb",wifiCheckListDb.toString())
-        Log.d("wifiCheckListDb",isChosenIdSSid.toString())
         items(items = wifiCheckListDb) {
             Surface(
                 color = if (isChosenIdSSid == it.id) Color(0xFF464646) else Color.Transparent,

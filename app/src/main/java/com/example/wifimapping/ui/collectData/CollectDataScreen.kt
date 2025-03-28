@@ -1,9 +1,6 @@
 package com.example.wifimapping.ui.collectData
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -17,14 +14,14 @@ import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
-import com.example.wifimapping.ui.home.RoomParamsEntryBody
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
-import kotlinx.coroutines.launch
 
 object CollectDataDestination : NavigationDestination {
     override val route = "collect_data"
     override val titleRes = R.string.collect_data_title
+    const val idCollectData = "idCollectData"
+    val routeWithArgs = "${route}/{$idCollectData}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
