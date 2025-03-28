@@ -18,6 +18,7 @@
     <string name="room_width">Lebar (m)*</string>
     <string name="grid_distance">Jarak Grid (cm)*</string>
     <string name="layer_distance">Jarak Layer (cm)*</string>
+    <string name="layer_count">Jumlah Layer*</string>
     <string name="no">No</string>
     <string name="price">Price</string>
     <string name="quantity_in_stock">Quantity in stock</string>

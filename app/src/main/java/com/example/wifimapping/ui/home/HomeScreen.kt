@@ -16,11 +16,7 @@
 
 package com.example.wifimapping.ui.home
 
-import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -37,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -90,8 +85,6 @@ fun ItemEntryScreen(
                 .padding(
                     top = innerPadding.calculateTopPadding()
                 )
-                .verticalScroll(rememberScrollState())
-                .fillMaxWidth()
         )
     }
 }
@@ -105,7 +98,7 @@ fun RoomParamsEntryBody(
 ) {
     Column(
         modifier = modifier
-            .padding(dimensionResource(id = R.dimen.padding_medium)),
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
         ) {
         Text("Input Data",
@@ -138,8 +131,6 @@ fun RoomParamsInputForm(
     showWarning : Boolean
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_small))
     ) {
         OutlinedTextField(
             value = roomParamsDetails.roomName,
@@ -187,20 +178,6 @@ fun RoomParamsInputForm(
             onValueChange = { onValueChange(roomParamsDetails.copy(gridDistance = it)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             label = { Text(stringResource(R.string.grid_distance)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            singleLine = true
-        )
-        OutlinedTextField(
-            value = roomParamsDetails.layerDistance,
-            onValueChange = { onValueChange(roomParamsDetails.copy(layerDistance = it)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(stringResource(R.string.layer_distance)) },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                 unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,

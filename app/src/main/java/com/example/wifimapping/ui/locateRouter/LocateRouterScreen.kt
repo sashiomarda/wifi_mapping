@@ -1,5 +1,6 @@
 package com.example.wifimapping.screens.locateRouter
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,15 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,7 +62,6 @@ fun LocateRouterScreen(
     onNavigateUp: () -> Unit,
 ){
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     Scaffold(
@@ -111,14 +108,6 @@ fun LocateRouterScreen(
                             grid = data.gridDistance?.toInt()
                         )
                     }
-                    Button(
-                        shape = RoundedCornerShape(5.dp),
-                        onClick = {
-                            Toast.makeText(context, "Fitur masih didevelop", Toast.LENGTH_LONG)
-                                .show()
-                        }) {
-                        Text("Tambah Lokasi Router")
-                    }
 
                     Button(
                         shape = RoundedCornerShape(5.dp),
@@ -143,6 +132,8 @@ fun WifiCheckedList(
         modifier = Modifier
             .padding(10.dp)
     ) {
+        Log.d("wifiCheckListDb",wifiCheckListDb.toString())
+        Log.d("wifiCheckListDb",isChosenIdSSid.toString())
         items(items = wifiCheckListDb) {
             Surface(
                 color = if (isChosenIdSSid == it.id) Color(0xFF464646) else Color.Transparent,

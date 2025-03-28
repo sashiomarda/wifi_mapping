@@ -23,12 +23,11 @@ import androidx.room.PrimaryKey
 /**
  * Entity data class represents a single row in the database.
  */
-@Entity(tableName = "room_params")
-data class RoomParams(
+@Entity(tableName = "grid")
+data class Grid(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val roomName: String,
-    val length: Int,
-    val width: Int,
-    val gridDistance: Int,
+    val idCollectData: Int,
+    val idWifi: Int = 0,
+    val layerNo: Int = 0,
 )

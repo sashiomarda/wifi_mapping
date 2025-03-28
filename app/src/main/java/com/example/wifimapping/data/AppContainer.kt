@@ -17,6 +17,8 @@
 package com.example.wifimapping.data
 
 import android.content.Context
+import com.example.gridmapping.data.GridRepository
+import com.example.gridmapping.data.OfflineGridRepository
 
 /**
  * App container for Dependency injection.
@@ -24,6 +26,7 @@ import android.content.Context
 interface AppContainer {
     val roomParamsRepository : RoomParamsRepository
     val wifiRepository : WifiRepository
+    val gridRepository : GridRepository
 }
 
 /**
@@ -39,5 +42,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val wifiRepository : WifiRepository by lazy {
         OfflineWifiRepository(WifiMappingDatabase.getDatabase(context).wifiDao())
+    }
+
+    override val gridRepository : GridRepository by lazy {
+        OfflineGridRepository(WifiMappingDatabase.getDatabase(context).gridDao())
     }
 }

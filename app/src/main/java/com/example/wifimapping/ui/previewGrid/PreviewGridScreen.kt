@@ -1,5 +1,6 @@
 package com.example.wifimapping.ui.previewGrid
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,7 +32,10 @@ import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object PreviewGridDestination : NavigationDestination {
     override val route = "preview_grid"
@@ -37,8 +46,12 @@ object PreviewGridDestination : NavigationDestination {
 fun PreviewGridScreen(
     navigateToChooseWifi: () -> Unit,
     canNavigateBack: Boolean = false,
-    viewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    previewGridviewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
+    val coroutineScope = rememberCoroutineScope()
+    var lastInputGridId: Int? by remember { mutableStateOf(0) }
+
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -47,7 +60,10 @@ fun PreviewGridScreen(
             )
         }
     ) { innerPadding ->
-        var data = viewModel.roomParamsUiState.roomParamsDetails
+        var data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+        gridViewModel.updateUiState(
+            gridViewModel.gridUiState.gridDetails.copy(idCollectData = data.id)
+        )
         Surface(
             modifier = Modifier
                 .padding(innerPadding)
@@ -79,7 +95,25 @@ fun PreviewGridScreen(
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),
-                    onClick = navigateToChooseWifi
+                    onClick = {
+                        coroutineScope.launch(Dispatchers.Main) {
+                            lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
+                            Log.d("lastInputGrid 0",gridViewModel.lastGridInputId()?.idCollectData.toString())
+                            val gridCount = data.length.toInt() * data.width.toInt()
+                            Log.d("lastInputGrid 2","${lastInputGridId} ${data.id}")
+                            if (lastInputGridId != data.id) {
+                                repeat(gridCount) {
+                                    Log.d(
+                                        "saveGrid",
+                                        gridViewModel.gridUiState.gridDetails.toString()
+                                    )
+                                    gridViewModel.saveGrid()
+                                }
+                            }
+                            navigateToChooseWifi()
+                        }
+
+                    }
                 ) {
                     Text("Selanjutnya")
                 }
