@@ -21,8 +21,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.gridmapping.data.GridRepository
 import com.example.wifimapping.data.Grid
+import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel to validate and insert wifi in the Room database.
@@ -34,6 +44,17 @@ class GridViewModel(
 
     var gridUiState by mutableStateOf(GridUiState())
         private set
+
+    private val idCollectData: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idCollectData])
+
+    val gridUiStateList: StateFlow<GridUiStateList> =
+        gridRepository.getGridByIdCollectDataStream(idCollectData = idCollectData)
+            .map { GridUiStateList(it) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = GridUiStateList()
+            )
 
     suspend fun lastGridInputId() : Grid? {
         return gridRepository.getLastGridInputId()

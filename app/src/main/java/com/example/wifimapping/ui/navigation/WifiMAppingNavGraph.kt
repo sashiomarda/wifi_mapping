@@ -17,12 +17,15 @@
 package com.example.wifimapping.ui.navigation
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
 import com.example.wifimapping.screens.locateRouter.LocateRouterScreen
 import com.example.wifimapping.ui.chooseWifi.ChooseWifiDestination
@@ -50,11 +53,16 @@ fun WifiMappingNavHost(
     ) {
         composable(route = ItemEntryDestination.route) {
             ItemEntryScreen(
-                navigateToPreviewGrid = { navController.navigate(PreviewGridDestination.route) },
+                navigateToPreviewGrid = { navController.navigate("${PreviewGridDestination.route}/0") },
                 onNavigateUp = { navController.navigateUp() }
             )
         }
-        composable(route = PreviewGridDestination.route) {
+        composable(
+            route = PreviewGridDestination.routeWithArgs,
+            arguments = listOf(navArgument(PreviewGridDestination.idCollectData) {
+                type = NavType.IntType
+            })
+        ) {
             PreviewGridScreen(
                 navigateToChooseWifi = { navController.navigate(ChooseWifiDestination.route) },
             )
@@ -62,12 +70,19 @@ fun WifiMappingNavHost(
 
         composable(route = ChooseWifiDestination.route) {
             ChooseWifiScreen(
-                navigateToLocateRouter = { navController.navigate(LocateRouterDestination.route) },
+                navigateToLocateRouter = {
+                    navController.navigate("${LocateRouterDestination.route}/${it}")
+                                         },
             )
         }
 
 
-        composable(route = LocateRouterDestination.route) {
+        composable(
+            route = LocateRouterDestination.routeWithArgs,
+            arguments = listOf(navArgument(LocateRouterDestination.idCollectData) {
+                type = NavType.IntType
+            })
+        ) {
             LocateRouterScreen(
                 navigateToCollectData= { navController.navigate(CollectDataDestination.route) },
                 onNavigateUp = { navController.navigateUp() }

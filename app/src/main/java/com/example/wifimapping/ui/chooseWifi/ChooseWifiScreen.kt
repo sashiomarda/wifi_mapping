@@ -64,6 +64,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
 import com.example.wifimapping.util.CountDownTimer
 import com.example.wifimapping.util.getCountDown
 import com.example.wifimapping.util.scanWifi
@@ -82,8 +83,9 @@ const val PERMISSIONS_REQUEST_CODE = 1
 @Composable
 fun ChooseWifiScreen(
     canNavigateBack: Boolean = false,
-    navigateToLocateRouter: () -> Unit,
-    viewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    navigateToLocateRouter: (Int) -> Unit,
+    viewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    previewGridviewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val wifiUiStateList by viewModel.allWifiUiStateList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -178,7 +180,10 @@ fun ChooseWifiScreen(
                     }
                     Button(
                         shape = RoundedCornerShape(5.dp),
-                        onClick = navigateToLocateRouter,
+                        onClick = {
+                            var data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+                            navigateToLocateRouter(data.id)
+                        },
                         enabled = !isNextButtonDisabled,
                         modifier = Modifier
                             .padding(1.dp)

@@ -27,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,13 +42,17 @@ import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import kotlin.Boolean
+import kotlin.Unit
 
 object LocateRouterDestination : NavigationDestination {
     override val route = "locate_router"
     override val titleRes = R.string.locate_router_title
+    const val idCollectData = "idCollectData"
+    val routeWithArgs = "${route}/{$idCollectData}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,12 +61,15 @@ fun LocateRouterScreen(
     navigateToCollectData: () -> Unit,
     previewGridViewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     canNavigateBack: Boolean = true,
     onNavigateUp: () -> Unit,
 ){
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
     val context = LocalContext.current
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
+    var chosenIdSsid by remember { mutableStateOf(0) }
+    val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -89,7 +95,10 @@ fun LocateRouterScreen(
                 Box(modifier = Modifier
                     .padding(start = 5.dp, end = 5.dp)) {
                     WifiCheckedList(
-                        wifiCheckListDb = wifiCheckedUiStateList.wifiList
+                        wifiCheckListDb = wifiCheckedUiStateList.wifiList,
+                        saveCurrentChosenIdSsid = {
+                            chosenIdSsid = it
+                        }
                     )
                 }
                 if (data.length != "") {
@@ -105,7 +114,10 @@ fun LocateRouterScreen(
                         CanvasGrid(
                             length = data.length?.toFloat(),
                             width = data.width?.toFloat(),
-                            grid = data.gridDistance?.toInt()
+                            grid = data.gridDistance?.toInt(),
+                            gridViewModel = gridViewModel,
+                            chosenIdSsid = chosenIdSsid,
+                            gridListDb = gridListDb
                         )
                     }
 
@@ -125,7 +137,8 @@ fun LocateRouterScreen(
 
 @Composable
 fun WifiCheckedList(
-    wifiCheckListDb: List<Wifi>
+    wifiCheckListDb: List<Wifi>,
+    saveCurrentChosenIdSsid: (Int) -> Unit,
 ){
     var isChosenIdSSid by remember { mutableStateOf(0) }
     LazyColumn(
@@ -145,6 +158,7 @@ fun WifiCheckedList(
                             .fillMaxWidth()
                             .clickable {
                                 isChosenIdSSid = it.id
+                                saveCurrentChosenIdSsid(it.id)
                             },
                         colors = CardDefaults.cardColors(Color.Transparent)
                     ) {

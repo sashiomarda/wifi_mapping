@@ -40,6 +40,8 @@ import kotlinx.coroutines.launch
 object PreviewGridDestination : NavigationDestination {
     override val route = "preview_grid"
     override val titleRes = R.string.preview_grid_title
+    const val idCollectData = "idCollectData"
+    val routeWithArgs = "${route}/{$idCollectData}"
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,18 +91,19 @@ fun PreviewGridScreen(
                         Text("Lebar")
                         Text("${data.width} m")
                     }
-                    CanvasGrid(length = data.length.toFloat(),
+                    CanvasGrid(
+                        length = data.length.toFloat(),
                         width = data.width.toFloat(),
-                        grid = data.gridDistance.toInt()
+                        grid = data.gridDistance.toInt(),
+                        gridViewModel = gridViewModel,
+                        gridListDb = null,
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),
                     onClick = {
                         coroutineScope.launch(Dispatchers.Main) {
                             lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
-                            Log.d("lastInputGrid 0",gridViewModel.lastGridInputId()?.idCollectData.toString())
                             val gridCount = data.length.toInt() * data.width.toInt()
-                            Log.d("lastInputGrid 2","${lastInputGridId} ${data.id}")
                             if (lastInputGridId != data.id) {
                                 repeat(gridCount) {
                                     Log.d(

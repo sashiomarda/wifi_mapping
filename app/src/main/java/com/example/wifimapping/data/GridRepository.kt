@@ -31,7 +31,6 @@ interface GridRepository {
      */
     fun getGridByIdCollectDataStream(idCollectData: Int): Flow<List<Grid>>
 
-//    fun getLastGridInputId(): Flow<Grid?>
     suspend fun getLastGridInputId(): Grid?
     /**
      * Insert item in the data source

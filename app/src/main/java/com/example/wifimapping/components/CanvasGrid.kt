@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
@@ -25,14 +29,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.wifimapping.ui.viewmodel.GridUiStateList
+import com.example.wifimapping.ui.viewmodel.GridViewModel
 import kotlin.run
 import kotlin.toString
 
 @Preview
 @Composable
-fun CanvasGrid(length: Float? = 6.0f,
-               width: Float? = 4.0f,
-               grid: Int? = 100){
+fun CanvasGrid(
+    length: Float? = 6.0f,
+    width: Float? = 4.0f,
+    grid: Int? = 100,
+    gridViewModel: GridViewModel,
+    chosenIdSsid: Int = 0,
+    gridListDb: GridUiStateList? = null
+){
 
     val localDensity = LocalDensity.current
     var gridCmToM = grid?.toFloat()?.div(100)
@@ -61,6 +73,7 @@ fun CanvasGrid(length: Float? = 6.0f,
     Log.d("gridWidth", gridWidth.toString())
     Log.d("gridVerticalAmount", gridVerticalAmount.toString())
     Log.d("gridHorizontalAmount", gridHorizontalAmount.toString())
+
     Surface(modifier = Modifier
 //        .background(Color.White)
         .padding(start = 5.dp)
@@ -94,23 +107,47 @@ fun CanvasGrid(length: Float? = 6.0f,
             }
         }
 
-        Column {
-            repeat(gridVerticalAmount.toInt()) { i ->
-                Row(
-                    modifier = Modifier
-                        .height(gridHeight.dp)
-                ) {
-                    repeat(gridHorizontalAmount.toInt()) { j ->
-                        OutlinedButton(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(gridWidth.dp),
-                            shape = RectangleShape,
-                            onClick = {
-
-                                Toast.makeText(context, "ok", Toast.LENGTH_LONG).show()
-                            }
-                        ) { }
+        if (gridListDb != null) {
+            val firstGridID = gridListDb.gridList[0].id
+            LazyVerticalGrid(
+                modifier = Modifier,
+                columns = GridCells.Adaptive(gridWidth.dp-10.dp)
+            ) {
+                items(gridListDb.gridList){it->
+                    OutlinedButton(
+                        modifier = Modifier
+                            .width(gridWidth.dp)
+                            .height(gridHeight.dp),
+//                            .background(Color(0xFFFF5858)),
+                        shape = RectangleShape,
+                        onClick = {
+                            Toast.makeText(context, "${it.id}", Toast.LENGTH_LONG).show()
+                        }
+                    ) {
+                    Text(fontSize = 10.sp,
+                        text = "${it.id-firstGridID+1}")
+                    }
+                }
+            }
+        }else{
+            Column {
+                repeat(gridVerticalAmount.toInt()) { i ->
+                    Row(
+                        modifier = Modifier
+                            .height(gridHeight.dp)
+                    ) {
+                        repeat(gridHorizontalAmount.toInt()) { j ->
+                            OutlinedButton(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(gridWidth.dp),
+                                shape = RectangleShape,
+                                onClick = {
+                                    Toast.makeText(context, "ok", Toast.LENGTH_LONG)
+                                        .show()
+                                }
+                            ) { }
+                        }
                     }
                 }
             }
