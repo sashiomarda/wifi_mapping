@@ -2,7 +2,6 @@ package com.example.wifimapping.ui.collectData
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,22 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,9 +43,9 @@ import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
-import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import kotlinx.coroutines.launch
 
 object CollectDataDestination : NavigationDestination {
@@ -78,6 +69,8 @@ fun CollectDataScreen(
     var chosenIdSsid by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     var currentActiveGridPosition by remember { mutableStateOf(1) }
+    val firstGridID = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
+    val lastGridID = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -156,7 +149,16 @@ fun CollectDataScreen(
                         .size(80.dp)
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
-                    onClick = {}
+                    onClick = {
+                        if (currentActiveGridPosition - data.width.toInt()  >= 1) {
+                            val currentIdGrid = currentActiveGridPosition + firstGridID - 1
+                            val nextIdGrid = currentIdGrid - data.width.toInt()
+                            coroutineScope.launch {
+                                resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
+                                currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                            }
+                        }
+                    }
                 ) {
                     Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "up arrow")
                 }
@@ -169,7 +171,16 @@ fun CollectDataScreen(
                             .size(80.dp)
                             .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
-                        onClick = {}
+                        onClick = {
+                            if (currentActiveGridPosition > 1) {
+                                val currentIdGrid = currentActiveGridPosition + firstGridID - 1
+                                val nextIdGrid = currentIdGrid - 1
+                                coroutineScope.launch {
+                                    resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
+                                    currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                }
+                            }
+                        }
                     ) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "left arrow")
                     }
@@ -198,7 +209,16 @@ fun CollectDataScreen(
                             .size(80.dp)
                             .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
-                        onClick = {}
+                        onClick = {
+                            if (currentActiveGridPosition < lastGridID - firstGridID + 1) {
+                                val currentIdGrid = currentActiveGridPosition + firstGridID - 1
+                                val nextIdGrid = currentIdGrid + 1
+                                coroutineScope.launch {
+                                    resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
+                                    currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                }
+                            }
+                        }
                     ) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "right arrow")
                     }
@@ -208,7 +228,16 @@ fun CollectDataScreen(
                         .size(80.dp)
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
-                    onClick = {}
+                    onClick = {
+                        if (currentActiveGridPosition + data.width.toInt()  <= lastGridID - firstGridID + 1) {
+                            val currentIdGrid = currentActiveGridPosition + firstGridID - 1
+                            val nextIdGrid = currentIdGrid + data.width.toInt()
+                            coroutineScope.launch {
+                                resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
+                                currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                            }
+                        }
+                    }
                 ) {
                     Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "down arrow")
                 }
@@ -223,5 +252,24 @@ fun CollectDataScreen(
                 }
             }
         }
+    }
+}
+
+
+private suspend fun resetChosenGridDb(
+    gridListDb: GridUiStateList,
+    gridViewModel: GridViewModel,
+    idGrid: Int
+) {
+    for (it in gridListDb.gridList) {
+            gridViewModel.updateUiState(
+                gridViewModel.gridUiState.gridDetails.copy(
+                    id = it.id,
+                    idCollectData = it.idCollectData,
+                    idWifi = it.idWifi,
+                    isClicked = it.id == idGrid
+                )
+            )
+        gridViewModel.updateGrid()
     }
 }
