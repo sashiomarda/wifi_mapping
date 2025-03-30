@@ -97,7 +97,10 @@ fun PreviewGridScreen(
                         grid = data.gridDistance.toInt(),
                         gridViewModel = gridViewModel,
                         gridListDb = null,
-                        saveIdGridRouterPosition = {}
+                        saveIdGridRouterPosition = {},
+                        screen = PreviewGridDestination.route,
+                        onClickActiveGridPosition = {},
+                        resetGridClicked = {}
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),
@@ -107,10 +110,6 @@ fun PreviewGridScreen(
                             val gridCount = data.length.toInt() * data.width.toInt()
                             if (lastInputGridId != data.id) {
                                 repeat(gridCount) {
-                                    Log.d(
-                                        "saveGrid",
-                                        gridViewModel.gridUiState.gridDetails.toString()
-                                    )
                                     gridViewModel.saveGrid()
                                 }
                             }

@@ -125,7 +125,10 @@ fun LocateRouterScreen(
                             gridListDb = gridListDb,
                             saveIdGridRouterPosition = { it ->
                                 idGridRouterPosition = it
-                            }
+                            },
+                            screen = LocateRouterDestination.route,
+                            onClickActiveGridPosition = {},
+                            resetGridClicked = {}
                         )
                     }
                     Row {
@@ -158,7 +161,7 @@ fun LocateRouterScreen(
                             enabled = idGridRouterPosition != 0 && chosenIdSsid != 0,
                             shape = RoundedCornerShape(5.dp),
                             onClick = {
-                                navigateToCollectData(gridListDb.gridList[0].id)
+                                navigateToCollectData(gridListDb.gridList[0].idCollectData)
                             }) {
                             Text("Selanjutnya")
                         }

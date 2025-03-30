@@ -30,4 +30,5 @@ data class Grid(
     val idCollectData: Int,
     val idWifi: Int = 0,
     val layerNo: Int = 0,
+    val isClicked: Boolean = false,
 )

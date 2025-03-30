@@ -16,6 +16,7 @@
 
 package com.example.wifimapping.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.gridmapping.data.GridRepository
 import com.example.wifimapping.data.Grid
 import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
+import com.example.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -96,6 +98,7 @@ data class GridDetails(
     val idCollectData: Int = 0,
     val idWifi: Int = 0,
     val layerNo: Int = 1,
+    val isClicked: Boolean = false,
 )
 
 /**
@@ -107,7 +110,8 @@ fun GridDetails.toGrid(): Grid = Grid(
     id = id,
     idCollectData = idCollectData,
     idWifi = idWifi,
-    layerNo = layerNo
+    layerNo = layerNo,
+    isClicked = isClicked
 )
 
 /**
@@ -125,7 +129,8 @@ fun Grid.toGridDetails(): GridDetails = GridDetails(
     id = id,
     idCollectData = idCollectData,
     idWifi = idWifi,
-    layerNo = layerNo
+    layerNo = layerNo,
+    isClicked = isClicked
 )
 
 data class GridUiStateList(val gridList: List<Grid> = listOf())
