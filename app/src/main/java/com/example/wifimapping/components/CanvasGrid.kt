@@ -128,7 +128,7 @@ fun CanvasGrid(
                 val firstGridID = gridListDb.gridList[0].id
                 LazyVerticalGrid(
                     modifier = Modifier,
-                    columns = GridCells.Adaptive(gridWidth.dp - 10.dp)
+                    columns = GridCells.Adaptive(gridWidth.dp - 3.dp)
                 ) {
                     items(gridListDb.gridList) { it ->
                         currentActiveGridPositionNumber = it.id - firstGridID + 1
