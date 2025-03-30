@@ -97,6 +97,7 @@ fun PreviewGridScreen(
                         grid = data.gridDistance.toInt(),
                         gridViewModel = gridViewModel,
                         gridListDb = null,
+                        saveIdGridRouterPosition = {}
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),

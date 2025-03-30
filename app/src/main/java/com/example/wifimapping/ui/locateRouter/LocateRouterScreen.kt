@@ -1,7 +1,6 @@
 package com.example.wifimapping.screens.locateRouter
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -32,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -72,6 +70,8 @@ fun LocateRouterScreen(
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
+    var isResetChosenIdSsid by remember { mutableStateOf(false) }
+    var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     Scaffold(
         topBar = {
@@ -101,7 +101,9 @@ fun LocateRouterScreen(
                         wifiCheckListDb = wifiCheckedUiStateList.wifiList,
                         saveCurrentChosenIdSsid = {
                             chosenIdSsid = it
-                        }
+                            isResetChosenIdSsid = false
+                        },
+                        isResetChosenIdSsid = isResetChosenIdSsid
                     )
                 }
                 if (data.length != "") {
@@ -115,12 +117,15 @@ fun LocateRouterScreen(
                             Text("${data.width} m")
                         }
                         CanvasGrid(
-                            length = data.length?.toFloat(),
-                            width = data.width?.toFloat(),
-                            grid = data.gridDistance?.toInt(),
+                            length = data.length.toFloat(),
+                            width = data.width.toFloat(),
+                            grid = data.gridDistance.toInt(),
                             gridViewModel = gridViewModel,
                             chosenIdSsid = chosenIdSsid,
-                            gridListDb = gridListDb
+                            gridListDb = gridListDb,
+                            saveIdGridRouterPosition = { it ->
+                                idGridRouterPosition = it
+                            }
                         )
                     }
                     Row {
@@ -138,6 +143,9 @@ fun LocateRouterScreen(
                                             )
                                         )
                                         gridViewModel.updateGrid()
+                                        chosenIdSsid = 0
+                                        idGridRouterPosition = 0
+                                        isResetChosenIdSsid = true
                                     }
                                 }
                             }) {
@@ -147,9 +155,9 @@ fun LocateRouterScreen(
                         Button(
                             modifier = Modifier
                                 .padding(start = 3.dp),
+                            enabled = idGridRouterPosition != 0 && chosenIdSsid != 0,
                             shape = RoundedCornerShape(5.dp),
                             onClick = {
-
                                 navigateToCollectData(gridListDb.gridList[0].id)
                             }) {
                             Text("Selanjutnya")
@@ -165,6 +173,7 @@ fun LocateRouterScreen(
 fun WifiCheckedList(
     wifiCheckListDb: List<Wifi>,
     saveCurrentChosenIdSsid: (Int) -> Unit,
+    isResetChosenIdSsid: Boolean,
 ){
     var isChosenIdSSid by remember { mutableStateOf(0) }
     LazyColumn(
@@ -173,7 +182,9 @@ fun WifiCheckedList(
     ) {
         items(items = wifiCheckListDb) {
             Surface(
-                color = if (isChosenIdSSid == it.id) Color(0xFF464646) else Color.Transparent,
+                color = if (isChosenIdSSid == it.id && isResetChosenIdSsid == false) {
+                    Color(0xFF464646)
+                } else Color.Transparent,
                 ) {
                 Column {
                     Card(

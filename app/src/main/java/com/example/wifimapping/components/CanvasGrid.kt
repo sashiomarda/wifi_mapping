@@ -54,6 +54,7 @@ fun CanvasGrid(
     gridViewModel: GridViewModel,
     chosenIdSsid: Int = 0,
     gridListDb: GridUiStateList? = null,
+    saveIdGridRouterPosition: (Int) -> Unit
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -78,7 +79,7 @@ fun CanvasGrid(
     val gridWidth = canvasHeight * gridCmToM / length
     val gridVerticalAmount = width / gridCmToM
     val gridHorizontalAmount = length / gridCmToM
-    var chosenIdWifiRouterPosition by remember { mutableIntStateOf(0) }
+    var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
 
     Surface(modifier = Modifier
 //        .background(Color.White)
@@ -131,17 +132,20 @@ fun CanvasGrid(
 //                            .background(Color(0xFFFF5858)),
                         shape = RectangleShape,
                         onClick = {
-                            chosenIdWifiRouterPosition = it.id
-                            Toast.makeText(context, "${it.id}", Toast.LENGTH_LONG).show()
-                            coroutineScope.launch {
-                                gridViewModel.updateUiState(
-                                    gridViewModel.gridUiState.gridDetails.copy(
-                                        id = it.id,
-                                        idCollectData = it.idCollectData,
-                                        idWifi = chosenIdSsid
+                            if (chosenIdSsid != 0) {
+                                chosenIdGridRouterPosition = it.id
+                                saveIdGridRouterPosition(chosenIdGridRouterPosition)
+                                Toast.makeText(context, "${it.id}", Toast.LENGTH_LONG).show()
+                                coroutineScope.launch {
+                                    gridViewModel.updateUiState(
+                                        gridViewModel.gridUiState.gridDetails.copy(
+                                            id = it.id,
+                                            idCollectData = it.idCollectData,
+                                            idWifi = chosenIdSsid
+                                        )
                                     )
-                                )
-                                gridViewModel.updateGrid()
+                                    gridViewModel.updateGrid()
+                                }
                             }
                         }
                     ) {
