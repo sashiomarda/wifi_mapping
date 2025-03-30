@@ -199,7 +199,7 @@ fun CanvasGrid(
                                 text = "${it.id - firstGridID + 1}"
                             )
                             if (it.idWifi != 0) {
-                                Icon(Icons.Default.Star, contentDescription = "content description")
+                                Icon(Icons.Default.Star, contentDescription = "Wifi Location")
                             }
                         }
                     }

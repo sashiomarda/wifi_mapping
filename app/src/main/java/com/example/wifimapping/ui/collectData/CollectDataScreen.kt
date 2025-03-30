@@ -1,13 +1,31 @@
 package com.example.wifimapping.ui.collectData
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,8 +38,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
@@ -65,8 +88,12 @@ fun CollectDataScreen(
         }
     ) { innerPadding ->
         Surface(modifier = Modifier
-            .padding(innerPadding)) {
-            Column {
+            .padding(innerPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Panjang ${data.length} m")
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -113,7 +140,87 @@ fun CollectDataScreen(
                 }
                 Spacer(modifier = Modifier
                     .height(30.dp))
-                Text("Posisi grid aktif: $currentActiveGridPosition")
+                Row {
+                    Text("Posisi grid aktif: ",
+                        fontSize = 20.sp)
+                    Text(
+                        "$currentActiveGridPosition",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }
+                Spacer(modifier = Modifier
+                    .height(30.dp))
+                Button(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(5.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    onClick = {}
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "up arrow")
+                }
+                Row(modifier = Modifier
+                    .padding(5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(5.dp),
+                        shape = RoundedCornerShape(50.dp),
+                        onClick = {}
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "left arrow")
+                    }
+                    Button(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .padding(5.dp),
+                        shape = RoundedCornerShape(50.dp),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = Color.LightGray
+                        ),
+                        onClick = {}
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
+                                textAlign = TextAlign.Center,
+                                        fontSize = 12.sp)
+                            Text(modifier = Modifier
+                                .padding(top = 10.dp), text = "27 s",
+                                fontSize = 30.sp)
+                        }
+                    }
+                    Button(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(5.dp),
+                        shape = RoundedCornerShape(50.dp),
+                        onClick = {}
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "right arrow")
+                    }
+                }
+                Button(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(5.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    onClick = {}
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "down arrow")
+                }
+                Button(
+                    modifier = Modifier
+                        .padding(5.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    enabled = false,
+                    onClick = {}
+                ) {
+                    Text("Simpan gambar peta")
+                }
             }
         }
     }
