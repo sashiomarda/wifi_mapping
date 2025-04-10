@@ -29,11 +29,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
+import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.GridViewModel
-import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -48,7 +49,7 @@ object PreviewGridDestination : NavigationDestination {
 fun PreviewGridScreen(
     navigateToChooseWifi: () -> Unit,
     canNavigateBack: Boolean = false,
-    previewGridviewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
     val coroutineScope = rememberCoroutineScope()
@@ -96,11 +97,10 @@ fun PreviewGridScreen(
                         width = data.width.toFloat(),
                         grid = data.gridDistance.toInt(),
                         gridViewModel = gridViewModel,
-                        gridListDb = null,
                         saveIdGridRouterPosition = {},
                         screen = PreviewGridDestination.route,
-                        onClickActiveGridPosition = {},
-                        resetGridClicked = {}
+//                        onClickActiveGridPosition = {currentGrid, oldGrid ->},
+//                        currentGrid = null
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),
@@ -109,8 +109,18 @@ fun PreviewGridScreen(
                             lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
                             val gridCount = data.length.toInt() * data.width.toInt()
                             if (lastInputGridId != data.id) {
-                                repeat(gridCount) {
-                                    gridViewModel.saveGrid()
+                                for (i in 1..gridCount){
+                                    var inputGrid = gridViewModel
+                                        .gridUiState
+                                        .gridDetails
+                                        .copy()
+                                    if (i == 1){
+                                        inputGrid = gridViewModel
+                                            .gridUiState
+                                            .gridDetails
+                                            .copy(isClicked = true)
+                                    }
+                                    gridViewModel.saveGrid(inputGrid)
                                 }
                             }
                             navigateToChooseWifi()

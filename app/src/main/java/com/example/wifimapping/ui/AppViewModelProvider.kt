@@ -25,7 +25,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.wifimapping.WifiMappingApplication
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
-import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 
 /**
@@ -39,7 +39,7 @@ object AppViewModelProvider {
         }
 
         initializer {
-            PreviewGridViewModel(
+            RoomParamsViewModel(
                 this.createSavedStateHandle(),
                 inventoryApplication().container.roomParamsRepository
             )

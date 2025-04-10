@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel to retrieve and update an item from the [com.example.wifimapping.data.RoomParamsRepository]'s data source.
  */
-class PreviewGridViewModel(
+class RoomParamsViewModel(
     savedStateHandle: SavedStateHandle,
     private val roomParamsRepository: RoomParamsRepository
 ) : ViewModel() {

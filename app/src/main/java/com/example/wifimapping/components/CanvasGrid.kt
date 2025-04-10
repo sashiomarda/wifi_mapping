@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -40,11 +41,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
+import com.example.wifimapping.ui.viewmodel.toGrid
 import kotlinx.coroutines.launch
 import kotlin.run
-import kotlin.toString
 
 @Preview
 @Composable
@@ -57,8 +59,6 @@ fun CanvasGrid(
     gridListDb: GridUiStateList? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
-    onClickActiveGridPosition: (Int) -> Unit,
-    resetGridClicked: (Int) -> Unit
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -84,7 +84,6 @@ fun CanvasGrid(
     val gridVerticalAmount = width / gridCmToM
     val gridHorizontalAmount = length / gridCmToM
     var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
-    var currentActiveGridPositionNumber by remember { mutableIntStateOf(0) }
 
     Surface(modifier = Modifier
 //        .background(Color.White)
@@ -130,8 +129,11 @@ fun CanvasGrid(
                     modifier = Modifier,
                     columns = GridCells.Adaptive(gridWidth.dp - 3.dp)
                 ) {
-                    items(gridListDb.gridList) { it ->
-                        currentActiveGridPositionNumber = it.id - firstGridID + 1
+                    items(gridListDb.gridList,
+                        key = {
+                            grid : Grid ->
+                            grid.id
+                        }) { it ->
                         OutlinedButton(
                             modifier = Modifier
                                 .width(gridWidth.dp)
@@ -150,26 +152,23 @@ fun CanvasGrid(
                                                 gridViewModel.gridUiState.gridDetails.copy(
                                                     id = it.id,
                                                     idCollectData = it.idCollectData,
-                                                    idWifi = chosenIdSsid
+                                                    idWifi = chosenIdSsid,
+                                                    isClicked = it.isClicked
                                                 )
                                             )
                                             gridViewModel.updateGrid()
                                         }
                                     }
                                 }else if (screen == "collect_data"){
-                                    currentActiveGridPositionNumber = it.id - firstGridID + 1
-                                    onClickActiveGridPosition(currentActiveGridPositionNumber)
+                                    var currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                                    if (gridListDb.gridList[0].isClicked){
+                                        currentActiveGrid = gridListDb.gridList[0]
+                                    }
                                     coroutineScope.launch {
-                                        resetGridClicked(it.id)
-                                        gridViewModel.updateUiState(
-                                            gridViewModel.gridUiState.gridDetails.copy(
-                                                id = it.id,
-                                                idCollectData = it.idCollectData,
-                                                idWifi = it.idWifi,
-                                                isClicked = true
-                                            )
+                                        gridViewModel.updateChosenGrid(
+                                            currentActiveGrid.copy(isClicked = false),
+                                            it.copy(isClicked = true)
                                         )
-                                        gridViewModel.updateGrid()
                                     }
                                 }
                             },
@@ -185,7 +184,7 @@ fun CanvasGrid(
                                 },
                                 color = if (screen == "collect_data") {
                                     if (it.isClicked) {
-                                        Color.Red
+                                        Color.Blue
                                     }else {
                                         Color.Black
                                     }

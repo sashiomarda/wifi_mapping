@@ -40,12 +40,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
+import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
-import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
+import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
+import com.example.wifimapping.ui.viewmodel.toGrid
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 object CollectDataDestination : NavigationDestination {
@@ -62,15 +66,23 @@ fun CollectDataScreen(
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    previewGridViewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    previewGridViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val coroutineScope = rememberCoroutineScope()
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
-    var currentActiveGridPosition by remember { mutableStateOf(1) }
-    val firstGridID = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
-    val lastGridID = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
+    val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
+    val lastGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
+    var currentActiveGrid by remember { mutableStateOf(
+        gridViewModel.currentGrid.toGrid()
+    ) }
+    var idGrids : MutableList<Int> = ArrayList()
+    if (gridListDb.gridList.isNotEmpty()) {
+        for (i in gridListDb.gridList) {
+            idGrids.add(i.id)
+        }
+    }
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -107,40 +119,25 @@ fun CollectDataScreen(
                                 gridListDb = gridListDb,
                                 saveIdGridRouterPosition = {},
                                 screen = CollectDataDestination.route,
-                                onClickActiveGridPosition = {it ->
-                                    currentActiveGridPosition = it
-                                },
-                                resetGridClicked = {idGrid ->
-                                    coroutineScope.launch {
-                                        for (it in gridListDb.gridList) {
-                                            if (it.id != idGrid) {
-                                                gridViewModel.updateUiState(
-                                                    gridViewModel.gridUiState.gridDetails.copy(
-                                                        id = it.id,
-                                                        idCollectData = it.idCollectData,
-                                                        idWifi = it.idWifi,
-                                                        isClicked = false
-                                                    )
-                                                )
-                                                gridViewModel.updateGrid()
-                                            }
-                                        }
-                                    }
-                                }
                             )
                         }
                     }
                 }
                 Spacer(modifier = Modifier
                     .height(30.dp))
-                Row {
-                    Text("Posisi grid aktif: ",
-                        fontSize = 20.sp)
-                    Text(
-                        "$currentActiveGridPosition",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
+                currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                if (currentActiveGrid.id != 0) {
+                    Row {
+                        Text(
+                            "Posisi grid aktif: ",
+                            fontSize = 20.sp
+                        )
+                        Text(
+                            "${currentActiveGrid.id}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier
                     .height(30.dp))
@@ -150,12 +147,21 @@ fun CollectDataScreen(
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
-                        if (currentActiveGridPosition - data.width.toInt()  >= 1) {
-                            val currentIdGrid = currentActiveGridPosition + firstGridID - 1
-                            val nextIdGrid = currentIdGrid - data.width.toInt()
+                        var prevAndCurrentGrid = navButtonClick(
+                            gridViewModel,
+                            gridListDb,
+                            data,
+                            idGrids,
+                            firstGridId,
+                            lastGridId,
+                            "up")
+
+                        if (prevAndCurrentGrid.isMoveGrid) {
                             coroutineScope.launch {
-                                resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
-                                currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                gridViewModel.updateChosenGrid(
+                                    prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                    prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                )
                             }
                         }
                     }
@@ -172,12 +178,21 @@ fun CollectDataScreen(
                             .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
-                            if (currentActiveGridPosition > 1) {
-                                val currentIdGrid = currentActiveGridPosition + firstGridID - 1
-                                val nextIdGrid = currentIdGrid - 1
+                            var prevAndCurrentGrid = navButtonClick(
+                                gridViewModel,
+                                gridListDb,
+                                data,
+                                idGrids,
+                                firstGridId,
+                                lastGridId,
+                                "left")
+
+                            if (prevAndCurrentGrid.isMoveGrid) {
                                 coroutineScope.launch {
-                                    resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
-                                    currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                    gridViewModel.updateChosenGrid(
+                                        prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                        prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                    )
                                 }
                             }
                         }
@@ -210,12 +225,21 @@ fun CollectDataScreen(
                             .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
-                            if (currentActiveGridPosition < lastGridID - firstGridID + 1) {
-                                val currentIdGrid = currentActiveGridPosition + firstGridID - 1
-                                val nextIdGrid = currentIdGrid + 1
+                            var prevAndCurrentGrid = navButtonClick(
+                                gridViewModel,
+                                gridListDb,
+                                data,
+                                idGrids,
+                                firstGridId,
+                                lastGridId,
+                                "right")
+
+                            if (prevAndCurrentGrid.isMoveGrid) {
                                 coroutineScope.launch {
-                                    resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
-                                    currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                    gridViewModel.updateChosenGrid(
+                                        prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                        prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                    )
                                 }
                             }
                         }
@@ -229,12 +253,21 @@ fun CollectDataScreen(
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
-                        if (currentActiveGridPosition + data.width.toInt()  <= lastGridID - firstGridID + 1) {
-                            val currentIdGrid = currentActiveGridPosition + firstGridID - 1
-                            val nextIdGrid = currentIdGrid + data.width.toInt()
+                        var prevAndCurrentGrid = navButtonClick(
+                            gridViewModel,
+                            gridListDb,
+                            data,
+                            idGrids,
+                            firstGridId,
+                            lastGridId,
+                            "down")
+
+                        if (prevAndCurrentGrid.isMoveGrid) {
                             coroutineScope.launch {
-                                resetChosenGridDb(gridListDb, gridViewModel, nextIdGrid)
-                                currentActiveGridPosition = nextIdGrid - firstGridID + 1
+                                gridViewModel.updateChosenGrid(
+                                    prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                    prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                )
                             }
                         }
                     }
@@ -256,20 +289,58 @@ fun CollectDataScreen(
 }
 
 
-private suspend fun resetChosenGridDb(
-    gridListDb: GridUiStateList,
+private fun navButtonClick(
     gridViewModel: GridViewModel,
-    idGrid: Int
-) {
-    for (it in gridListDb.gridList) {
-            gridViewModel.updateUiState(
-                gridViewModel.gridUiState.gridDetails.copy(
-                    id = it.id,
-                    idCollectData = it.idCollectData,
-                    idWifi = it.idWifi,
-                    isClicked = it.id == idGrid
-                )
-            )
-        gridViewModel.updateGrid()
+    gridListDb: GridUiStateList,
+    data: RoomParamsDetails,
+    idGrids: MutableList<Int>,
+    firstGridId: Int,
+    lastGridId: Int,
+    direction: String
+): PrevAndCurrentGrid {
+    var currentActiveGrid = gridViewModel.currentGrid.toGrid()
+    var previousActiveGrid = gridViewModel.previousGrid.toGrid()
+    var isMoveGrid = false
+    var currentActiveGridPosition = currentActiveGrid.id - firstGridId + 1
+    var chosenIdGrid = 0
+    if (direction == "up") {
+        if (currentActiveGridPosition - data.width.toInt() >= 1) {
+            isMoveGrid = true
+            chosenIdGrid = currentActiveGrid.id - data.width.toInt()
+        }
+    } else if (direction == "left") {
+        if (currentActiveGridPosition > 1) {
+            isMoveGrid = true
+            chosenIdGrid = currentActiveGrid.id - 1
+        }
+    } else if (direction == "right") {
+        if (currentActiveGrid.id == 0){
+            currentActiveGrid = gridListDb.gridList[0]
+            currentActiveGridPosition = gridListDb.gridList[0].id - firstGridId + 1
+        }
+        if (currentActiveGridPosition < lastGridId - firstGridId + 1) {
+            isMoveGrid = true
+            chosenIdGrid = currentActiveGrid.id + 1
+        }
+    } else if (direction == "down") {
+        if (currentActiveGridPosition + data.width.toInt()  <= lastGridId - firstGridId + 1) {
+            isMoveGrid = true
+            chosenIdGrid = currentActiveGrid.id + data.width.toInt()
+        }
     }
+
+    if (isMoveGrid){
+        previousActiveGrid = currentActiveGrid
+        currentActiveGrid = gridListDb.gridList[
+            idGrids.indexOf(chosenIdGrid)
+        ].copy(isClicked = false)
+    }
+
+    return PrevAndCurrentGrid(previousActiveGrid, currentActiveGrid, isMoveGrid)
 }
+
+data class PrevAndCurrentGrid(
+    val previousActiveGrid: Grid,
+    val currentActiveGrid: Grid,
+    val isMoveGrid: Boolean
+)

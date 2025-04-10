@@ -1,6 +1,5 @@
 package com.example.wifimapping.screens.locateRouter
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -43,7 +42,7 @@ import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.GridViewModel
-import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import kotlinx.coroutines.launch
 import kotlin.Boolean
@@ -60,7 +59,7 @@ object LocateRouterDestination : NavigationDestination {
 @Composable
 fun LocateRouterScreen(
     navigateToCollectData: (Int) -> Unit,
-    previewGridViewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    previewGridViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     canNavigateBack: Boolean = true,
@@ -127,8 +126,6 @@ fun LocateRouterScreen(
                                 idGridRouterPosition = it
                             },
                             screen = LocateRouterDestination.route,
-                            onClickActiveGridPosition = {},
-                            resetGridClicked = {}
                         )
                     }
                     Row {

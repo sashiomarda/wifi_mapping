@@ -47,6 +47,12 @@ class GridViewModel(
     var gridUiState by mutableStateOf(GridUiState())
         private set
 
+    var previousGrid by mutableStateOf(GridDetails())
+        private set
+
+    var currentGrid by mutableStateOf(GridDetails())
+        private set
+
     private val idCollectData: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idCollectData])
 
     val gridUiStateList: StateFlow<GridUiStateList> =
@@ -62,8 +68,9 @@ class GridViewModel(
         return gridRepository.getLastGridInputId()
     }
 
-    suspend fun saveGrid() {
-        gridRepository.insertGrid(gridUiState.gridDetails.toGrid())
+    suspend fun saveGrid(gridDetails: GridDetails) {
+        Log.d("gridDetails", gridDetails.toString())
+        gridRepository.insertGrid(gridDetails.toGrid())
     }
 
     suspend fun deleteGrid() {
@@ -72,6 +79,15 @@ class GridViewModel(
 
     suspend fun updateGrid() {
         gridRepository.updateGrid(gridUiState.gridDetails.toGrid())
+    }
+
+    suspend fun updateChosenGrid(prevGrid: Grid, currGrid: Grid) {
+        previousGrid = prevGrid.toGridDetails()
+        currentGrid = currGrid.toGridDetails()
+        Log.d("grid previousGrid 4",previousGrid.toString())
+        Log.d("grid currentGrid 5",currentGrid.toString())
+        gridRepository.updateGrid(previousGrid.toGrid())
+        gridRepository.updateGrid(currentGrid.toGrid())
     }
 
 

@@ -1,16 +1,7 @@
 package com.example.wifimapping.ui.chooseWifi
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.net.wifi.WifiManager
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -37,8 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
@@ -50,7 +39,6 @@ import com.example.wifimapping.ui.viewmodel.WifiDetails
 import com.example.wifimapping.ui.viewmodel.WifiUiState
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import kotlinx.coroutines.launch
-import kotlin.toString
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
@@ -64,7 +52,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import com.example.wifimapping.ui.viewmodel.PreviewGridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.util.CountDownTimer
 import com.example.wifimapping.util.getCountDown
 import com.example.wifimapping.util.scanWifi
@@ -85,7 +73,7 @@ fun ChooseWifiScreen(
     canNavigateBack: Boolean = false,
     navigateToLocateRouter: (Int) -> Unit,
     viewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    previewGridviewModel: PreviewGridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val wifiUiStateList by viewModel.allWifiUiStateList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
