@@ -17,7 +17,9 @@
 package com.example.wifimapping.data
 
 import android.content.Context
+import com.example.gridmapping.data.DbmRepository
 import com.example.gridmapping.data.GridRepository
+import com.example.gridmapping.data.OfflineDbmRepository
 import com.example.gridmapping.data.OfflineGridRepository
 
 /**
@@ -27,6 +29,7 @@ interface AppContainer {
     val roomParamsRepository : RoomParamsRepository
     val wifiRepository : WifiRepository
     val gridRepository : GridRepository
+    val dbmRepository : DbmRepository
 }
 
 /**
@@ -46,5 +49,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val gridRepository : GridRepository by lazy {
         OfflineGridRepository(WifiMappingDatabase.getDatabase(context).gridDao())
+    }
+
+    override val dbmRepository : DbmRepository by lazy {
+        OfflineDbmRepository(WifiMappingDatabase.getDatabase(context).dbmDao())
     }
 }

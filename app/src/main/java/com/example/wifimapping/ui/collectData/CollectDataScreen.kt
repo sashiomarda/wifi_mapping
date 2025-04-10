@@ -126,17 +126,26 @@ fun CollectDataScreen(
                 Spacer(modifier = Modifier
                     .height(30.dp))
                 currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                if (currentActiveGrid.id != 0) {
-                    Row {
+
+                Row {
+                    Text(
+                        "Posisi grid aktif: ",
+                        fontSize = 20.sp
+                    )
+                    if (currentActiveGrid.id != 0) {
                         Text(
-                            "Posisi grid aktif: ",
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            "${currentActiveGrid.id}",
+                            "${currentActiveGrid.id - firstGridId + 1}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
                         )
+                    }else{
+                        if (gridListDb.gridList.isNotEmpty()) {
+                            Text(
+                                "${gridListDb.gridList[0].id - firstGridId + 1}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier
