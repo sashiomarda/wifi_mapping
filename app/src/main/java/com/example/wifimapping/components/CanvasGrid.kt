@@ -71,20 +71,24 @@ fun CanvasGrid(
     var canvasHeight = 0.0
     var canvasWidth = 0.0
     var aspectRatioWidth = 0.2f
+    var gridVerticalAmount = 0.0f
+    var gridHorizontalAmount = 0.0f
     if (length!! > width!!) {
         aspectRatioWidth = width / length
         canvasHeight = screenWidth
         canvasWidth = screenWidth * aspectRatioWidth
+        gridVerticalAmount = length / gridCmToM!!
+        gridHorizontalAmount = width / gridCmToM!!
     }else{
         aspectRatioWidth = length / width
         canvasWidth = screenWidth
         canvasHeight = screenWidth * aspectRatioWidth
+        gridVerticalAmount = width / gridCmToM!!
+        gridHorizontalAmount = length / gridCmToM!!
     }
     val context = LocalContext.current
     val gridHeight = canvasWidth * gridCmToM!! / width
     val gridWidth = canvasHeight * gridCmToM / length
-    val gridVerticalAmount = width / gridCmToM
-    val gridHorizontalAmount = length / gridCmToM
     var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
 
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
@@ -236,13 +240,22 @@ fun CanvasGrid(
                 }
             }
         }else{
+            var repeatX = 0
+            var repeatY = 0
+            if (length!! > width!!) {
+                repeatX = gridHorizontalAmount.toInt()
+                repeatY = gridVerticalAmount.toInt()
+            }else{
+                repeatX = gridVerticalAmount.toInt()
+                repeatY = gridHorizontalAmount.toInt()
+            }
             Column {
-                repeat(gridVerticalAmount.toInt()) { i ->
+                repeat(repeatX) { i ->
                     Row(
                         modifier = Modifier
                             .height(gridHeight.dp)
                     ) {
-                        repeat(gridHorizontalAmount.toInt()) { j ->
+                        repeat(repeatY) { j ->
                             OutlinedButton(
                                 modifier = Modifier
                                     .fillMaxHeight()
