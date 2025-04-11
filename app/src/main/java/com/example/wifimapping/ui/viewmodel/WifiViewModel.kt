@@ -16,6 +16,7 @@
 
 package com.example.wifimapping.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -37,6 +38,10 @@ class WifiViewModel(
 ) : ViewModel() {
 
     var wifiUiState by mutableStateOf(WifiUiState())
+        private set
+
+
+    var wifiScanList by mutableStateOf(WifiUiStateList())
         private set
 
     suspend fun saveWifi() {
@@ -78,6 +83,15 @@ class WifiViewModel(
     fun updateUiState(wifiDetails: WifiDetails) {
         wifiUiState =
             WifiUiState(wifiDetails = wifiDetails)
+    }
+
+    suspend fun selectWifiById(wifiId: Int): Wifi {
+        var wifiById = wifiRepository.getWifiById(wifiId)
+        return  wifiById
+    }
+
+    fun updateWifiScanList(wifiList : List<Wifi>) {
+        wifiScanList = WifiUiStateList(wifiList)
     }
 }
 data class WifiUiState(

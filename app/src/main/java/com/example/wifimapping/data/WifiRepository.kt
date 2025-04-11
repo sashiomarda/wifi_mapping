@@ -34,6 +34,8 @@ interface WifiRepository {
      */
     fun getWifiStream(ssid: String): Flow<Wifi?>
 
+    suspend fun getWifiById(id: Int): Wifi
+
     fun getWifiCheckedStream(): Flow<List<Wifi>>
 
     /**

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -32,13 +33,16 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         enableEdgeToEdge()
         setContent {
             WifiMappingTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    askTurnOnLocation(PRIORITY_HIGH_ACCURACY, this)
+                    askTurnOnLocation(isLocationEnabled, PRIORITY_HIGH_ACCURACY, this)
                     WifiMappingApp()
                 }
             }
@@ -59,11 +63,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        askTurnOnLocation(PRIORITY_HIGH_ACCURACY, this)
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        askTurnOnLocation(isLocationEnabled, PRIORITY_HIGH_ACCURACY, this)
     }
 }
 
-fun askTurnOnLocation(PRIORITY_HIGH_ACCURACY: Int, context: Context) {
+fun askTurnOnLocation(isLocationEnabled: Boolean, PRIORITY_HIGH_ACCURACY: Int, context: Context) {
     val activity = context as Activity
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         if (checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
@@ -79,7 +86,7 @@ fun askTurnOnLocation(PRIORITY_HIGH_ACCURACY: Int, context: Context) {
                     Manifest.permission.ACCESS_NETWORK_STATE
                 ),
                 PERMISSIONS_REQUEST_CODE
-            );
+            )
         }
     }
     val locationRequest = LocationRequest.create().apply {

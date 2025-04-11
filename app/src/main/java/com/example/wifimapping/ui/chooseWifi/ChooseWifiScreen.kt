@@ -2,6 +2,7 @@ package com.example.wifimapping.ui.chooseWifi
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -46,15 +47,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
-import com.example.wifimapping.util.CountDownTimer
-import com.example.wifimapping.util.getCountDown
 import com.example.wifimapping.util.scanWifi
 import kotlinx.coroutines.*
 
@@ -72,20 +70,14 @@ const val PERMISSIONS_REQUEST_CODE = 1
 fun ChooseWifiScreen(
     canNavigateBack: Boolean = false,
     navigateToLocateRouter: (Int) -> Unit,
-    viewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
-    val wifiUiStateList by viewModel.allWifiUiStateList.collectAsState()
+    val wifiUiStateList by wifiViewModel.allWifiUiStateList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var wifiList by remember { mutableStateOf(scanWifi(context)) }
-    val buttonCounter = remember {
-        CountDownTimer(
-            initialTime = 27,
-            minTime = 1,
-        )
-    }
-    var isWifiRefreshButtonDisabled by remember { mutableStateOf(false) }
+    var wifiScanList by remember { mutableStateOf(scanWifi(context)) }
+    wifiViewModel.updateWifiScanList(wifiScanList)
     var isNextButtonDisabled by remember { mutableStateOf(true) }
 
     Scaffold(
@@ -117,18 +109,18 @@ fun ChooseWifiScreen(
                     .fillMaxWidth()
                     .padding(start = 5.dp, end = 5.dp)) {
                     WifiList(
-                        wifiList = wifiList,
+                        wifiViewModel = wifiViewModel,
                         wifiListDb = wifiUiStateList.wifiList,
-                        wifiUiState = viewModel.wifiUiState,
-                        addUpdateWifi = viewModel::updateUiState,
+                        wifiUiState = wifiViewModel.wifiUiState,
+                        addUpdateWifi = wifiViewModel::updateUiState,
                         insertWifi = {
                             coroutineScope.launch {
-                                viewModel.saveWifi()
+                                wifiViewModel.saveWifi()
                             }
                         },
                         updateWifi = {
                             coroutineScope.launch {
-                                viewModel.updateWifi()
+                                wifiViewModel.updateWifi()
                             }
                         },
                         isNextButtonDisabled = {
@@ -136,7 +128,7 @@ fun ChooseWifiScreen(
                         },
                         resetWifiChecked = {
                             CoroutineScope(Dispatchers.IO).launch {
-                                viewModel.resetCheckedWifi()
+                                wifiViewModel.resetCheckedWifi()
                             }
                         }
                     )
@@ -147,12 +139,10 @@ fun ChooseWifiScreen(
                         modifier = Modifier
                             .padding(1.dp)
                             .padding(5.dp),
-                        enabled = !isWifiRefreshButtonDisabled,
                         onClick = {
-                            isWifiRefreshButtonDisabled = true
                             var scanWifiResult = scanWifi(context)
                             if (scanWifiResult.isNotEmpty()) {
-                                wifiList = scanWifiResult
+                                wifiScanList = scanWifiResult
                             }else{
                                 Toast.makeText(context,
                                     "Too fast clicking!",
@@ -160,11 +150,7 @@ fun ChooseWifiScreen(
                             }
                         }
                     ) {
-                        if (!isWifiRefreshButtonDisabled) {
-                            Text("Refresh Wifi")
-                        }else{
-                            Text("Tunggu ${buttonCounter.getCountDown} s")
-                        }
+                        Text("Refresh Wifi")
                     }
                     Button(
                         shape = RoundedCornerShape(5.dp),
@@ -180,19 +166,6 @@ fun ChooseWifiScreen(
                         Text("Selanjutnya")
                     }
                 }
-                if (isWifiRefreshButtonDisabled) {
-                    LaunchedEffect(buttonCounter) {
-                        coroutineScope {
-                            launch {
-                                buttonCounter.run()
-                            }
-                        }
-                    }
-                }
-                if (buttonCounter.getCountDown == 0){
-                    isWifiRefreshButtonDisabled = false
-                    buttonCounter.reset()
-                }
             }
         }
     }
@@ -202,7 +175,7 @@ fun ChooseWifiScreen(
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun WifiList(
-    wifiList: MutableList<Wifi>,
+    wifiViewModel: WifiViewModel,
     wifiListDb: List<Wifi>,
     wifiUiState: WifiUiState,
     addUpdateWifi: (WifiDetails) -> Unit,
@@ -211,6 +184,7 @@ fun WifiList(
     isNextButtonDisabled: (Boolean) -> Unit,
     resetWifiChecked: () -> Unit,
 ){
+    var wifiList = wifiViewModel.wifiScanList.wifiList
     var ssidListDb : MutableList<String> = ArrayList()
     var idListDb : MutableList<Int> = ArrayList()
     for (wifi in wifiListDb){
@@ -251,7 +225,7 @@ fun WifiList(
                                     )
                                 )
                             }
-                        } else {
+                        }else {
                             wifiListDisplay.add(
                                 Wifi(
                                     id = idListDb[ssidListDb.indexOf(wifiSsid)],
@@ -261,15 +235,13 @@ fun WifiList(
                                 )
                             )
                         }
-
                     }
                 }
             }
-        } else {
+        }else {
             addUpdateWifi(wifiUiState.wifiDetails.copy(ssid = "testwifimapping"))
             insertWifi()
         }
-
         Card(
             modifier = Modifier
                 .padding(10.dp)
@@ -280,7 +252,11 @@ fun WifiList(
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                items(items = wifiListDisplay) {
+                items(items = wifiListDisplay,
+                    key = {
+                        wifi : Wifi ->
+                        wifi.id
+                    }) {
                     var isChecked by remember { mutableStateOf(false) }
                     var ssid by remember { mutableStateOf(it.ssid) }
                     var ssidId by remember { mutableIntStateOf(it.id) }

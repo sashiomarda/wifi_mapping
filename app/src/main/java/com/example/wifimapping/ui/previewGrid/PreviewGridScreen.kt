@@ -29,10 +29,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
-import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +50,8 @@ fun PreviewGridScreen(
     navigateToChooseWifi: () -> Unit,
     canNavigateBack: Boolean = false,
     previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
     val coroutineScope = rememberCoroutineScope()
     var lastInputGridId: Int? by remember { mutableStateOf(0) }
@@ -99,8 +100,7 @@ fun PreviewGridScreen(
                         gridViewModel = gridViewModel,
                         saveIdGridRouterPosition = {},
                         screen = PreviewGridDestination.route,
-//                        onClickActiveGridPosition = {currentGrid, oldGrid ->},
-//                        currentGrid = null
+                        dbmViewModel = dbmViewModel
                     )
                     }
                 Button(shape = RoundedCornerShape(5.dp),

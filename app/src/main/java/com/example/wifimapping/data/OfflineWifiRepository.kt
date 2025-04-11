@@ -25,6 +25,8 @@ class OfflineWifiRepository(private val wifiDao: WifiDao) : WifiRepository {
 
     override fun getWifiStream(ssid: String): Flow<Wifi?> = wifiDao.getWifi(ssid)
 
+    override suspend fun getWifiById(id: Int): Wifi = wifiDao.getWifiById(id)
+
     override suspend fun insertWifi(wifi: Wifi) = wifiDao.insert(wifi)
 
     override suspend fun deleteWifi(wifi: Wifi) = wifiDao.delete(wifi)

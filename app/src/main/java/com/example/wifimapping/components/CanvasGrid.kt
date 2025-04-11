@@ -24,9 +24,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wifimapping.data.Grid
+import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
@@ -59,6 +60,7 @@ fun CanvasGrid(
     gridListDb: GridUiStateList? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
+    dbmViewModel: DbmViewModel
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -85,6 +87,13 @@ fun CanvasGrid(
     val gridHorizontalAmount = length / gridCmToM
     var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
 
+    val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
+    var dbmGridMap = HashMap<Int,Int>()
+    if (dbmListDb.dbmList.isNotEmpty()){
+        for (i in dbmListDb.dbmList) {
+            dbmGridMap[i.idGrid] = i.dbm
+        }
+    }
     Surface(modifier = Modifier
 //        .background(Color.White)
         .padding(start = 5.dp)
@@ -106,15 +115,37 @@ fun CanvasGrid(
                             gridHeightPx * 1,
                             gridWidthPx * 1
                         )
-                    for (i in gridListDb.gridList.indices) {
-                        repeat(gridHorizontalAmount.toInt()) {y->
-                            repeat(gridVerticalAmount.toInt()) {x->
-                                drawRect(
-//                                    color = if (x == 0) Color.Red else Color.Blue,
-                                    color = Color.White,
-                                    size = canvasQuadrantSize,
-                                    topLeft = Offset(x = gridHeightPx * x, y = gridHeightPx * y)
-                                )
+                    if (screen == "collect_data"){
+                        for (i in gridListDb.gridList.indices) {
+                            var count = 0
+                            repeat(gridHorizontalAmount.toInt()) {y->
+                                repeat(gridVerticalAmount.toInt()) {x->
+                                    var dbm = dbmGridMap[gridListDb.gridList[i].id]
+                                    if (dbm != null) {
+                                        if (count == i) {
+                                            drawRect(
+                                                color = if (dbm > -50) {
+                                                    Color(0xFF1AFF00)
+                                                } else if (dbm >= -60 && dbm <= -50) {
+                                                    Color(0xFFFFEB3B)
+                                                } else if (dbm >= -80 && dbm <= -70) {
+                                                    Color(0xFFFF9800)
+                                                } else if (dbm <= -90) {
+                                                    Color(0xFFFF0000)
+                                                } else {
+                                                    Color(0xFFFF0000)
+                                                },
+//                                                color = Color.White,
+                                                size = canvasQuadrantSize,
+                                                topLeft = Offset(
+                                                    x = gridHeightPx * x,
+                                                    y = gridHeightPx * y
+                                                )
+                                            )
+                                        }
+                                    }
+                                    count += 1
+                                }
                             }
                         }
                     }

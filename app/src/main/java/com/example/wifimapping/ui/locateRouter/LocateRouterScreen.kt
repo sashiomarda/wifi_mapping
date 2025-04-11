@@ -41,6 +41,7 @@ import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
@@ -62,6 +63,7 @@ fun LocateRouterScreen(
     previewGridViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
     canNavigateBack: Boolean = true,
     onNavigateUp: () -> Unit,
 ){
@@ -126,6 +128,7 @@ fun LocateRouterScreen(
                                 idGridRouterPosition = it
                             },
                             screen = LocateRouterDestination.route,
+                            dbmViewModel = dbmViewModel
                         )
                     }
                     Row {
@@ -139,7 +142,8 @@ fun LocateRouterScreen(
                                             gridViewModel.gridUiState.gridDetails.copy(
                                                 id = it.id,
                                                 idCollectData = it.idCollectData,
-                                                idWifi = 0
+                                                idWifi = 0,
+                                                isClicked = false
                                             )
                                         )
                                         gridViewModel.updateGrid()
@@ -203,7 +207,7 @@ fun WifiCheckedList(
                                 .background(Color.Transparent)
                         ) {
                             Text(
-                                text = "${it.ssid} (Strength: ${it.dbm} dBm)",
+                                text = "${it.ssid}",
                                 fontWeight = if (isChosenIdSSid == it.id) FontWeight.Bold else FontWeight.Light,
                             )
                         }

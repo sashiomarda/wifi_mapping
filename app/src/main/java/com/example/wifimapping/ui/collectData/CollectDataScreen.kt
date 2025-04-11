@@ -1,14 +1,17 @@
 package com.example.wifimapping.ui.collectData
 
+import android.os.Build
 import android.util.Log
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -24,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,8 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,12 +48,15 @@ import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
+import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
-import kotlinx.coroutines.coroutineScope
+import com.example.wifimapping.ui.viewmodel.toWifi
+import com.example.wifimapping.util.scanWifi
 import kotlinx.coroutines.launch
 
 object CollectDataDestination : NavigationDestination {
@@ -59,6 +66,7 @@ object CollectDataDestination : NavigationDestination {
     val routeWithArgs = "${route}/{$idCollectData}"
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectDataScreen(
@@ -67,7 +75,11 @@ fun CollectDataScreen(
     canNavigateBack: Boolean = false,
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
     previewGridViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    val context = LocalContext.current
+    var wifiList = wifiViewModel.wifiScanList.wifiList
     val coroutineScope = rememberCoroutineScope()
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
@@ -78,11 +90,22 @@ fun CollectDataScreen(
         gridViewModel.currentGrid.toGrid()
     ) }
     var idGrids : MutableList<Int> = ArrayList()
+    var ssidList : MutableList<String> = ArrayList()
+    var dbmList : MutableList<Int> = ArrayList()
     if (gridListDb.gridList.isNotEmpty()) {
+        if (currentActiveGrid.id == 0){
+            currentActiveGrid = gridListDb.gridList[0]
+        }
         for (i in gridListDb.gridList) {
             idGrids.add(i.id)
+            if (i.idWifi != 0){
+                chosenIdSsid = i.idWifi
+            }
         }
     }
+    var chosenSsid by remember { mutableStateOf(wifiViewModel.wifiUiState.wifiDetails.toWifi()) }
+    var gridHaveDbm = remember { mutableStateListOf<Int>() }
+
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -119,41 +142,15 @@ fun CollectDataScreen(
                                 gridListDb = gridListDb,
                                 saveIdGridRouterPosition = {},
                                 screen = CollectDataDestination.route,
+                                dbmViewModel = dbmViewModel
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier
-                    .height(30.dp))
-                currentActiveGrid = gridViewModel.currentGrid.toGrid()
-
-                Row {
-                    Text(
-                        "Posisi grid aktif: ",
-                        fontSize = 20.sp
-                    )
-                    if (currentActiveGrid.id != 0) {
-                        Text(
-                            "${currentActiveGrid.id - firstGridId + 1}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }else{
-                        if (gridListDb.gridList.isNotEmpty()) {
-                            Text(
-                                "${gridListDb.gridList[0].id - firstGridId + 1}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier
-                    .height(30.dp))
                 Button(
                     modifier = Modifier
-                        .size(80.dp)
-                        .padding(5.dp),
+                        .size(50.dp),
+//                            .padding(3.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
                         var prevAndCurrentGrid = navButtonClick(
@@ -178,13 +175,13 @@ fun CollectDataScreen(
                     Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "up arrow")
                 }
                 Row(modifier = Modifier
-                    .padding(5.dp),
+                    .padding(3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
                         modifier = Modifier
-                            .size(80.dp)
-                            .padding(5.dp),
+                            .size(50.dp),
+//                            .padding(3.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
                             var prevAndCurrentGrid = navButtonClick(
@@ -210,28 +207,68 @@ fun CollectDataScreen(
                     }
                     Button(
                         modifier = Modifier
-                            .size(150.dp)
-                            .padding(5.dp),
+                            .height(150.dp)
+                            .width(200.dp),
+//                            .padding(3.dp),
                         shape = RoundedCornerShape(50.dp),
                         border = BorderStroke(
                             width = 1.dp,
                             color = Color.LightGray
                         ),
-                        onClick = {}
+                        onClick = {
+                            currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                            var scanWifiResult = scanWifi(context)
+                            Log.d("scanwifi result", "${scanWifiResult}")
+                            if (scanWifiResult.isNotEmpty()) {
+                                wifiList = scanWifiResult
+                            }else{
+                                Toast.makeText(context,
+                                    "Too fast clicking!",
+                                    Toast.LENGTH_SHORT).show()
+                            }
+                            if (!wifiList.isNullOrEmpty()) {
+                                for (i in wifiList) {
+                                    ssidList.add(i.ssid)
+                                    dbmList.add(i.dbm)
+                                }
+                            }
+                            coroutineScope.launch {
+                                if (chosenIdSsid != 0) {
+                                    chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
+                                }
+                                var dbm = dbmList[
+                                    ssidList.indexOf(chosenSsid.ssid)
+                                ]
+                                var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
+                                    idCollectData = data.id,
+                                    idGrid = currentActiveGrid.id,
+                                    dbm = dbm
+                                )
+                                if (currentActiveGrid.id !in gridHaveDbm) {
+                                    dbmViewModel.saveDbm(inputDbm)
+                                    Toast.makeText(context,
+                                        "${dbm}",
+                                        Toast.LENGTH_SHORT).show()
+                                    gridHaveDbm.add(currentActiveGrid.id)
+                                }
+                            }
+                        },
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
                                 textAlign = TextAlign.Center,
                                         fontSize = 12.sp)
+                            var changeBtnText = ""
+                            changeBtnText = "Ambil data"
                             Text(modifier = Modifier
-                                .padding(top = 10.dp), text = "27 s",
-                                fontSize = 30.sp)
+                                .padding(top = 10.dp), text = "${changeBtnText}",
+                                fontSize = 20.sp)
                         }
                     }
                     Button(
                         modifier = Modifier
-                            .size(80.dp)
-                            .padding(5.dp),
+                            .size(50.dp),
+//                            .padding(3.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
                             var prevAndCurrentGrid = navButtonClick(
@@ -258,8 +295,8 @@ fun CollectDataScreen(
                 }
                 Button(
                     modifier = Modifier
-                        .size(80.dp)
-                        .padding(5.dp),
+                        .size(50.dp),
+//                            .padding(3.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
                         var prevAndCurrentGrid = navButtonClick(

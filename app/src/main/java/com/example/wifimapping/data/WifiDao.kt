@@ -30,4 +30,7 @@ interface WifiDao {
 
     @Query("UPDATE wifi SET isChecked = 0")
     fun resetCheckedWifi() : Int
+
+    @Query("SELECT * from wifi WHERE id = :id")
+    suspend fun getWifiById(id: Int): Wifi
 }

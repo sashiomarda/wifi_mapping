@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
@@ -42,10 +43,19 @@ fun scanWifi(context : Context) : MutableList<Wifi>{
         if (success){
             var results = wifiManager.scanResults
             for (wifi in results){
-                wifiList.add(Wifi(
-                    ssid = wifi.wifiSsid.toString().removeSurrounding("\""),
-                    dbm = wifi.level
-                ))
+                if (wifi.wifiSsid.toString() != "") {
+                    var ssidText = if (wifi.frequency > 3000) {
+                        "${wifi.wifiSsid.toString().removeSurrounding("\"")}_5GHz"
+                    } else {
+                        wifi.wifiSsid.toString().removeSurrounding("\"")
+                    }
+                    wifiList.add(
+                        Wifi(
+                            ssid = ssidText,
+                            dbm = wifi.level
+                        )
+                    )
+                }
             }
 
         }
