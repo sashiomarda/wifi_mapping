@@ -233,6 +233,9 @@ fun CollectDataScreen(
                                 }
                             }
                             coroutineScope.launch {
+                                if (currentActiveGrid.id == 0){
+                                    currentActiveGrid = gridListDb.gridList[0]
+                                }
                                 if (chosenIdSsid != 0) {
                                     chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
                                 }
