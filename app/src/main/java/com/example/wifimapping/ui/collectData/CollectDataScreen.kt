@@ -348,6 +348,9 @@ private fun navButtonClick(
     direction: String
 ): PrevAndCurrentGrid {
     var currentActiveGrid = gridViewModel.currentGrid.toGrid()
+    if (currentActiveGrid.id == 0){
+        currentActiveGrid = gridListDb.gridList[0]
+    }
     var previousActiveGrid = gridViewModel.previousGrid.toGrid()
     var isMoveGrid = false
     var currentActiveGridPosition = currentActiveGrid.id - firstGridId + 1
@@ -377,6 +380,10 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id + data.length.toInt()
         }
     }
+    Log.d("chosenIdGrid","${currentActiveGrid.id} ${data.length.toInt()}")
+    Log.d("chosenIdGrid","${chosenIdGrid}")
+    Log.d("idGrids","${idGrids}")
+    Log.d("gridListDb.gridList","${gridListDb.gridList}")
 
     if (isMoveGrid){
         previousActiveGrid = currentActiveGrid
