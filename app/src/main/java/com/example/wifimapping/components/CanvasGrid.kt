@@ -67,7 +67,7 @@ fun CanvasGrid(
     var gridCmToM = grid?.toFloat()?.div(100)
     val configuration = LocalConfiguration.current
 //    val screenHeight = configuration.screenHeightDp * 0.8
-    val screenWidth = configuration.screenWidthDp * 0.8
+    val screenWidth = configuration.screenWidthDp * 0.86
     var canvasHeight = 0.0
     var canvasWidth = 0.0
     var aspectRatioWidth = 0.2f

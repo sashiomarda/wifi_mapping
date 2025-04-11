@@ -1,4 +1,4 @@
-package com.example.wifimapping.screens.locateRouter
+package com.example.wifimapping.ui.locateRouter
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,7 +29,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
+import com.example.wifimapping.ui.previewGrid.vertical
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
@@ -112,10 +115,13 @@ fun LocateRouterScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(
                             modifier = Modifier
-                                .padding(start = 5.dp)
                         ) {
-                            Text("Lebar")
-                            Text("${data.width} m")
+                            Text(
+                                modifier = Modifier
+                                    .vertical()
+                                    .rotate(-90f),
+                                text = "Lebar ${data.width} m"
+                            )
                         }
                         CanvasGrid(
                             length = data.length.toFloat(),
@@ -222,3 +228,14 @@ fun WifiCheckedList(
         }
     }
 }
+
+fun Modifier.vertical() =
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(placeable.height, placeable.width) {
+            placeable.place(
+                x = -(placeable.width / 2 - placeable.height / 2),
+                y = -(placeable.height / 2 - placeable.width / 2)
+            )
+        }
+    }

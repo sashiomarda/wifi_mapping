@@ -25,16 +25,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gridmapping.data.GridRepository
 import com.example.wifimapping.data.Grid
-import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
-import com.example.wifimapping.ui.chooseWifi.ChooseWifiDestination
-import kotlinx.coroutines.flow.Flow
+import com.example.wifimapping.ui.locateRouter.LocateRouterDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 /**
  * ViewModel to validate and insert wifi in the Room database.

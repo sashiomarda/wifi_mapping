@@ -25,7 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gridmapping.data.DbmRepository
 import com.example.wifimapping.data.Dbm
-import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
+import com.example.wifimapping.ui.locateRouter.LocateRouterDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

@@ -26,14 +26,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.wifimapping.screens.locateRouter.LocateRouterDestination
-import com.example.wifimapping.screens.locateRouter.LocateRouterScreen
 import com.example.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.example.wifimapping.ui.chooseWifi.ChooseWifiScreen
 import com.example.wifimapping.ui.collectData.CollectDataDestination
 import com.example.wifimapping.ui.collectData.CollectDataScreen
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.home.ItemEntryScreen
+import com.example.wifimapping.ui.locateRouter.LocateRouterDestination
+import com.example.wifimapping.ui.locateRouter.LocateRouterScreen
 import com.example.wifimapping.ui.previewGrid.PreviewGridDestination
 import com.example.wifimapping.ui.previewGrid.PreviewGridScreen
 

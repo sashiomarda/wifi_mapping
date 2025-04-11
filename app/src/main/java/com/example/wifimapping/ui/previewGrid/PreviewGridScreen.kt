@@ -1,6 +1,7 @@
 package com.example.wifimapping.ui.previewGrid
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,53 +89,70 @@ fun PreviewGridScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp))
-                if (data.length != ""){
+                if (data.length != "") {
                     Text("Panjang ${data.length} m")
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier
-                        .padding(start = 5.dp)) {
-                        Text("Lebar")
-                        Text("${data.width} m")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            modifier = Modifier
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .vertical()
+                                    .rotate(-90f),
+                                text = "Lebar ${data.width} m"
+                            )
+                        }
+                        CanvasGrid(
+                            length = data.length.toFloat(),
+                            width = data.width.toFloat(),
+                            grid = data.gridDistance.toInt(),
+                            gridViewModel = gridViewModel,
+                            saveIdGridRouterPosition = {},
+                            screen = PreviewGridDestination.route,
+                            dbmViewModel = dbmViewModel
+                        )
                     }
-                    CanvasGrid(
-                        length = data.length.toFloat(),
-                        width = data.width.toFloat(),
-                        grid = data.gridDistance.toInt(),
-                        gridViewModel = gridViewModel,
-                        saveIdGridRouterPosition = {},
-                        screen = PreviewGridDestination.route,
-                        dbmViewModel = dbmViewModel
-                    )
-                    }
-                Button(shape = RoundedCornerShape(5.dp),
-                    onClick = {
-                        coroutineScope.launch(Dispatchers.Main) {
-                            lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
-                            val gridCount = data.length.toInt() * data.width.toInt()
-                            if (lastInputGridId != data.id) {
-                                for (i in 1..gridCount){
-                                    var inputGrid = gridViewModel
-                                        .gridUiState
-                                        .gridDetails
-                                        .copy()
-                                    if (i == 1){
-                                        inputGrid = gridViewModel
+                    Button(
+                        shape = RoundedCornerShape(5.dp),
+                        onClick = {
+                            coroutineScope.launch(Dispatchers.Main) {
+                                lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
+                                val gridCount = data.length.toInt() * data.width.toInt()
+                                if (lastInputGridId != data.id) {
+                                    for (i in 1..gridCount) {
+                                        var inputGrid = gridViewModel
                                             .gridUiState
                                             .gridDetails
-                                            .copy(isClicked = true)
+                                            .copy()
+                                        if (i == 1) {
+                                            inputGrid = gridViewModel
+                                                .gridUiState
+                                                .gridDetails
+                                                .copy(isClicked = true)
+                                        }
+                                        gridViewModel.saveGrid(inputGrid)
                                     }
-                                    gridViewModel.saveGrid(inputGrid)
                                 }
+                                navigateToChooseWifi()
                             }
-                            navigateToChooseWifi()
-                        }
 
+                        }
+                    ) {
+                        Text("Selanjutnya")
                     }
-                ) {
-                    Text("Selanjutnya")
                 }
-}
             }
         }
     }
 }
+
+fun Modifier.vertical() =
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(placeable.height, placeable.width) {
+            placeable.place(
+                x = -(placeable.width / 2 - placeable.height / 2),
+                y = -(placeable.height / 2 - placeable.width / 2)
+            )
+        }
+    }
