@@ -158,7 +158,7 @@ fun CanvasGrid(
                 val firstGridID = gridListDb.gridList[0].id
                 LazyVerticalGrid(
                     modifier = Modifier,
-                    columns = GridCells.Adaptive(gridWidth.dp - 3.dp)
+                    columns = GridCells.Adaptive(gridWidth.toInt().dp)
                 ) {
                     items(gridListDb.gridList,
                         key = {

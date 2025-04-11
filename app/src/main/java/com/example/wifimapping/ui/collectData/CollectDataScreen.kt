@@ -353,9 +353,9 @@ private fun navButtonClick(
     var currentActiveGridPosition = currentActiveGrid.id - firstGridId + 1
     var chosenIdGrid = 0
     if (direction == "up") {
-        if (currentActiveGridPosition - data.width.toInt() >= 1) {
+        if (currentActiveGridPosition - data.length.toInt() >= 1) {
             isMoveGrid = true
-            chosenIdGrid = currentActiveGrid.id - data.width.toInt()
+            chosenIdGrid = currentActiveGrid.id - data.length.toInt()
         }
     } else if (direction == "left") {
         if (currentActiveGridPosition > 1) {
@@ -372,9 +372,9 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id + 1
         }
     } else if (direction == "down") {
-        if (currentActiveGridPosition + data.width.toInt()  <= lastGridId - firstGridId + 1) {
+        if (currentActiveGridPosition + data.length.toInt()  <= lastGridId - firstGridId + 1) {
             isMoveGrid = true
-            chosenIdGrid = currentActiveGrid.id + data.width.toInt()
+            chosenIdGrid = currentActiveGrid.id + data.length.toInt()
         }
     }
 
