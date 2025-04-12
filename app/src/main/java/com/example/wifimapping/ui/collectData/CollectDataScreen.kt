@@ -5,6 +5,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -155,11 +157,78 @@ fun CollectDataScreen(
                             )
                         }
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+                            .fillMaxWidth()) {
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)){
+                            Box(modifier = Modifier
+                                .background(Color(0xFF1AFF00))
+                                .size(15.dp))
+                            Text(modifier = Modifier
+                                .padding(start = 5.dp),
+                                fontSize = 10.sp,
+                                text = "> -70 dbm (sangat kuat)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)){
+                            Box(modifier = Modifier
+                                .background(Color(0xFFFFEB3B))
+                                .size(15.dp))
+                            Text(modifier = Modifier
+                                .padding(start = 5.dp),
+                                fontSize = 10.sp,
+                                text = "-70 dbm s/d -85 dbm (kuat)")
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(start = 20.dp, end = 20.dp)
+                            .fillMaxWidth()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFFF9800))
+                                    .size(15.dp)
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .padding(start = 5.dp),
+                                fontSize = 10.sp,
+                                text = "-86 dbm s/d -100 dbm (lemah)"
+                            )
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFFF0000))
+                                    .size(15.dp)
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .padding(start = 5.dp),
+                                fontSize = 10.sp,
+                                text = "< -100 dbm (sangat lemah)"
+                            )
+                        }
+                    }
+//
                 }
                 Button(
                     modifier = Modifier
-                        .size(50.dp),
-//                            .padding(3.dp),
+                        .size(70.dp)
+                        .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
                         var prevAndCurrentGrid = navButtonClick(
@@ -189,8 +258,8 @@ fun CollectDataScreen(
                 ) {
                     Button(
                         modifier = Modifier
-                            .size(50.dp),
-//                            .padding(3.dp),
+                            .size(70.dp)
+                            .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
                             var prevAndCurrentGrid = navButtonClick(
@@ -279,8 +348,8 @@ fun CollectDataScreen(
                     }
                     Button(
                         modifier = Modifier
-                            .size(50.dp),
-//                            .padding(3.dp),
+                            .size(70.dp)
+                            .padding(5.dp),
                         shape = RoundedCornerShape(50.dp),
                         onClick = {
                             var prevAndCurrentGrid = navButtonClick(
@@ -307,8 +376,8 @@ fun CollectDataScreen(
                 }
                 Button(
                     modifier = Modifier
-                        .size(50.dp),
-//                            .padding(3.dp),
+                        .size(70.dp)
+                        .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
                     onClick = {
                         var prevAndCurrentGrid = navButtonClick(
