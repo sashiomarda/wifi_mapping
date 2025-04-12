@@ -128,13 +128,13 @@ fun CanvasGrid(
                                     if (dbm != null) {
                                         if (count == i) {
                                             drawRect(
-                                                color = if (dbm > -50) {
+                                                color = if (dbm > -70) {
                                                     Color(0xFF1AFF00)
-                                                } else if (dbm >= -60 && dbm <= -50) {
+                                                } else if (dbm >= -85 && dbm <= -70) {
                                                     Color(0xFFFFEB3B)
-                                                } else if (dbm >= -80 && dbm <= -70) {
+                                                } else if (dbm >= -100 && dbm <= -86) {
                                                     Color(0xFFFF9800)
-                                                } else if (dbm <= -90) {
+                                                } else if (dbm < -100) {
                                                     Color(0xFFFF0000)
                                                 } else {
                                                     Color(0xFFFF0000)
