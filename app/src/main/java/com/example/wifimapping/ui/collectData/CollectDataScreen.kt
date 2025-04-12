@@ -2,7 +2,6 @@ package com.example.wifimapping.ui.collectData
 
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,8 +29,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +65,8 @@ import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
 import com.example.wifimapping.ui.viewmodel.toWifi
+import com.example.wifimapping.util.ObserveChosenSsidDbm
+import com.example.wifimapping.util.getDbm
 import com.example.wifimapping.util.scanWifi
 import kotlinx.coroutines.launch
 
@@ -91,7 +93,9 @@ fun CollectDataScreen(
     var wifiList = wifiViewModel.wifiScanList.wifiList
     val coroutineScope = rememberCoroutineScope()
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
-    var chosenIdSsid by remember { mutableStateOf(0) }
+    var chosenIdSsid by remember { mutableIntStateOf(0) }
+    var dbmText by remember { mutableStateOf("") }
+    var dbmObserveInt by remember { mutableStateOf(0)}
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
     val lastGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
@@ -114,7 +118,7 @@ fun CollectDataScreen(
     }
     var chosenSsid by remember { mutableStateOf(wifiViewModel.wifiUiState.wifiDetails.toWifi()) }
     var gridHaveDbm = remember { mutableStateListOf<Int>() }
-
+    var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsid, gridListDb, wifiViewModel)
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -131,7 +135,8 @@ fun CollectDataScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally) {
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Panjang ${data.length} m")
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -159,37 +164,53 @@ fun CollectDataScreen(
                             )
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .padding(top = 10.dp, start = 20.dp, end = 20.dp)
-                            .fillMaxWidth()) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
+                            .fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .weight(1f)){
-                            Box(modifier = Modifier
-                                .background(Color(0xFF1AFF00))
-                                .size(15.dp))
-                            Text(modifier = Modifier
-                                .padding(start = 5.dp),
+                                .weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFF1AFF00))
+                                    .size(15.dp)
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "> -70 dbm (sangat kuat)")
+                                text = "> -70 dbm (sangat kuat)"
+                            )
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .weight(1f)){
-                            Box(modifier = Modifier
-                                .background(Color(0xFFFFEB3B))
-                                .size(15.dp))
-                            Text(modifier = Modifier
-                                .padding(start = 5.dp),
+                                .weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFFFEB3B))
+                                    .size(15.dp)
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "-70 dbm s/d -85 dbm (kuat)")
+                                text = "-70 dbm s/d -85 dbm (kuat)"
+                            )
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .padding(start = 20.dp, end = 20.dp)
-                            .fillMaxWidth()) {
+                            .fillMaxWidth()
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -226,18 +247,31 @@ fun CollectDataScreen(
                         }
                     }
                 }
-                Row(modifier = Modifier
-                    .padding(start = 20.dp, end = 20.dp),
+                Row(
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier
-                        .weight(1f)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
                     ) {
+                        val activeGridText = if (currentActiveGrid.id != 0) {
+                            currentActiveGrid.id - firstGridId + 1
+                        } else {
+                            1
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = "Posisi Grid Aktif: ${activeGridText}")
+                        }
                         Button(
                             modifier = Modifier
                                 .width(200.dp),
-//                            .padding(3.dp),
-                            shape = RoundedCornerShape(30.dp),
+                            shape = RoundedCornerShape(20.dp),
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = Color.LightGray
@@ -247,12 +281,6 @@ fun CollectDataScreen(
                                 var scanWifiResult = scanWifi(context)
                                 if (scanWifiResult.isNotEmpty()) {
                                     wifiList = scanWifiResult
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Too fast clicking!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
                                 }
                                 if (!wifiList.isNullOrEmpty()) {
                                     for (i in wifiList) {
@@ -277,51 +305,56 @@ fun CollectDataScreen(
                                     )
                                     if (currentActiveGrid.id !in gridHaveDbm) {
                                         dbmViewModel.saveDbm(inputDbm)
-                                        Toast.makeText(
-                                            context,
-                                            "${dbm}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                         gridHaveDbm.add(currentActiveGrid.id)
                                     }
                                 }
                             },
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                                if (currentActiveGrid.id == 0 && !gridListDb.gridList.isNullOrEmpty()){
-                                    currentActiveGrid = gridListDb.gridList[0]
-                                }
-                                val activeGridText = if (currentActiveGrid.id != 0){
-                                    currentActiveGrid.id - firstGridId + 1
+                                dbmObserveInt = observeChosenSsidDbm.getDbm
+                                dbmText = if (dbmObserveInt != 0) {
+                                    dbmObserveInt.toString()
                                 }else{
-                                    1
+                                    ""
                                 }
-                                Text(text = "-70 dbm",
-                                    fontSize = 30.sp)
-                                Text(text = "Posisi Grid Aktif: ${activeGridText}")
+                                Text(
+                                    text = "${dbmText} dbm",
+                                    fontSize = 30.sp,
+                                    color = if (dbmObserveInt > -70) {
+                                        Color(0xFF1AFF00)
+                                    } else if (dbmObserveInt >= -85 && dbmObserveInt <= -70) {
+                                        Color(0xFFFFEB3B)
+                                    } else if (dbmObserveInt >= -100 && dbmObserveInt <= -86) {
+                                        Color(0xFFFF9800)
+                                    } else if (dbmObserveInt < -100) {
+                                        Color(0xFFFF0000)
+                                    } else {
+                                        Color(0xFFFF0000)
+                                    },
+                                )
                                 Text(
                                     text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
                                     textAlign = TextAlign.Center,
                                     fontSize = 12.sp
                                 )
-                                var changeBtnText = ""
-                                changeBtnText = "Ambil data"
                                 Text(
                                     modifier = Modifier
-                                        .padding(top = 10.dp), text = "${changeBtnText}",
+                                        .padding(top = 10.dp), text = "Ambil data",
                                     fontSize = 20.sp
                                 )
                             }
                         }
                     }
-                    Column(modifier = Modifier
-                        .weight(1f)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
                     ) {
-                        Row(modifier = Modifier
-                            .offset(y = 20.dp)
-                            .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center) {
+                        Row(
+                            modifier = Modifier
+                                .offset(y = 20.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Button(
                                 modifier = Modifier
                                     .size(70.dp)
@@ -352,9 +385,11 @@ fun CollectDataScreen(
                             }
                         }
 
-                        Row(modifier = Modifier
-                            .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
                             Button(
                                 modifier = Modifier
                                     .size(70.dp)
@@ -420,10 +455,12 @@ fun CollectDataScreen(
                             }
                         }
 
-                        Row(modifier = Modifier
-                            .offset(y = (-20).dp)
-                            .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center) {
+                        Row(
+                            modifier = Modifier
+                                .offset(y = (-20).dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Button(
                                 modifier = Modifier
                                     .size(70.dp)
@@ -450,7 +487,10 @@ fun CollectDataScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "down arrow")
+                                Icon(
+                                    Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = "down arrow"
+                                )
                             }
                         }
                     }
@@ -466,6 +506,9 @@ fun CollectDataScreen(
                 }
             }
         }
+    }
+    LaunchedEffect(observeChosenSsidDbm) {
+        observeChosenSsidDbm.run()
     }
 }
 
@@ -512,10 +555,6 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id + data.length.toInt()
         }
     }
-    Log.d("chosenIdGrid","${currentActiveGrid.id} ${data.length.toInt()}")
-    Log.d("chosenIdGrid","${chosenIdGrid}")
-    Log.d("idGrids","${idGrids}")
-    Log.d("gridListDb.gridList","${gridListDb.gridList}")
 
     if (isMoveGrid){
         previousActiveGrid = currentActiveGrid
