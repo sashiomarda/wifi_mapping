@@ -134,7 +134,8 @@ fun LocateRouterScreen(
                                 idGridRouterPosition = it
                             },
                             screen = LocateRouterDestination.route,
-                            dbmViewModel = dbmViewModel
+                            dbmViewModel = dbmViewModel,
+                            saveCanvasBitmap = {}
                         )
                     }
                     Row {

@@ -1,7 +1,6 @@
 package com.example.wifimapping.components
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -31,10 +30,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -60,7 +63,8 @@ fun CanvasGrid(
     gridListDb: GridUiStateList? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
-    dbmViewModel: DbmViewModel
+    dbmViewModel: DbmViewModel,
+    saveCanvasBitmap: (ImageBitmap) -> Unit
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -98,6 +102,7 @@ fun CanvasGrid(
             dbmGridMap[i.idGrid] = i.dbm
         }
     }
+    val graphicsLayer = rememberGraphicsLayer()
     Surface(modifier = Modifier
 //        .background(Color.White)
         .padding(start = 5.dp)
@@ -107,6 +112,16 @@ fun CanvasGrid(
     ) {
         Box(modifier = Modifier
             .background(Color.White)
+            .drawWithContent {
+                graphicsLayer.record {
+                    this@drawWithContent.drawContent()
+                }
+                drawLayer(graphicsLayer)
+                coroutineScope.launch {
+                    var canvasBitmap = graphicsLayer.toImageBitmap()
+                    saveCanvasBitmap(canvasBitmap)
+                }
+            }
         ){
             Canvas(modifier = Modifier
                 .fillMaxSize(),
@@ -180,8 +195,6 @@ fun CanvasGrid(
                                     if (chosenIdSsid != 0) {
                                         chosenIdGridRouterPosition = it.id
                                         saveIdGridRouterPosition(chosenIdGridRouterPosition)
-                                        Toast.makeText(context, "${it.id}", Toast.LENGTH_LONG)
-                                            .show()
                                         coroutineScope.launch {
                                             gridViewModel.updateUiState(
                                                 gridViewModel.gridUiState.gridDetails.copy(
@@ -261,10 +274,7 @@ fun CanvasGrid(
                                     .fillMaxHeight()
                                     .width(gridWidth.dp),
                                 shape = RectangleShape,
-                                onClick = {
-                                    Toast.makeText(context, "ok", Toast.LENGTH_LONG)
-                                        .show()
-                                }
+                                onClick = {}
                             ) { }
                         }
                     }

@@ -1,6 +1,14 @@
 package com.example.wifimapping.ui.collectData
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.createChooser
+import android.graphics.Bitmap
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -42,12 +50,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
 import com.example.wifimapping.R
@@ -68,7 +78,10 @@ import com.example.wifimapping.ui.viewmodel.toWifi
 import com.example.wifimapping.util.ObserveChosenSsidDbm
 import com.example.wifimapping.util.getDbm
 import com.example.wifimapping.util.scanWifi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import java.io.File
 
 object CollectDataDestination : NavigationDestination {
     override val route = "collect_data"
@@ -77,6 +90,7 @@ object CollectDataDestination : NavigationDestination {
     val routeWithArgs = "${route}/{$idCollectData}"
 }
 
+@SuppressLint("UnrememberedMutableState")
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,6 +133,8 @@ fun CollectDataScreen(
     var chosenSsid by remember { mutableStateOf(wifiViewModel.wifiUiState.wifiDetails.toWifi()) }
     var gridHaveDbm = remember { mutableStateListOf<Int>() }
     var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsid, gridListDb, wifiViewModel)
+    var imageBitmap by mutableStateOf(ImageBitmap(500,500))
+    var isSaveImageButton by remember { mutableStateOf(false)}
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -160,7 +176,13 @@ fun CollectDataScreen(
                                 gridListDb = gridListDb,
                                 saveIdGridRouterPosition = {},
                                 screen = CollectDataDestination.route,
-                                dbmViewModel = dbmViewModel
+                                dbmViewModel = dbmViewModel,
+                                saveCanvasBitmap = {bitmap ->
+                                    imageBitmap = bitmap
+                                    if (gridHaveDbm.size == gridListDb.gridList.size) {
+                                        isSaveImageButton = true
+                                    }
+                                }
                             )
                         }
                     }
@@ -499,10 +521,15 @@ fun CollectDataScreen(
                     modifier = Modifier
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
-                    enabled = false,
-                    onClick = {}
+                    enabled = isSaveImageButton,
+                    onClick = {
+                        coroutineScope.launch {
+                            val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
+                            shareBitmap(context, uri)
+                        }
+                    }
                 ) {
-                    Text("Simpan gambar peta")
+                    Text("Simpan gambar peta grid")
                 }
             }
         }
@@ -572,13 +599,46 @@ data class PrevAndCurrentGrid(
     val isMoveGrid: Boolean
 )
 
-fun Modifier.vertical() =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.height, placeable.width) {
-            placeable.place(
-                x = -(placeable.width / 2 - placeable.height / 2),
-                y = -(placeable.height / 2 - placeable.width / 2)
-            )
+private fun shareBitmap(context: Context, uri: Uri) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    startActivity(context, createChooser(intent, "Share your image"), null)
+}
+
+private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+    outputStream().use { out ->
+        bitmap.compress(format, quality, out)
+        out.flush()
+    }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
+    return suspendCancellableCoroutine { continuation ->
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(filePath),
+            arrayOf("image/png")
+        ) { _, scannedUri ->
+            if (scannedUri == null) {
+                continuation.cancel(Exception("File $filePath could not be scanned"))
+            } else {
+                continuation.resume(scannedUri,onCancellation = null)
+            }
         }
     }
+}
+
+private suspend fun Bitmap.saveToDisk(context: Context): Uri {
+    val file = File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+        "screenshot-${System.currentTimeMillis()}.png"
+    )
+
+    file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
+
+    return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
+}

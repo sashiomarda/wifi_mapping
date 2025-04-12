@@ -109,7 +109,8 @@ fun PreviewGridScreen(
                             gridViewModel = gridViewModel,
                             saveIdGridRouterPosition = {},
                             screen = PreviewGridDestination.route,
-                            dbmViewModel = dbmViewModel
+                            dbmViewModel = dbmViewModel,
+                            saveCanvasBitmap = {}
                         )
                     }
                     Button(
