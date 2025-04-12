@@ -6,11 +6,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -159,7 +161,7 @@ fun CollectDataScreen(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+                            .padding(top = 10.dp, start = 20.dp, end = 20.dp)
                             .fillMaxWidth()) {
                         Row(verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -223,183 +225,235 @@ fun CollectDataScreen(
                             )
                         }
                     }
-//
-                }
-                Button(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(50.dp),
-                    onClick = {
-                        var prevAndCurrentGrid = navButtonClick(
-                            gridViewModel,
-                            gridListDb,
-                            data,
-                            idGrids,
-                            firstGridId,
-                            lastGridId,
-                            "up")
-
-                        if (prevAndCurrentGrid.isMoveGrid) {
-                            coroutineScope.launch {
-                                gridViewModel.updateChosenGrid(
-                                    prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                    prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
-                                )
-                            }
-                        }
-                    }
-                ) {
-                    Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "up arrow")
                 }
                 Row(modifier = Modifier
-                    .padding(3.dp),
+                    .padding(start = 20.dp, end = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        modifier = Modifier
-                            .size(70.dp)
-                            .padding(5.dp),
-                        shape = RoundedCornerShape(50.dp),
-                        onClick = {
-                            var prevAndCurrentGrid = navButtonClick(
-                                gridViewModel,
-                                gridListDb,
-                                data,
-                                idGrids,
-                                firstGridId,
-                                lastGridId,
-                                "left")
-
-                            if (prevAndCurrentGrid.isMoveGrid) {
-                                coroutineScope.launch {
-                                    gridViewModel.updateChosenGrid(
-                                        prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                        prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
-                                    )
-                                }
-                            }
-                        }
+                    Column(modifier = Modifier
+                        .weight(1f)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "left arrow")
-                    }
-                    Button(
-                        modifier = Modifier
-                            .height(150.dp)
-                            .width(200.dp),
+                        Button(
+                            modifier = Modifier
+                                .width(200.dp),
 //                            .padding(3.dp),
-                        shape = RoundedCornerShape(50.dp),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = Color.LightGray
-                        ),
-                        onClick = {
-                            currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                            var scanWifiResult = scanWifi(context)
-                            Log.d("scanwifi result", "${scanWifiResult}")
-                            if (scanWifiResult.isNotEmpty()) {
-                                wifiList = scanWifiResult
-                            }else{
-                                Toast.makeText(context,
-                                    "Too fast clicking!",
-                                    Toast.LENGTH_SHORT).show()
-                            }
-                            if (!wifiList.isNullOrEmpty()) {
-                                for (i in wifiList) {
-                                    ssidList.add(i.ssid)
-                                    dbmList.add(i.dbm)
+                            shape = RoundedCornerShape(30.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Color.LightGray
+                            ),
+                            onClick = {
+                                currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                                var scanWifiResult = scanWifi(context)
+                                if (scanWifiResult.isNotEmpty()) {
+                                    wifiList = scanWifiResult
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Too fast clicking!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-                            }
-                            coroutineScope.launch {
-                                if (currentActiveGrid.id == 0){
+                                if (!wifiList.isNullOrEmpty()) {
+                                    for (i in wifiList) {
+                                        ssidList.add(i.ssid)
+                                        dbmList.add(i.dbm)
+                                    }
+                                }
+                                coroutineScope.launch {
+                                    if (currentActiveGrid.id == 0) {
+                                        currentActiveGrid = gridListDb.gridList[0]
+                                    }
+                                    if (chosenIdSsid != 0) {
+                                        chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
+                                    }
+                                    var dbm = dbmList[
+                                        ssidList.indexOf(chosenSsid.ssid)
+                                    ]
+                                    var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
+                                        idCollectData = data.id,
+                                        idGrid = currentActiveGrid.id,
+                                        dbm = dbm
+                                    )
+                                    if (currentActiveGrid.id !in gridHaveDbm) {
+                                        dbmViewModel.saveDbm(inputDbm)
+                                        Toast.makeText(
+                                            context,
+                                            "${dbm}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        gridHaveDbm.add(currentActiveGrid.id)
+                                    }
+                                }
+                            },
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                                if (currentActiveGrid.id == 0 && !gridListDb.gridList.isNullOrEmpty()){
                                     currentActiveGrid = gridListDb.gridList[0]
                                 }
-                                if (chosenIdSsid != 0) {
-                                    chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
+                                val activeGridText = if (currentActiveGrid.id != 0){
+                                    currentActiveGrid.id - firstGridId + 1
+                                }else{
+                                    1
                                 }
-                                var dbm = dbmList[
-                                    ssidList.indexOf(chosenSsid.ssid)
-                                ]
-                                var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
-                                    idCollectData = data.id,
-                                    idGrid = currentActiveGrid.id,
-                                    dbm = dbm
+                                Text(text = "-70 dbm",
+                                    fontSize = 30.sp)
+                                Text(text = "Posisi Grid Aktif: ${activeGridText}")
+                                Text(
+                                    text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 12.sp
                                 )
-                                if (currentActiveGrid.id !in gridHaveDbm) {
-                                    dbmViewModel.saveDbm(inputDbm)
-                                    Toast.makeText(context,
-                                        "${dbm}",
-                                        Toast.LENGTH_SHORT).show()
-                                    gridHaveDbm.add(currentActiveGrid.id)
-                                }
+                                var changeBtnText = ""
+                                changeBtnText = "Ambil data"
+                                Text(
+                                    modifier = Modifier
+                                        .padding(top = 10.dp), text = "${changeBtnText}",
+                                    fontSize = 20.sp
+                                )
                             }
-                        },
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
-                                textAlign = TextAlign.Center,
-                                        fontSize = 12.sp)
-                            var changeBtnText = ""
-                            changeBtnText = "Ambil data"
-                            Text(modifier = Modifier
-                                .padding(top = 10.dp), text = "${changeBtnText}",
-                                fontSize = 20.sp)
                         }
                     }
-                    Button(
-                        modifier = Modifier
-                            .size(70.dp)
-                            .padding(5.dp),
-                        shape = RoundedCornerShape(50.dp),
-                        onClick = {
-                            var prevAndCurrentGrid = navButtonClick(
-                                gridViewModel,
-                                gridListDb,
-                                data,
-                                idGrids,
-                                firstGridId,
-                                lastGridId,
-                                "right")
-
-                            if (prevAndCurrentGrid.isMoveGrid) {
-                                coroutineScope.launch {
-                                    gridViewModel.updateChosenGrid(
-                                        prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                        prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                    Column(modifier = Modifier
+                        .weight(1f)
+                    ) {
+                        Row(modifier = Modifier
+                            .offset(y = 20.dp)
+                            .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center) {
+                            Button(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(5.dp),
+                                shape = RoundedCornerShape(50.dp),
+                                onClick = {
+                                    var prevAndCurrentGrid = navButtonClick(
+                                        gridViewModel,
+                                        gridListDb,
+                                        data,
+                                        idGrids,
+                                        firstGridId,
+                                        lastGridId,
+                                        "up"
                                     )
+
+                                    if (prevAndCurrentGrid.isMoveGrid) {
+                                        coroutineScope.launch {
+                                            gridViewModel.updateChosenGrid(
+                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                            )
+                                        }
+                                    }
                                 }
+                            ) {
+                                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "up arrow")
                             }
                         }
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "right arrow")
-                    }
-                }
-                Button(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(50.dp),
-                    onClick = {
-                        var prevAndCurrentGrid = navButtonClick(
-                            gridViewModel,
-                            gridListDb,
-                            data,
-                            idGrids,
-                            firstGridId,
-                            lastGridId,
-                            "down")
 
-                        if (prevAndCurrentGrid.isMoveGrid) {
-                            coroutineScope.launch {
-                                gridViewModel.updateChosenGrid(
-                                    prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                    prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                        Row(modifier = Modifier
+                            .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly) {
+                            Button(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(5.dp),
+                                shape = RoundedCornerShape(50.dp),
+                                onClick = {
+                                    var prevAndCurrentGrid = navButtonClick(
+                                        gridViewModel,
+                                        gridListDb,
+                                        data,
+                                        idGrids,
+                                        firstGridId,
+                                        lastGridId,
+                                        "left"
+                                    )
+
+                                    if (prevAndCurrentGrid.isMoveGrid) {
+                                        coroutineScope.launch {
+                                            gridViewModel.updateChosenGrid(
+                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = "left arrow"
+                                )
+                            }
+
+                            Button(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(5.dp),
+                                shape = RoundedCornerShape(50.dp),
+                                onClick = {
+                                    var prevAndCurrentGrid = navButtonClick(
+                                        gridViewModel,
+                                        gridListDb,
+                                        data,
+                                        idGrids,
+                                        firstGridId,
+                                        lastGridId,
+                                        "right"
+                                    )
+
+                                    if (prevAndCurrentGrid.isMoveGrid) {
+                                        coroutineScope.launch {
+                                            gridViewModel.updateChosenGrid(
+                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "right arrow"
                                 )
                             }
                         }
+
+                        Row(modifier = Modifier
+                            .offset(y = (-20).dp)
+                            .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center) {
+                            Button(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .padding(5.dp),
+                                shape = RoundedCornerShape(50.dp),
+                                onClick = {
+                                    var prevAndCurrentGrid = navButtonClick(
+                                        gridViewModel,
+                                        gridListDb,
+                                        data,
+                                        idGrids,
+                                        firstGridId,
+                                        lastGridId,
+                                        "down"
+                                    )
+
+                                    if (prevAndCurrentGrid.isMoveGrid) {
+                                        coroutineScope.launch {
+                                            gridViewModel.updateChosenGrid(
+                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "down arrow")
+                            }
+                        }
                     }
-                ) {
-                    Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "down arrow")
                 }
                 Button(
                     modifier = Modifier
