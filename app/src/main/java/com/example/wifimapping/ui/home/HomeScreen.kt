@@ -98,7 +98,8 @@ fun RoomParamsEntryBody(
 ) {
     Column(
         modifier = modifier
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(start = 20.dp, end = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
         ) {
         Text("Input Data",
@@ -115,7 +116,9 @@ fun RoomParamsEntryBody(
             onClick = onSaveClick,
             enabled = roomParamsUiState.isEntryValid,
             shape = MaterialTheme.shapes.small,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
         ) {
             Text(text = stringResource(R.string.save_action))
         }

@@ -50,6 +50,8 @@ import com.example.wifimapping.ui.viewmodel.GridUiStateList
 import com.example.wifimapping.ui.viewmodel.GridViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.run
 
 @Preview
@@ -90,6 +92,7 @@ fun CanvasGrid(
         gridVerticalAmount = width / gridCmToM!!
         gridHorizontalAmount = length / gridCmToM!!
     }
+    canvasWidth = ceil(canvasWidth)
     val context = LocalContext.current
     val gridHeight = canvasWidth * gridCmToM!! / width
     val gridWidth = canvasHeight * gridCmToM / length
@@ -119,7 +122,9 @@ fun CanvasGrid(
                 drawLayer(graphicsLayer)
                 coroutineScope.launch {
                     var canvasBitmap = graphicsLayer.toImageBitmap()
-                    saveCanvasBitmap(canvasBitmap)
+                    if (dbmListDb.dbmList.size == gridListDb?.gridList?.size) {
+                        saveCanvasBitmap(canvasBitmap)
+                    }
                 }
             }
         ){
@@ -157,7 +162,7 @@ fun CanvasGrid(
 //                                                color = Color.White,
                                                 size = canvasQuadrantSize,
                                                 topLeft = Offset(
-                                                    x = gridHeightPx * x,
+                                                    x = gridWidthPx * x,
                                                     y = gridHeightPx * y
                                                 )
                                             )
@@ -177,7 +182,7 @@ fun CanvasGrid(
                 val firstGridID = gridListDb.gridList[0].id
                 LazyVerticalGrid(
                     modifier = Modifier,
-                    columns = GridCells.Adaptive(gridWidth.toInt().dp)
+                    columns = GridCells.Adaptive(floor(gridWidth).dp-2.dp)
                 ) {
                     items(gridListDb.gridList,
                         key = {

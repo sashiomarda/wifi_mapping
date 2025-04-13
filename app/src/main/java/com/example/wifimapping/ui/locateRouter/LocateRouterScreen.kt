@@ -77,6 +77,7 @@ fun LocateRouterScreen(
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
     var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
+    val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 1
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -138,6 +139,13 @@ fun LocateRouterScreen(
                             saveCanvasBitmap = {}
                         )
                     }
+                    Text(modifier = Modifier
+                        .padding(top = 10.dp),
+                        text = if (idGridRouterPosition != 0){
+                            "Posisi router di Grid: ${idGridRouterPosition - firstGridId + 1}"
+                        }else {
+                            ""
+                        })
                     Row {
                         Button(modifier = Modifier
                             .padding(end = 3.dp),
