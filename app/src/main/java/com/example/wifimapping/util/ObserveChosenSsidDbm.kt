@@ -24,7 +24,7 @@ class ObserveChosenSsidDbm(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun run() {
         while (true) {
-            delay(100)
+            delay(500)
             var scanWifiResult = scanWifi(context)
             if (chosenSsid.id == 0){
                 for (i in gridListDb.gridList) {
