@@ -1,5 +1,7 @@
 package com.example.wifimapping.components
 
+//noinspection SuspiciousImport
+import android.R
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -26,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -100,12 +104,22 @@ fun CanvasGrid(
 
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var dbmGridMap = HashMap<Int,Int>()
+    var wifiGridLocationIndex by remember { mutableStateOf(0) }
+    if (!gridListDb?.gridList.isNullOrEmpty()){
+        for (i in 1..gridListDb.gridList.size) {
+            if (gridListDb.gridList[i-1].idWifi != 0){
+                wifiGridLocationIndex = i-1
+            }
+        }
+    }
     if (dbmListDb.dbmList.isNotEmpty()){
         for (i in dbmListDb.dbmList) {
             dbmGridMap[i.idGrid] = i.dbm
         }
     }
     val graphicsLayer = rememberGraphicsLayer()
+    val star = ImageBitmap.imageResource(id = R.drawable.star_on)
+
     Surface(modifier = Modifier
 //        .background(Color.White)
         .padding(start = 5.dp)
@@ -164,8 +178,17 @@ fun CanvasGrid(
                                                 topLeft = Offset(
                                                     x = gridWidthPx * x,
                                                     y = gridHeightPx * y
-                                                )
+                                                ),
                                             )
+                                            if (wifiGridLocationIndex == i) {
+                                                drawImage(
+                                                    image = star,
+                                                    topLeft = Offset(
+                                                        x = gridWidthPx * x,
+                                                        y = gridHeightPx * y
+                                                    )
+                                                )
+                                            }
                                         }
                                     }
                                     count += 1
@@ -250,7 +273,7 @@ fun CanvasGrid(
                                 fontSize = 10.sp,
                                 text = "${it.id - firstGridID + 1}"
                             )
-                            if (it.idWifi != 0) {
+                            if (it.idWifi != 0 && screen == "locate_router") {
                                 Icon(Icons.Default.Star, contentDescription = "Wifi Location")
                             }
                         }
