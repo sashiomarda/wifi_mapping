@@ -575,10 +575,11 @@ private fun navButtonClick(
     var isMoveGrid = false
     var currentActiveGridPosition = currentActiveGrid.id - firstGridId + 1
     var chosenIdGrid = 0
+    var gridCmToM = data.gridDistance.toFloat().div(100)
     if (direction == "up") {
-        if (currentActiveGridPosition - data.length.toInt() >= 1) {
+        if (currentActiveGridPosition - (data.length.toInt() / gridCmToM).toInt() >= 1) {
             isMoveGrid = true
-            chosenIdGrid = currentActiveGrid.id - data.length.toInt()
+            chosenIdGrid = currentActiveGrid.id - (data.length.toInt() / gridCmToM).toInt()
         }
     } else if (direction == "left") {
         if (currentActiveGridPosition > 1) {
@@ -595,9 +596,9 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id + 1
         }
     } else if (direction == "down") {
-        if (currentActiveGridPosition + data.length.toInt()  <= lastGridId - firstGridId + 1) {
+        if (currentActiveGridPosition + (data.length.toInt() / gridCmToM).toInt()  <= lastGridId - firstGridId + 1) {
             isMoveGrid = true
-            chosenIdGrid = currentActiveGrid.id + data.length.toInt()
+            chosenIdGrid = currentActiveGrid.id + (data.length.toInt() / gridCmToM).toInt()
         }
     }
 

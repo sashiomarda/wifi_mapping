@@ -118,9 +118,10 @@ fun PreviewGridScreen(
                         onClick = {
                             coroutineScope.launch(Dispatchers.Main) {
                                 lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
-                                val gridCount = data.length.toInt() * data.width.toInt()
+                                var gridCmToM = data.gridDistance.toFloat().div(100)
+                                val gridCount = (data.length.toInt() / gridCmToM) * (data.width.toInt() / gridCmToM)
                                 if (lastInputGridId != data.id) {
-                                    for (i in 1..gridCount) {
+                                    for (i in 1..gridCount.toInt()) {
                                         var inputGrid = gridViewModel
                                             .gridUiState
                                             .gridDetails
