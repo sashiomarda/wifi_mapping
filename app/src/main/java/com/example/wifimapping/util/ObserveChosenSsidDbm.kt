@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.viewmodel.GridUiStateList
@@ -21,6 +22,9 @@ class ObserveChosenSsidDbm(
     var dbm by mutableIntStateOf(0)
         private set
 
+    var isDbmChosenExist by mutableStateOf(true)
+        private set
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun run() {
         while (true) {
@@ -33,9 +37,18 @@ class ObserveChosenSsidDbm(
                     }
                 }
             }
+            var wifiCount = 0
             for (wifi in scanWifiResult) {
                 if (wifi.ssid == chosenSsid.ssid) {
                     dbm = wifi.dbm
+                    isDbmChosenExist = true
+                    wifiCount = 0
+                }else{
+                    wifiCount = wifiCount + 1
+                }
+                if (wifiCount == scanWifiResult.size){
+                    dbm = -100
+                    wifiCount = 0
                 }
             }
         }

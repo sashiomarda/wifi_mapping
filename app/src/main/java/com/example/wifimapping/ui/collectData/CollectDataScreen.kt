@@ -206,7 +206,7 @@ fun CollectDataScreen(
                                 modifier = Modifier
                                     .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "> -70 dbm (sangat kuat)"
+                                text = "> -67 dbm (sangat kuat)"
                             )
                         }
                         Row(
@@ -223,7 +223,7 @@ fun CollectDataScreen(
                                 modifier = Modifier
                                     .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "-70 dbm s/d -85 dbm (kuat)"
+                                text = "-68 dbm s/d -70 dbm (kuat)"
                             )
                         }
                     }
@@ -247,7 +247,7 @@ fun CollectDataScreen(
                                 modifier = Modifier
                                     .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "-86 dbm s/d -100 dbm (lemah)"
+                                text = "-71 dbm s/d -80 dbm (lemah)"
                             )
                         }
                         Row(
@@ -264,7 +264,7 @@ fun CollectDataScreen(
                                 modifier = Modifier
                                     .padding(start = 5.dp),
                                 fontSize = 10.sp,
-                                text = "< -100 dbm (sangat lemah)"
+                                text = "< -80 dbm (sangat lemah)"
                             )
                         }
                     }
@@ -317,9 +317,13 @@ fun CollectDataScreen(
                                     if (chosenIdSsid != 0) {
                                         chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
                                     }
-                                    var dbm = dbmList[
-                                        ssidList.indexOf(chosenSsid.ssid)
-                                    ]
+                                    var dbm = if (ssidList.indexOf(chosenSsid.ssid) != -1) {
+                                        dbmList[
+                                            ssidList.indexOf(chosenSsid.ssid)
+                                        ]
+                                    }else{
+                                        -100
+                                    }
                                     var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
                                         idCollectData = data.id,
                                         idGrid = currentActiveGrid.id,
@@ -335,20 +339,34 @@ fun CollectDataScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 dbmObserveInt = observeChosenSsidDbm.getDbm
                                 dbmText = if (dbmObserveInt != 0) {
-                                    dbmObserveInt.toString()
+                                    if (dbmObserveInt == -100){
+                                        "Tidak terdeteksi"
+                                    }else {
+                                        "$dbmObserveInt dbm"
+                                    }
                                 }else{
-                                    ""
+                                    "Loading..."
                                 }
                                 Text(
-                                    text = "${dbmText} dbm",
-                                    fontSize = 30.sp,
-                                    color = if (dbmObserveInt > -70) {
+                                    text = dbmText,
+                                    fontSize = if (dbmObserveInt != 0){
+                                        if (dbmObserveInt != -100) {
+                                            30.sp
+                                        }else{
+                                            15.sp
+                                        }
+                                    }else{
+                                        20.sp
+                                    },
+                                    color = if (dbmObserveInt == 0){
+                                        Color(0xFF000000)
+                                    } else if (dbmObserveInt >= -67) {
                                         Color(0xFF1AFF00)
-                                    } else if (dbmObserveInt >= -85 && dbmObserveInt <= -70) {
+                                    } else if (dbmObserveInt >= -70 && dbmObserveInt <= -68) {
                                         Color(0xFFFFEB3B)
-                                    } else if (dbmObserveInt >= -100 && dbmObserveInt <= -86) {
+                                    } else if (dbmObserveInt >= -80 && dbmObserveInt <= -71) {
                                         Color(0xFFFF9800)
-                                    } else if (dbmObserveInt < -100) {
+                                    } else if (dbmObserveInt < -80) {
                                         Color(0xFFFF0000)
                                     } else {
                                         Color(0xFFFF0000)
