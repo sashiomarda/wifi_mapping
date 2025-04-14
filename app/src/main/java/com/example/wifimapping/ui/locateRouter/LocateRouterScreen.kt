@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -95,6 +98,8 @@ fun LocateRouterScreen(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState()),
             ){
                 Text("Locate Router Position",
                     style = MaterialTheme.typography.headlineLarge,
@@ -198,6 +203,8 @@ fun WifiCheckedList(
     LazyColumn(
         modifier = Modifier
             .padding(10.dp)
+            .fillMaxWidth()
+            .heightIn(min = 80.dp, max = 500.dp)
     ) {
         items(items = wifiCheckListDb) {
             Surface(
