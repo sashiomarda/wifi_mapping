@@ -111,7 +111,7 @@ fun PreviewGridScreen(
                             screen = PreviewGridDestination.route,
                             dbmViewModel = dbmViewModel,
                             saveCanvasBitmap = {},
-                            addChosenIdList = {}
+                            addChosenIdList = {ssidId, gridId ->}
                         )
                     }
                     Button(

@@ -81,6 +81,8 @@ fun LocateRouterScreen(
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
     var chosenIdSsidList = remember { mutableStateListOf<Int>() }
+    var chosenSsidList = remember { mutableStateListOf<String>() }
+    var chosenIdGridList = remember { mutableStateListOf<Int>() }
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
     var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
@@ -147,18 +149,37 @@ fun LocateRouterScreen(
                             screen = LocateRouterDestination.route,
                             dbmViewModel = dbmViewModel,
                             saveCanvasBitmap = {},
-                            addChosenIdList = {
-                                chosenIdSsidList.add(it)
+                            addChosenIdList = {ssidId, gridId ->
+                                chosenIdSsidList.add(ssidId)
+                                for (wifi in wifiCheckedUiStateList.wifiList) {
+                                    if (wifi.id == ssidId) {
+                                        chosenSsidList.add(wifi.ssid)
+                                        chosenIdGridList.add(gridId)
+                                    }
+                                }
                             }
                         )
                     }
-                    Text(modifier = Modifier
-                        .padding(top = 10.dp),
-                        text = if (idGridRouterPosition != 0){
-                            "Posisi router di Grid: ${idGridRouterPosition - firstGridId + 1}"
-                        }else {
-                            ""
-                        })
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 40.dp),
+                        horizontalAlignment = Alignment.Start) {
+                        if (idGridRouterPosition != 0) {
+                            for (i in 0..chosenSsidList.size - 1) {
+                                Text(
+                                    modifier = Modifier
+                                        .padding(top = 10.dp),
+                                    text = "Grid ${chosenIdGridList[i] - firstGridId + 1} : ${chosenSsidList[i]}"
+                                )
+                            }
+                        } else {
+                            Text(
+                                modifier = Modifier
+                                    .padding(top = 10.dp),
+                                text = ""
+                            )
+                        }
+                    }
                     Row {
                         Button(modifier = Modifier
                             .padding(end = 3.dp),

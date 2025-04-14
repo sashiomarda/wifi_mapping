@@ -189,7 +189,7 @@ fun CollectDataScreen(
                                         isSaveImageButton = true
                                     }
                                 },
-                                addChosenIdList = {}
+                                addChosenIdList = {ssidId, gridId ->}
                             )
                         }
                     }
