@@ -1,9 +1,12 @@
 package com.example.wifimapping.ui.collectData
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.createChooser
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -57,6 +60,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wifimapping.InventoryTopAppBar
@@ -64,6 +69,7 @@ import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
+import com.example.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
 import com.example.wifimapping.ui.home.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.previewGrid.vertical
@@ -541,9 +547,31 @@ fun CollectDataScreen(
                     shape = RoundedCornerShape(50.dp),
                     enabled = isSaveImageButton,
                     onClick = {
-                        coroutineScope.launch {
-                            val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
-                            shareBitmap(context, uri)
+                        val activity = context as Activity
+                        if (Build.VERSION.SDK_INT < 34) {
+                            if (checkSelfPermission(
+                                    context.applicationContext,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                requestPermissions(
+                                    activity,
+                                    arrayOf(
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    ),
+                                    PERMISSIONS_REQUEST_CODE
+                                )
+                            } else {
+                                coroutineScope.launch {
+                                    val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
+                                    shareBitmap(context, uri)
+                                }
+                            }
+                        }else{
+                            coroutineScope.launch {
+                                val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
+                                shareBitmap(context, uri)
+                            }
                         }
                     }
                 ) {
