@@ -217,7 +217,9 @@ fun WifiCheckedList(
                         modifier = Modifier
                             .padding(10.dp)
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(
+//                                enabled =
+                            ) {
                                 isChosenIdSSid = it.id
                                 saveCurrentChosenIdSsid(it.id)
                             },

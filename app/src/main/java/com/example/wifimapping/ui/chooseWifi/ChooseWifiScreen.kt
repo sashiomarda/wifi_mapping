@@ -47,6 +47,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -167,6 +168,11 @@ fun ChooseWifiScreen(
                     }
                 }
             }
+        }
+    }
+    LaunchedEffect(Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            wifiViewModel.resetCheckedWifi()
         }
     }
 }

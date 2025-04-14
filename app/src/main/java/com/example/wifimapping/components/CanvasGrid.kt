@@ -267,7 +267,16 @@ fun CanvasGrid(
                                 } else {
                                     Color.Black
                                 }
-                            )
+                            ),
+                            enabled = if (screen != "locate_router"){
+                                true
+                            }else{
+                                if (it.idWifi == 0){
+                                    true
+                                }else{
+                                    false
+                                }
+                            }
                         ) {
                             Text(
                                 fontSize = 10.sp,
