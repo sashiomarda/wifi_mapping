@@ -43,11 +43,11 @@ fun scanWifi(context : Context) : MutableList<Wifi>{
         if (success){
             var results = wifiManager.scanResults
             for (wifi in results){
-                if (wifi.wifiSsid.toString() != "") {
+                if (wifi.SSID.toString() != "") {
                     var ssidText = if (wifi.frequency > 3000) {
-                        "${wifi.wifiSsid.toString().removeSurrounding("\"")}_5GHz"
+                        "${wifi.SSID.toString().removeSurrounding("\"")}_5GHz"
                     } else {
-                        wifi.wifiSsid.toString().removeSurrounding("\"")
+                        wifi.SSID.toString().removeSurrounding("\"")
                     }
                     wifiList.add(
                         Wifi(
