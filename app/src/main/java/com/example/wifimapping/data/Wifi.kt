@@ -32,5 +32,5 @@ data class Wifi(
     val id: Int = 0,
     val ssid: String,
     val isChecked: Boolean = false,
-    val dbm: Int,
+    val dbm: Int = 0
 )

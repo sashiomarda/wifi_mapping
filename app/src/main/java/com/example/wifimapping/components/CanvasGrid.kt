@@ -70,7 +70,8 @@ fun CanvasGrid(
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
     dbmViewModel: DbmViewModel,
-    saveCanvasBitmap: (ImageBitmap) -> Unit
+    saveCanvasBitmap: (ImageBitmap) -> Unit,
+    addChosenIdList: (Int) -> Unit
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -221,6 +222,7 @@ fun CanvasGrid(
                             onClick = {
                                 if (screen == "locate_router") {
                                     if (chosenIdSsid != 0) {
+                                        addChosenIdList(chosenIdSsid)
                                         chosenIdGridRouterPosition = it.id
                                         saveIdGridRouterPosition(chosenIdGridRouterPosition)
                                         coroutineScope.launch {

@@ -1,5 +1,6 @@
 package com.example.wifimapping.ui.locateRouter
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,10 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -77,6 +80,7 @@ fun LocateRouterScreen(
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
+    var chosenIdSsidList = remember { mutableStateListOf<Int>() }
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
     var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
@@ -113,7 +117,8 @@ fun LocateRouterScreen(
                             chosenIdSsid = it
                             isResetChosenIdSsid = false
                         },
-                        isResetChosenIdSsid = isResetChosenIdSsid
+                        isResetChosenIdSsid = isResetChosenIdSsid,
+                        chosenIdSsidList = chosenIdSsidList
                     )
                 }
                 if (data.length != "") {
@@ -141,7 +146,10 @@ fun LocateRouterScreen(
                             },
                             screen = LocateRouterDestination.route,
                             dbmViewModel = dbmViewModel,
-                            saveCanvasBitmap = {}
+                            saveCanvasBitmap = {},
+                            addChosenIdList = {
+                                chosenIdSsidList.add(it)
+                            }
                         )
                     }
                     Text(modifier = Modifier
@@ -198,7 +206,12 @@ fun WifiCheckedList(
     wifiCheckListDb: List<Wifi>,
     saveCurrentChosenIdSsid: (Int) -> Unit,
     isResetChosenIdSsid: Boolean,
+    chosenIdSsidList: SnapshotStateList<Int>,
 ){
+    var wifiLocateList : MutableList<WifiLocateRouter> = ArrayList()
+    for (wifi in wifiCheckListDb){
+        wifiLocateList.add(wifi.toWifiLocateRouter().copy(isChosenLocationRouter = false))
+    }
     var isChosenIdSSid by remember { mutableStateOf(0) }
     LazyColumn(
         modifier = Modifier
@@ -206,7 +219,7 @@ fun WifiCheckedList(
             .fillMaxWidth()
             .heightIn(min = 80.dp, max = 500.dp)
     ) {
-        items(items = wifiCheckListDb) {
+        items(items = wifiLocateList) {
             Surface(
                 color = if (isChosenIdSSid == it.id && isResetChosenIdSsid == false) {
                     Color(0xFF464646)
@@ -218,7 +231,11 @@ fun WifiCheckedList(
                             .padding(10.dp)
                             .fillMaxWidth()
                             .clickable(
-//                                enabled =
+                                enabled = if (it.id in chosenIdSsidList){
+                                    false
+                                }else{
+                                    true
+                                }
                             ) {
                                 isChosenIdSSid = it.id
                                 saveCurrentChosenIdSsid(it.id)
@@ -233,6 +250,11 @@ fun WifiCheckedList(
                             Text(
                                 text = "${it.ssid}",
                                 fontWeight = if (isChosenIdSSid == it.id) FontWeight.Bold else FontWeight.Light,
+                                color = if (it.id in chosenIdSsidList){
+                                    Color(0xFF333333)
+                                }else{
+                                    Color.Unspecified
+                                }
                             )
                         }
                     }
@@ -257,3 +279,18 @@ fun Modifier.vertical() =
             )
         }
     }
+
+data class WifiLocateRouter(
+    var id: Int = 0,
+    var ssid: String,
+    var isCheckedDb: Boolean = false,
+    var dbm: Int,
+    var isChosenLocationRouter: Boolean = false,
+)
+
+fun Wifi.toWifiLocateRouter(): WifiLocateRouter = WifiLocateRouter(
+    id = id,
+    ssid = ssid,
+    isCheckedDb = isChecked,
+    dbm = dbm
+)

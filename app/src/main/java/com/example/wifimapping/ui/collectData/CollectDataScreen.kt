@@ -188,7 +188,8 @@ fun CollectDataScreen(
                                     if (gridHaveDbm.size == gridListDb.gridList.size) {
                                         isSaveImageButton = true
                                     }
-                                }
+                                },
+                                addChosenIdList = {}
                             )
                         }
                     }
