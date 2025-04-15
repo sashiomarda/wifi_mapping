@@ -5,55 +5,47 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.wifimapping.data.Wifi
-import com.example.wifimapping.ui.viewmodel.GridUiStateList
-import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import kotlinx.coroutines.delay
 
 class ObserveChosenSsidDbm(
     private val context: Context,
-    private var chosenSsid: Wifi,
-    private val gridListDb: GridUiStateList,
-    private val wifiViewModel: WifiViewModel
+    private var chosenSsidList: MutableList<String>,
 ) {
-    var dbm by mutableIntStateOf(0)
+    var dbmList by mutableStateOf(listOf<Int>())
         private set
 
-    var isDbmChosenExist by mutableStateOf(true)
+    var ssidList by mutableStateOf(listOf<String>())
         private set
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun run() {
         while (true) {
+            var dbms : MutableList<Int> = ArrayList()
+            var ssids : MutableList<String> = ArrayList()
             delay(500)
             var scanWifiResult = scanWifi(context)
-            if (chosenSsid.id == 0){
-                for (i in gridListDb.gridList) {
-                    if (i.idWifi != 0){
-                        chosenSsid = wifiViewModel.selectWifiById(i.idWifi)
+            for (ssid in chosenSsidList) {
+                for (wifi in scanWifiResult) {
+                    if (ssid == wifi.ssid) {
+                        ssids.add(wifi.ssid)
+                        dbms.add(wifi.dbm)
                     }
                 }
-            }
-            var wifiCount = 0
-            for (wifi in scanWifiResult) {
-                if (wifi.ssid == chosenSsid.ssid) {
-                    dbm = wifi.dbm
-                    isDbmChosenExist = true
-                    wifiCount = 0
-                }else{
-                    wifiCount = wifiCount + 1
-                }
-                if (wifiCount == scanWifiResult.size){
-                    dbm = -100
-                    wifiCount = 0
+                if (ssid !in ssids){
+                    ssids.add(ssid)
+                    dbms.add(-100)
                 }
             }
+            ssidList = ssids
+            dbmList = dbms
         }
     }
 }
 
-val ObserveChosenSsidDbm.getDbm: Int
-    get() = dbm
+val ObserveChosenSsidDbm.getDbmList: List<Int>
+    get() = dbmList
+
+val ObserveChosenSsidDbm.getSsidList: List<String>
+    get() = ssidList

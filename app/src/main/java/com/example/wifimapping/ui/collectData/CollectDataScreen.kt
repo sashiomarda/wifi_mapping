@@ -82,7 +82,8 @@ import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
 import com.example.wifimapping.ui.viewmodel.toWifi
 import com.example.wifimapping.util.ObserveChosenSsidDbm
-import com.example.wifimapping.util.getDbm
+import com.example.wifimapping.util.getDbmList
+import com.example.wifimapping.util.getSsidList
 import com.example.wifimapping.util.scanWifi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -115,7 +116,6 @@ fun CollectDataScreen(
     var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableIntStateOf(0) }
     var dbmText by remember { mutableStateOf("") }
-    var dbmObserveInt by remember { mutableStateOf(0)}
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
     val lastGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
@@ -123,8 +123,8 @@ fun CollectDataScreen(
         gridViewModel.currentGrid.toGrid()
     ) }
     var idGrids : MutableList<Int> = ArrayList()
-    var ssidList : MutableList<String> = ArrayList()
-    var dbmList : MutableList<Int> = ArrayList()
+    var ssidList : List<String> = ArrayList()
+    var dbmList : List<Int> = ArrayList()
     if (gridListDb.gridList.isNotEmpty()) {
         if (currentActiveGrid.id == 0){
             currentActiveGrid = gridListDb.gridList[0]
@@ -136,11 +136,18 @@ fun CollectDataScreen(
             }
         }
     }
-    var chosenSsid by remember { mutableStateOf(wifiViewModel.wifiUiState.wifiDetails.toWifi()) }
     var gridHaveDbm = remember { mutableStateListOf<Int>() }
-    var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsid, gridListDb, wifiViewModel)
     var imageBitmap by mutableStateOf(ImageBitmap(500,500))
     var isSaveImageButton by remember { mutableStateOf(false)}
+    val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
+    var chosenSsidList : MutableList<String> = ArrayList()
+    if (wifiCheckedUiStateList.wifiList.isNotEmpty()) {
+        for (wifi in wifiCheckedUiStateList.wifiList){
+            chosenSsidList.add(wifi.ssid)
+        }
+    }
+    var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsidList)
+    var maxDbmFromList by remember { mutableIntStateOf(-100)}
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -306,35 +313,38 @@ fun CollectDataScreen(
                                 color = Color.LightGray
                             ),
                             onClick = {
+                                var ssidDbmMap = HashMap<String,Int>()
                                 currentActiveGrid = gridViewModel.currentGrid.toGrid()
                                 var scanWifiResult = scanWifi(context)
                                 if (scanWifiResult.isNotEmpty()) {
                                     wifiList = scanWifiResult
                                 }
-                                if (!wifiList.isNullOrEmpty()) {
-                                    for (i in wifiList) {
-                                        ssidList.add(i.ssid)
-                                        dbmList.add(i.dbm)
+                                for (ssid in chosenSsidList) {
+                                    if (!wifiList.isNullOrEmpty()) {
+                                        for (wifi in wifiList) {
+                                            if (ssid == wifi.ssid) {
+                                                ssidDbmMap[wifi.ssid] = wifi.dbm
+                                            }
+                                        }
+                                    }
+                                    if (ssidDbmMap[ssid] == null){
+                                        ssidDbmMap[ssid] = -100
                                     }
                                 }
+                                for (i in ssidDbmMap){
+                                    if (i.value > maxDbmFromList){
+                                        maxDbmFromList = i.value
+                                    }
+                                }
+
                                 coroutineScope.launch {
                                     if (currentActiveGrid.id == 0) {
                                         currentActiveGrid = gridListDb.gridList[0]
                                     }
-                                    if (chosenIdSsid != 0) {
-                                        chosenSsid = wifiViewModel.selectWifiById(chosenIdSsid)
-                                    }
-                                    var dbm = if (ssidList.indexOf(chosenSsid.ssid) != -1) {
-                                        dbmList[
-                                            ssidList.indexOf(chosenSsid.ssid)
-                                        ]
-                                    }else{
-                                        -100
-                                    }
                                     var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
                                         idCollectData = data.id,
                                         idGrid = currentActiveGrid.id,
-                                        dbm = dbm
+                                        dbm = maxDbmFromList
                                     )
                                     if (currentActiveGrid.id !in gridHaveDbm) {
                                         dbmViewModel.saveDbm(inputDbm)
@@ -344,20 +354,22 @@ fun CollectDataScreen(
                             },
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                dbmObserveInt = observeChosenSsidDbm.getDbm
-                                dbmText = if (dbmObserveInt != 0) {
-                                    if (dbmObserveInt == -100){
+                                ssidList = observeChosenSsidDbm.getSsidList
+                                dbmList = observeChosenSsidDbm.getDbmList
+                                maxDbmFromList = dbmList.maxOrNull() ?: 0
+                                dbmText = if (maxDbmFromList != 0) {
+                                    if (maxDbmFromList == -100){
                                         "Tidak terdeteksi"
                                     }else {
-                                        "$dbmObserveInt dbm"
+                                        "$maxDbmFromList dbm"
                                     }
                                 }else{
                                     "Loading..."
                                 }
                                 Text(
                                     text = dbmText,
-                                    fontSize = if (dbmObserveInt != 0){
-                                        if (dbmObserveInt != -100) {
+                                    fontSize = if (maxDbmFromList != 0){
+                                        if (maxDbmFromList != -100) {
                                             30.sp
                                         }else{
                                             15.sp
@@ -365,15 +377,15 @@ fun CollectDataScreen(
                                     }else{
                                         20.sp
                                     },
-                                    color = if (dbmObserveInt == 0){
+                                    color = if (maxDbmFromList == 0){
                                         Color(0xFF000000)
-                                    } else if (dbmObserveInt >= -67) {
+                                    } else if (maxDbmFromList >= -67) {
                                         Color(0xFF1AFF00)
-                                    } else if (dbmObserveInt >= -70 && dbmObserveInt <= -68) {
+                                    } else if (maxDbmFromList >= -70 && maxDbmFromList <= -68) {
                                         Color(0xFFFFEB3B)
-                                    } else if (dbmObserveInt >= -80 && dbmObserveInt <= -71) {
+                                    } else if (maxDbmFromList >= -80 && maxDbmFromList <= -71) {
                                         Color(0xFFFF9800)
-                                    } else if (dbmObserveInt < -80) {
+                                    } else if (maxDbmFromList < -80) {
                                         Color(0xFFFF0000)
                                     } else {
                                         Color(0xFFFF0000)
