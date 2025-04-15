@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -80,7 +82,6 @@ import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
 import com.example.wifimapping.ui.viewmodel.toGrid
-import com.example.wifimapping.ui.viewmodel.toWifi
 import com.example.wifimapping.util.ObserveChosenSsidDbm
 import com.example.wifimapping.util.getDbmList
 import com.example.wifimapping.util.getSsidList
@@ -148,6 +149,7 @@ fun CollectDataScreen(
     }
     var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsidList)
     var maxDbmFromList by remember { mutableIntStateOf(-100)}
+    var isButtonDetailsClicked by remember { mutableStateOf(false)}
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -304,6 +306,136 @@ fun CollectDataScreen(
                         ) {
                             Text(text = "Posisi Grid Aktif: ${activeGridText}")
                         }
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable{
+                                isButtonDetailsClicked = !isButtonDetailsClicked
+                            }
+                        ) {
+                            ssidList = observeChosenSsidDbm.getSsidList
+                            dbmList = observeChosenSsidDbm.getDbmList
+                            maxDbmFromList = dbmList.maxOrNull() ?: 0
+                            dbmText = if (maxDbmFromList != 0) {
+                                if (maxDbmFromList == -100) {
+                                    "Tidak terdeteksi"
+                                } else {
+                                    "$maxDbmFromList dbm"
+                                }
+                            } else {
+                                "Loading..."
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = dbmText,
+                                    fontSize = if (maxDbmFromList != 0) {
+                                        if (maxDbmFromList != -100) {
+                                            30.sp
+                                        } else {
+                                            15.sp
+                                        }
+                                    } else {
+                                        20.sp
+                                    },
+                                    color = if (maxDbmFromList == 0) {
+                                        Color(0xFFFF0000)
+                                    } else if (maxDbmFromList >= -67) {
+                                        Color(0xFF1AFF00)
+                                    } else if (maxDbmFromList >= -70 && maxDbmFromList <= -68) {
+                                        Color(0xFFFFEB3B)
+                                    } else if (maxDbmFromList >= -80 && maxDbmFromList <= -71) {
+                                        Color(0xFFFF9800)
+                                    } else if (maxDbmFromList < -80) {
+                                        Color(0xFFFF0000)
+                                    } else {
+                                        Color(0xFFFF0000)
+                                    },
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = if (isButtonDetailsClicked) {
+                                        "Tutup detail"
+                                    } else {
+                                        "Lihat detail"
+                                    },
+                                    color = Color(0xFF479AFF)
+                                )
+                                Icon(
+                                    imageVector = if (isButtonDetailsClicked) {
+                                        Icons.Filled.KeyboardArrowUp
+                                    } else {
+                                        Icons.Filled.KeyboardArrowDown
+                                    },
+                                    contentDescription = "button details",
+                                    tint = Color(0xFF479AFF)
+                                )
+                            }
+                            if (isButtonDetailsClicked) {
+                                for (i in ssidList.indices) {
+                                    var dbmTxt = if (dbmList[i] != -100) {
+                                        dbmList[i].toString()
+                                    } else {
+                                        "--"
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(
+                                            modifier = Modifier
+                                                .weight(7f),
+                                            fontSize = 10.sp,
+                                            text = "${ssidList[i]}",
+                                            color = if (dbmList[i] == 0) {
+                                                Color(0xFF000000)
+                                            } else if (dbmList[i] >= -67) {
+                                                Color(0xFF1AFF00)
+                                            } else if (dbmList[i] >= -70 && dbmList[i] <= -68) {
+                                                Color(0xFFFFEB3B)
+                                            } else if (dbmList[i] >= -80 && dbmList[i] <= -71) {
+                                                Color(0xFFFF9800)
+                                            } else if (dbmList[i] < -80) {
+                                                Color(0xFFFF0000)
+                                            } else {
+                                                Color(0xFFFF0000)
+                                            },
+                                        )
+                                        Text(
+                                            modifier = Modifier
+                                                .weight(3f),
+                                            text = "${dbmTxt} dbm",
+                                            fontSize = 10.sp,
+                                            color = if (dbmList[i] == 0) {
+                                                Color(0xFF000000)
+                                            } else if (dbmList[i] >= -67) {
+                                                Color(0xFF1AFF00)
+                                            } else if (dbmList[i] >= -70 && dbmList[i] <= -68) {
+                                                Color(0xFFFFEB3B)
+                                            } else if (dbmList[i] >= -80 && dbmList[i] <= -71) {
+                                                Color(0xFFFF9800)
+                                            } else if (dbmList[i] < -80) {
+                                                Color(0xFFFF0000)
+                                            } else {
+                                                Color(0xFFFF0000)
+                                            },
+                                            textAlign = TextAlign.Right
+                                        )
+                                    }
+                                    HorizontalDivider(
+                                        color = Color.LightGray,
+                                        modifier = Modifier
+                                            .padding(bottom = 10.dp)
+                                            .offset(y = (-5).dp),
+                                    )
+                                }
+                            }
+                        }
                         Button(
                             modifier = Modifier
                                 .width(200.dp),
@@ -354,51 +486,9 @@ fun CollectDataScreen(
                             },
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                ssidList = observeChosenSsidDbm.getSsidList
-                                dbmList = observeChosenSsidDbm.getDbmList
-                                maxDbmFromList = dbmList.maxOrNull() ?: 0
-                                dbmText = if (maxDbmFromList != 0) {
-                                    if (maxDbmFromList == -100){
-                                        "Tidak terdeteksi"
-                                    }else {
-                                        "$maxDbmFromList dbm"
-                                    }
-                                }else{
-                                    "Loading..."
-                                }
                                 Text(
-                                    text = dbmText,
-                                    fontSize = if (maxDbmFromList != 0){
-                                        if (maxDbmFromList != -100) {
-                                            30.sp
-                                        }else{
-                                            15.sp
-                                        }
-                                    }else{
-                                        20.sp
-                                    },
-                                    color = if (maxDbmFromList == 0){
-                                        Color(0xFF000000)
-                                    } else if (maxDbmFromList >= -67) {
-                                        Color(0xFF1AFF00)
-                                    } else if (maxDbmFromList >= -70 && maxDbmFromList <= -68) {
-                                        Color(0xFFFFEB3B)
-                                    } else if (maxDbmFromList >= -80 && maxDbmFromList <= -71) {
-                                        Color(0xFFFF9800)
-                                    } else if (maxDbmFromList < -80) {
-                                        Color(0xFFFF0000)
-                                    } else {
-                                        Color(0xFFFF0000)
-                                    },
-                                )
-                                Text(
-                                    text = "Pastikan HP dalam posisi stabil dan tidak bergerak",
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 12.sp
-                                )
-                                Text(
-                                    modifier = Modifier
-                                        .padding(top = 10.dp), text = "Ambil data",
+                                    modifier = Modifier,
+                                    text = "Ambil data",
                                     fontSize = 20.sp
                                 )
                             }
