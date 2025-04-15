@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -678,7 +679,14 @@ fun CollectDataScreen(
                         }
                     }
                 ) {
-                    Text("Simpan gambar peta grid")
+                    Row(modifier = Modifier
+                    ) {
+                        Text("Bagikan gambar peta grid")
+                        Icon(modifier = Modifier
+                            .padding(start = 5.dp),
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = "Share button")
+                    }
                 }
             }
         }

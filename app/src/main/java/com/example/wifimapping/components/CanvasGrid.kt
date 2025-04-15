@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -105,11 +104,11 @@ fun CanvasGrid(
 
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var dbmGridMap = HashMap<Int,Int>()
-    var wifiGridLocationIndex by remember { mutableStateOf(0) }
+    var wifiGridLocationIndex: MutableList<Int> = ArrayList()
     if (!gridListDb?.gridList.isNullOrEmpty()){
         for (i in 1..gridListDb.gridList.size) {
             if (gridListDb.gridList[i-1].idWifi != 0){
-                wifiGridLocationIndex = i-1
+                wifiGridLocationIndex.add(i-1)
             }
         }
     }
@@ -181,7 +180,7 @@ fun CanvasGrid(
                                                     y = gridHeightPx * y
                                                 ),
                                             )
-                                            if (wifiGridLocationIndex == i) {
+                                            if (gridListDb.gridList[i].idWifi != 0) {
                                                 drawImage(
                                                     image = star,
                                                     topLeft = Offset(
