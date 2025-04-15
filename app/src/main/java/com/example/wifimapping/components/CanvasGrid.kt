@@ -154,10 +154,19 @@ fun CanvasGrid(
                             (gridHeightPx * 1)-5
                         )
                     if (screen == "collect_data"){
+                        var repeatX = 0
+                        var repeatY = 0
+                        if (length!! > width!!) {
+                            repeatX = gridVerticalAmount.toInt()
+                            repeatY = gridHorizontalAmount.toInt()
+                        }else{
+                            repeatX = gridHorizontalAmount.toInt()
+                            repeatY = gridVerticalAmount.toInt()
+                        }
                         for (i in gridListDb.gridList.indices) {
                             var count = 0
-                            repeat(gridHorizontalAmount.toInt()) {y->
-                                repeat(gridVerticalAmount.toInt()) {x->
+                            repeat(repeatY) {y->
+                                repeat(repeatX) {x->
                                     var dbm = dbmGridMap[gridListDb.gridList[i].id]
                                     if (dbm != null) {
                                         if (count == i) {
@@ -173,7 +182,6 @@ fun CanvasGrid(
                                                 } else {
                                                     Color(0xFFFF0000)
                                                 },
-//                                                color = Color.White,
                                                 size = canvasQuadrantSize,
                                                 topLeft = Offset(
                                                     x = gridWidthPx * x,
@@ -205,7 +213,7 @@ fun CanvasGrid(
                 val firstGridID = gridListDb.gridList[0].id
                 LazyVerticalGrid(
                     modifier = Modifier,
-                    columns = GridCells.Adaptive(floor(gridWidth).dp-2.dp)
+                    columns = GridCells.Adaptive(floor(gridWidth).dp-((floor(gridWidth)*0.01).dp))
                 ) {
                     items(gridListDb.gridList,
                         key = {
