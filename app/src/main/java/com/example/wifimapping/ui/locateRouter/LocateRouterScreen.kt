@@ -200,6 +200,8 @@ fun LocateRouterScreen(
                                         idGridRouterPosition = 0
                                         isResetChosenIdSsid = true
                                     }
+                                    chosenIdSsidList.removeAll(chosenIdSsidList)
+                                    chosenSsidList.removeAll(chosenSsidList)
                                 }
                             }) {
                             Text("Reset Lokasi Router")
