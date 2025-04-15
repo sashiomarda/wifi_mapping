@@ -150,8 +150,8 @@ fun CanvasGrid(
                     val gridWidthPx = localDensity.run { gridWidth.dp.toPx() }
                     val canvasQuadrantSize =
                         Size(
-                            gridHeightPx * 1,
-                            gridWidthPx * 1
+                            (gridWidthPx * 1)-5,
+                            (gridHeightPx * 1)-5
                         )
                     if (screen == "collect_data"){
                         for (i in gridListDb.gridList.indices) {
