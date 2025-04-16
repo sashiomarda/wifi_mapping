@@ -64,7 +64,6 @@ class GridViewModel(
     }
 
     suspend fun saveGrid(gridDetails: GridDetails) {
-        Log.d("gridDetails", gridDetails.toString())
         gridRepository.insertGrid(gridDetails.toGrid())
     }
 
@@ -79,8 +78,6 @@ class GridViewModel(
     suspend fun updateChosenGrid(prevGrid: Grid, currGrid: Grid) {
         previousGrid = prevGrid.toGridDetails()
         currentGrid = currGrid.toGridDetails()
-        Log.d("grid previousGrid 4",previousGrid.toString())
-        Log.d("grid currentGrid 5",currentGrid.toString())
         gridRepository.updateGrid(previousGrid.toGrid())
         gridRepository.updateGrid(currentGrid.toGrid())
     }

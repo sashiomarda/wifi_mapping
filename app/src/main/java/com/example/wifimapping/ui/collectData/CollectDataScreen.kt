@@ -295,6 +295,7 @@ fun CollectDataScreen(
                         modifier = Modifier
                             .weight(1f)
                     ) {
+                        currentActiveGrid = gridViewModel.currentGrid.toGrid()
                         val activeGridText = if (currentActiveGrid.id != 0) {
                             currentActiveGrid.id - firstGridId + 1
                         } else {
