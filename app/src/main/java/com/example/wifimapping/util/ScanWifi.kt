@@ -21,7 +21,6 @@ fun scanWifi(context : Context) : MutableList<Wifi>{
     val wifiScanReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             context.unregisterReceiver(this)
-            val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
         }
     }
 

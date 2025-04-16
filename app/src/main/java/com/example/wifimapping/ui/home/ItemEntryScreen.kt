@@ -16,6 +16,9 @@
 
 package com.example.wifimapping.ui.home
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -48,12 +51,14 @@ import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsUiState
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 object ItemEntryDestination : NavigationDestination {
     override val route = "roomparams_entry"
     override val titleRes = R.string.room_params_entry_title
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemEntryScreen(
@@ -77,6 +82,8 @@ fun ItemEntryScreen(
             onItemValueChange = viewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {
+                    val currentTime = LocalDateTime.now()
+                    viewModel.roomParamsUiState.roomParamsDetails.copy(timestamp = currentTime)
                     viewModel.saveRoomParams()
                     navigateToPreviewGrid()
                 }
@@ -89,6 +96,7 @@ fun ItemEntryScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RoomParamsEntryBody(
     roomParamsUiState: RoomParamsUiState,
@@ -125,6 +133,7 @@ fun RoomParamsEntryBody(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RoomParamsInputForm(
     roomParamsDetails: RoomParamsDetails,
@@ -199,6 +208,7 @@ fun RoomParamsInputForm(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 private fun ItemEntryScreenPreview() {
