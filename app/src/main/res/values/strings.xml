@@ -12,7 +12,9 @@
     <string name="preview_grid_title">Preview Grid</string>
     <string name="choose_wifi_title">Choose Wifi</string>
     <string name="collect_data_title">Collect Data</string>
+    <string name="history_title">History</string>
     <string name="locate_router_title">Locate Router</string>
+    <string name="room_list_title">Room List</string>
     <string name="room_name">Nama Ruangan*</string>
     <string name="room_length">Panjang (m)*</string>
     <string name="room_width">Lebar (m)*</string>

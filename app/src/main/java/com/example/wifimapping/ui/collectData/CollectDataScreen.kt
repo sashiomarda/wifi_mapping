@@ -12,7 +12,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -67,13 +66,13 @@ import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
-import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.previewGrid.vertical
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
@@ -153,7 +152,7 @@ fun CollectDataScreen(
     var isButtonDetailsClicked by remember { mutableStateOf(false)}
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp

@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 data class RoomParams(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val timestamp: LocalDateTime,
+    val timestamp: Long,
     val roomName: String,
     val length: Int,
     val width: Int,

@@ -1,6 +1,7 @@
 package com.example.wifimapping.ui.locateRouter
 
-import android.util.Log
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -42,12 +43,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
-import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.previewGrid.vertical
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
@@ -65,6 +66,7 @@ object LocateRouterDestination : NavigationDestination {
     val routeWithArgs = "${route}/{$idCollectData}"
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocateRouterScreen(
@@ -89,7 +91,7 @@ fun LocateRouterScreen(
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 1
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp

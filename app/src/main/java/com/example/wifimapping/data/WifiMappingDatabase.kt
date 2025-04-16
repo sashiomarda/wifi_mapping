@@ -15,7 +15,7 @@ import kotlin.jvm.java
     Grid::class,
     Dbm::class],
     version = 2, exportSchema = false)
-@TypeConverters(TimeConverter::class)
+//@TypeConverters(TimeConverter::class)
 abstract class WifiMappingDatabase : RoomDatabase() {
     abstract fun roomParamsDao(): RoomParamsDao
     abstract fun wifiDao(): WifiDao

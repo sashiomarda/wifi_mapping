@@ -17,6 +17,8 @@
 package com.example.wifimapping.ui
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -33,6 +35,7 @@ import com.example.wifimapping.ui.viewmodel.WifiViewModel
  * Provides Factory to create instance of ViewModel for the entire Inventory app
  */
 object AppViewModelProvider {
+    @RequiresApi(Build.VERSION_CODES.O)
     val Factory = viewModelFactory {
         // Initializer for ItemEntryViewModel
         initializer {

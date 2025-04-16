@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.wifimapping.ui.home
+package com.example.wifimapping.ui.itemEntry
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,7 +41,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.navigation.NavigationDestination
@@ -65,12 +64,12 @@ fun ItemEntryScreen(
     navigateToPreviewGrid: () -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
-    viewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    roomParamsEntryViewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
@@ -78,13 +77,13 @@ fun ItemEntryScreen(
         }
     ) { innerPadding ->
         RoomParamsEntryBody(
-            roomParamsUiState = viewModel.roomParamsUiState,
-            onItemValueChange = viewModel::updateUiState,
+            roomParamsUiState = roomParamsEntryViewModel.roomParamsUiState,
+            onItemValueChange = roomParamsEntryViewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {
-                    val currentTime = LocalDateTime.now()
-                    viewModel.roomParamsUiState.roomParamsDetails.copy(timestamp = currentTime)
-                    viewModel.saveRoomParams()
+                    val currentTime = System.currentTimeMillis()
+                    roomParamsEntryViewModel.roomParamsUiState.roomParamsDetails.copy(timestamp = currentTime)
+                    roomParamsEntryViewModel.saveRoomParams()
                     navigateToPreviewGrid()
                 }
             },

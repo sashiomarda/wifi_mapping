@@ -1,7 +1,8 @@
 package com.example.wifimapping.ui.previewGrid
 
+import android.os.Build
 import android.util.Log
-import androidx.compose.foundation.background
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,19 +26,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.ui.AppViewModelProvider
-import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
+import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,6 +49,7 @@ object PreviewGridDestination : NavigationDestination {
     const val idCollectData = "idCollectData"
     val routeWithArgs = "${route}/{$idCollectData}"
 }
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreviewGridScreen(
@@ -62,13 +64,18 @@ fun PreviewGridScreen(
 
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
             )
         }
     ) { innerPadding ->
-        var data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+        var data = RoomParamsDetails()
+        if (previewGridviewModel.getIdCollectData() == 0) {
+            data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+        }else {
+            data = previewGridviewModel.roomParamByIdsUiState.roomParamsDetails
+        }
         gridViewModel.updateUiState(
             gridViewModel.gridUiState.gridDetails.copy(idCollectData = data.id)
         )

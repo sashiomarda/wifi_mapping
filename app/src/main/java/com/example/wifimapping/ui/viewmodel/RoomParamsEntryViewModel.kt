@@ -79,7 +79,7 @@ data class RoomParamsDetails(
     val length: String = "",
     val width: String = "",
     val gridDistance: String = "",
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
