@@ -16,7 +16,9 @@
 
 package com.example.wifimapping.ui.viewmodel
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,7 +27,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gridmapping.data.GridRepository
 import com.example.wifimapping.data.Grid
-import com.example.wifimapping.ui.locateRouter.LocateRouterDestination
+import com.example.wifimapping.ui.previewGrid.PreviewGridDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.stateIn
 /**
  * ViewModel to validate and insert wifi in the Room database.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class GridViewModel(
     savedStateHandle: SavedStateHandle,
     private val gridRepository: GridRepository,
@@ -48,10 +51,10 @@ class GridViewModel(
     var currentGrid by mutableStateOf(GridDetails())
         private set
 
-    private val idCollectData: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idCollectData])
+    private val idHistory: Int = checkNotNull(savedStateHandle[PreviewGridDestination.idHistory])
 
     val gridUiStateList: StateFlow<GridUiStateList> =
-        gridRepository.getGridByIdCollectDataStream(idCollectData = idCollectData)
+        gridRepository.getGridByIdHistoryStream(idHistory = idHistory)
             .map { GridUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -59,7 +62,7 @@ class GridViewModel(
                 initialValue = GridUiStateList()
             )
 
-    suspend fun lastGridInputId() : Grid? {
+    suspend fun lastGridInputIdHistory() : Grid? {
         return gridRepository.getLastGridInputId()
     }
 
@@ -91,9 +94,13 @@ class GridViewModel(
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
-    fun updateUiState(wifiDetails: GridDetails) {
+    fun updateUiState(gridDetails: GridDetails) {
         gridUiState =
-            GridUiState(gridDetails = wifiDetails)
+            GridUiState(gridDetails = gridDetails)
+    }
+
+    fun getIdHistory(): Int {
+        return idHistory
     }
 
 }
@@ -103,23 +110,20 @@ data class GridUiState(
 
 data class GridDetails(
     val id: Int = 0,
-    val idCollectData: Int = 0,
+    val idRoom: Int = 0,
+    val idHistory: Int = 0,
     val idWifi: Int = 0,
     val layerNo: Int = 1,
     val isClicked: Boolean = false,
 )
 
-/**
- * Extension function to convert [GridDetails] to [Grid]. If the value of [GridDetails.price] is
- * not a valid [Double], then the price will be set to 0.0. Similarly if the value of
- * [GridDetails.quantity] is not a valid [Int], then the quantity will be set to 0
- */
 fun GridDetails.toGrid(): Grid = Grid(
     id = id,
-    idCollectData = idCollectData,
+    idRoom = idRoom,
     idWifi = idWifi,
     layerNo = layerNo,
-    isClicked = isClicked
+    isClicked = isClicked,
+    idHistory = idHistory
 )
 
 /**
@@ -135,10 +139,11 @@ fun Grid.toGridUiState(): GridUiState = GridUiState(
  */
 fun Grid.toGridDetails(): GridDetails = GridDetails(
     id = id,
-    idCollectData = idCollectData,
+    idRoom = idRoom,
     idWifi = idWifi,
     layerNo = layerNo,
-    isClicked = isClicked
+    isClicked = isClicked,
+    idHistory = idHistory
 )
 
 data class GridUiStateList(val gridList: List<Grid> = listOf())

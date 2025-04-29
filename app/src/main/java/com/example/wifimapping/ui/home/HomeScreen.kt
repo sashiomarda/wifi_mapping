@@ -16,197 +16,131 @@
 
 package com.example.wifimapping.ui.home
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
-import com.example.wifimapping.ui.AppViewModelProvider
+import com.example.wifimapping.ui.history.HistoryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
-import com.example.wifimapping.ui.theme.WifiMappingTheme
-import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
-import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
-import com.example.wifimapping.ui.viewmodel.RoomParamsUiState
-import kotlinx.coroutines.launch
+import com.example.wifimapping.ui.roomList.RoomListDestination
 
-object ItemEntryDestination : NavigationDestination {
-    override val route = "roomparams_entry"
+object HomeDestination : NavigationDestination {
+    override val route = "home"
     override val titleRes = R.string.room_params_entry_title
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemEntryScreen(
-    navigateToPreviewGrid: () -> Unit,
+fun HomeScreen(
+    navigateToNextMenu: (String) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
-    viewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+            WifiMappingTopAppBar(
+                title = stringResource(HomeDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )
         }
     ) { innerPadding ->
-        RoomParamsEntryBody(
-            roomParamsUiState = viewModel.roomParamsUiState,
-            onItemValueChange = viewModel::updateUiState,
-            onSaveClick = {
-                coroutineScope.launch {
-                    viewModel.saveRoomParams()
-                    navigateToPreviewGrid()
-                }
-            },
-            modifier = Modifier
-                .padding(
-                    top = innerPadding.calculateTopPadding()
+        Box(modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxWidth()
+            .fillMaxHeight()
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Beranda",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
                 )
-        )
-    }
-}
-
-@Composable
-fun RoomParamsEntryBody(
-    roomParamsUiState: RoomParamsUiState,
-    onItemValueChange: (RoomParamsDetails) -> Unit,
-    onSaveClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(start = 20.dp, end = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-        Text("Input Data",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier
-                .padding(bottom = 15.dp))
-        RoomParamsInputForm(
-            roomParamsDetails = roomParamsUiState.roomParamsDetails,
-            onValueChange = onItemValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            showWarning = !roomParamsUiState.isEntryValid
-        )
-        Button(
-            onClick = onSaveClick,
-            enabled = roomParamsUiState.isEntryValid,
-            shape = MaterialTheme.shapes.small,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp)
-        ) {
-            Text(text = stringResource(R.string.save_action))
+                val menuNameList = listOf<String>(
+                    "Ruangan",
+                    "Riwayat"
+                )
+                val nextRouteList = listOf<String>(
+                    RoomListDestination.route,
+                    HistoryDestination.route
+                )
+                val imageVectorList = listOf<ImageVector>(
+                    Icons.Default.Home,
+                    Icons.Default.Menu
+                )
+                val menuList: MutableList<HomeMenu> = ArrayList()
+                for (i in menuNameList.indices) {
+                    menuList.add(
+                        HomeMenu(
+                            menuName = menuNameList[i],
+                            nextRoute = nextRouteList[i],
+                            imageVector = imageVectorList[i]
+                        )
+                    )
+                }
+                LazyColumn {
+                    items(items = menuList) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .border(border = BorderStroke(2.dp, color = Color.LightGray))
+                                .clickable {
+                                    navigateToNextMenu(it.nextRoute)
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(it.imageVector, contentDescription = it.menuName)
+                            Text(it.menuName)
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .height(10.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-@Composable
-fun RoomParamsInputForm(
-    roomParamsDetails: RoomParamsDetails,
-    modifier: Modifier = Modifier,
-    onValueChange: (RoomParamsDetails) -> Unit = {},
-    enabled: Boolean = true,
-    showWarning : Boolean
-) {
-    Column(
-    ) {
-        OutlinedTextField(
-            value = roomParamsDetails.roomName,
-            onValueChange = { onValueChange(roomParamsDetails.copy(roomName = it)) },
-            label = { Text(stringResource(R.string.room_name)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            singleLine = true
-        )
-        OutlinedTextField(
-            value = roomParamsDetails.length,
-            onValueChange = { onValueChange(roomParamsDetails.copy(length = it)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(stringResource(R.string.room_length)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            singleLine = true
-        )
-        OutlinedTextField(
-            value = roomParamsDetails.width,
-            onValueChange = { onValueChange(roomParamsDetails.copy(width = it)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(stringResource(R.string.room_width)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            singleLine = true
-        )
-        OutlinedTextField(
-            value = roomParamsDetails.gridDistance,
-            onValueChange = { onValueChange(roomParamsDetails.copy(gridDistance = it)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            label = { Text(stringResource(R.string.grid_distance)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            singleLine = true
-        )
-        if (showWarning) {
-            Text(
-                text = stringResource(R.string.required_fields),
-                modifier = Modifier.padding(start = dimensionResource(id = R.dimen.padding_medium))
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ItemEntryScreenPreview() {
-    WifiMappingTheme {
-        RoomParamsEntryBody(roomParamsUiState = RoomParamsUiState(
-            RoomParamsDetails(
-                roomName = "Item name", length = "10.00", width = "5"
-            )
-        ), onItemValueChange = {}, onSaveClick = {})
-    }
-}
+data class HomeMenu(
+    val menuName: String,
+    val nextRoute: String,
+    val imageVector: ImageVector
+)

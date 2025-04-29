@@ -19,11 +19,11 @@ interface DbmDao {
     @Delete
     suspend fun delete(dbm: Dbm)
 
-    @Query("SELECT * from dbm WHERE idCollectData = :idCollectData ORDER BY idGrid ASC")
-    fun getDbmByIdCollectData(idCollectData: Int): Flow<List<Dbm>>
+    @Query("SELECT * from dbm WHERE idHistory = :idHistory ORDER BY idGrid ASC")
+    fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>>
 
-    @Query("SELECT * from dbm WHERE idCollectData = :idCollectData AND layerNo = :layerNo")
-    fun getDbmByIdCollectDataAndLayerNo(idCollectData: Int,layerNo: Int): Flow<List<Dbm>>
+    @Query("SELECT * from dbm WHERE idHistory = :idHistory AND layerNo = :layerNo")
+    fun getDbmByIdHistoryAndLayerNo(idHistory: Int,layerNo: Int): Flow<List<Dbm>>
 
     @Query("SELECT * from dbm ORDER BY id DESC LIMIT 1")
     suspend fun getLastDbm(): Dbm

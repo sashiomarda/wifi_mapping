@@ -30,6 +30,7 @@ interface AppContainer {
     val wifiRepository : WifiRepository
     val gridRepository : GridRepository
     val dbmRepository : DbmRepository
+    val historyRepository : HistoryRepository
 }
 
 /**
@@ -53,5 +54,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val dbmRepository : DbmRepository by lazy {
         OfflineDbmRepository(WifiMappingDatabase.getDatabase(context).dbmDao())
+    }
+
+    override val historyRepository : HistoryRepository by lazy {
+        OfflineHistoryRepository(WifiMappingDatabase.getDatabase(context).historyDao())
     }
 }

@@ -18,6 +18,7 @@ package com.example.wifimapping.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDateTime
 
 
 /**
@@ -27,6 +28,7 @@ import androidx.room.PrimaryKey
 data class RoomParams(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val timestamp: Long,
     val roomName: String,
     val length: Int,
     val width: Int,

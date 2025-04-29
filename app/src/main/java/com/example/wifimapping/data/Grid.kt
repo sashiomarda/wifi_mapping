@@ -27,7 +27,8 @@ import androidx.room.PrimaryKey
 data class Grid(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val idCollectData: Int,
+    val idRoom: Int = 0,
+    val idHistory: Int = 0,
     val idWifi: Int = 0,
     val layerNo: Int = 0,
     val isClicked: Boolean = false,

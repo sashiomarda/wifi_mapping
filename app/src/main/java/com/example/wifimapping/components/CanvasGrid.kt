@@ -2,7 +2,9 @@ package com.example.wifimapping.components
 
 //noinspection SuspiciousImport
 import android.R
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -57,6 +59,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.run
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 fun CanvasGrid(
@@ -88,17 +91,17 @@ fun CanvasGrid(
         canvasHeight = screenWidth
         canvasWidth = screenWidth * aspectRatioWidth
         gridVerticalAmount = length / gridCmToM!!
-        gridHorizontalAmount = width / gridCmToM!!
+        gridHorizontalAmount = width / gridCmToM
     }else{
         aspectRatioWidth = length / width
         canvasWidth = screenWidth
         canvasHeight = screenWidth * aspectRatioWidth
         gridVerticalAmount = width / gridCmToM!!
-        gridHorizontalAmount = length / gridCmToM!!
+        gridHorizontalAmount = length / gridCmToM
     }
     canvasWidth = ceil(canvasWidth)
     val context = LocalContext.current
-    val gridHeight = canvasWidth * gridCmToM!! / width
+    val gridHeight = canvasWidth * gridCmToM / width
     val gridWidth = canvasHeight * gridCmToM / length
     var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
 
@@ -156,7 +159,7 @@ fun CanvasGrid(
                     if (screen == "collect_data"){
                         var repeatX = 0
                         var repeatY = 0
-                        if (length!! > width!!) {
+                        if (length > width) {
                             repeatX = gridVerticalAmount.toInt()
                             repeatY = gridHorizontalAmount.toInt()
                         }else{
@@ -236,7 +239,8 @@ fun CanvasGrid(
                                             gridViewModel.updateUiState(
                                                 gridViewModel.gridUiState.gridDetails.copy(
                                                     id = it.id,
-                                                    idCollectData = it.idCollectData,
+                                                    idRoom = it.idRoom,
+                                                    idHistory = it.idHistory,
                                                     idWifi = chosenIdSsid,
                                                     isClicked = it.isClicked
                                                 )
@@ -301,7 +305,7 @@ fun CanvasGrid(
         }else{
             var repeatX = 0
             var repeatY = 0
-            if (length!! > width!!) {
+            if (length > width) {
                 repeatX = gridHorizontalAmount.toInt()
                 repeatY = gridVerticalAmount.toInt()
             }else{
