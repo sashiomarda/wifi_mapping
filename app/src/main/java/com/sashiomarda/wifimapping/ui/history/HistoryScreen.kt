@@ -97,7 +97,8 @@ fun HistoryScreen(
                         if (historyViewModel.getIdRoom() != 0) {
                             historyViewModel.saveHistory(
                                 historyViewModel.historyUiState.historyDetails.copy(
-                                    idRoom = historyViewModel.getIdRoom()
+                                    idRoom = historyViewModel.getIdRoom(),
+                                    timestamp = System.currentTimeMillis(),
                                 )
                             )
                             isnavigateToRoomPreviewGrid = true
