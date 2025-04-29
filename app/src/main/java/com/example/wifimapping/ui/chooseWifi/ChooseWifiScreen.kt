@@ -52,7 +52,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import com.example.wifimapping.ui.roomList.RoomListDestination
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.util.scanWifi
 import kotlinx.coroutines.*
@@ -60,9 +59,8 @@ import kotlinx.coroutines.*
 object ChooseWifiDestination : NavigationDestination {
     override val route = "choose_wifi"
     override val titleRes = R.string.choose_wifi_title
-    const val SSIDARG = "ssid"
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 const val PERMISSIONS_REQUEST_CODE = 1
@@ -104,7 +102,7 @@ fun ChooseWifiScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Choose Wifi",
+                Text("Pilih Wifi",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp))
@@ -158,7 +156,7 @@ fun ChooseWifiScreen(
                     Button(
                         shape = RoundedCornerShape(5.dp),
                         onClick = {
-                            var data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+                            var data = previewGridviewModel.historyByIdUiState.historyDetails
                             navigateToLocateRouter(data.id)
                         },
                         enabled = !isNextButtonDisabled,

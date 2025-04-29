@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -48,8 +49,8 @@ import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 object RoomListDestination : NavigationDestination {
     override val route = "room_list"
     override val titleRes = R.string.locate_router_title
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 @SuppressLint("UnrememberedMutableState")
@@ -58,7 +59,7 @@ object RoomListDestination : NavigationDestination {
 @Composable
 fun RoomListScreen(
     navigateToRoomParamsEntry: () -> Unit,
-    navigateToPreviewGrid: (Int) -> Unit,
+    navigateToHistory: (Int) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
     roomParamsViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -74,7 +75,9 @@ fun RoomListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = navigateToRoomParamsEntry,
+                onClick = {
+                    navigateToRoomParamsEntry()
+                          },
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier
                     .padding(
@@ -92,43 +95,66 @@ fun RoomListScreen(
         Surface(modifier = Modifier
             .padding(innerPadding)
         ) {
-            Card(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .height(500.dp),
-                shape = RoundedCornerShape(corner = CornerSize(16.dp))
+            Column(
+                modifier = Modifier,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LazyColumn(
+                Text(
+                    "Ruangan",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
+                )
+                Card(
                     modifier = Modifier
                         .padding(10.dp)
+                        .height(500.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(corner = CornerSize(16.dp))
                 ) {
-                    items(items = wifiUiStateList.roomParamList,
-                        key = {
-                            roomParams: RoomParams ->
-                            roomParams.id
-                        }) {
-                        Card(
+                    if (wifiUiStateList.roomParamList.isEmpty()) {
+                        Text(
+                            modifier = Modifier
+                                .padding(10.dp),
+                            text = "Belum ada ruangan ditambahkan"
+                        )
+                    } else {
+                        LazyColumn(
                             modifier = Modifier
                                 .padding(10.dp)
-                                .fillMaxWidth()
-                                .clickable {
-                                    navigateToPreviewGrid(it.id)
-                                }
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Column {
-                                    Text(it.roomName)
+                            items(
+                                items = wifiUiStateList.roomParamList,
+                                key = { roomParams: RoomParams ->
+                                    roomParams.id
+                                }) {
+                                Card(
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .fillMaxWidth()
+                                        .clickable {
+//                                        navigateToPreviewGrid(it.id)
+                                            navigateToHistory(it.id)
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        Column {
+                                            Text(it.roomName)
+//                                        var timestamp = TimeConverter().fromTimestamp(it.timestamp)
+//                                        Text("$timestamp")
+                                        }
+                                    }
                                 }
+                                HorizontalDivider(
+                                    color = Color.LightGray,
+                                    modifier = Modifier
+                                        .padding(bottom = 10.dp)
+                                )
                             }
                         }
-                        HorizontalDivider(
-                            color = Color.LightGray,
-                            modifier = Modifier
-                                .padding(bottom = 10.dp)
-                        )
                     }
                 }
             }

@@ -1,6 +1,7 @@
 package com.example.wifimapping.ui.viewmodel
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,9 +9,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wifimapping.data.History
+import com.example.wifimapping.data.HistoryRepository
 import com.example.wifimapping.data.RoomParams
 import com.example.wifimapping.data.RoomParamsRepository
-import com.example.wifimapping.ui.roomList.RoomListDestination
+import com.example.wifimapping.ui.previewGrid.PreviewGridDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -25,7 +28,8 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 class RoomParamsViewModel(
     savedStateHandle: SavedStateHandle,
-    private val roomParamsRepository: RoomParamsRepository
+    private val roomParamsRepository: RoomParamsRepository,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
     /**
@@ -37,7 +41,10 @@ class RoomParamsViewModel(
     var roomParamByIdsUiState by mutableStateOf(RoomParamsUiState())
         private set
 
-    private val idCollectData: Int = checkNotNull(savedStateHandle[RoomListDestination.idCollectData])
+    var historyByIdUiState by mutableStateOf(HistoryByIdUiState())
+        private set
+
+    private val idHistory: Int = checkNotNull(savedStateHandle[PreviewGridDestination.idHistory])
 
     val allRoomUiStateList: StateFlow<RoomParamsList> =
         roomParamsRepository.getAllRoomParamsStream().map { RoomParamsList(it) }
@@ -54,15 +61,16 @@ class RoomParamsViewModel(
                 .first()
                 .toRoomParamsUiState(true)
 
-            roomParamByIdsUiState = roomParamsRepository.getRoomParamsStream(idCollectData)
+            historyByIdUiState = historyRepository.getHistoryByIdStream(idHistory)
+                .filterNotNull()
+                .first()
+                .toHistoryByIdUiState()
+
+            roomParamByIdsUiState = roomParamsRepository.getRoomParamsStream(historyByIdUiState.historyDetails.idRoom)
                 .filterNotNull()
                 .first()
                 .toRoomParamsUiState(true)
         }
-    }
-
-    fun getIdCollectData():Int{
-        return  idCollectData
     }
 
     companion object {
@@ -72,3 +80,13 @@ class RoomParamsViewModel(
 
 @RequiresApi(Build.VERSION_CODES.O)
 data class RoomParamsList(val roomParamList: List<RoomParams> = listOf())
+
+@RequiresApi(Build.VERSION_CODES.O)
+data class HistoryByIdUiState(
+    val historyDetails: HistoryDetails = HistoryDetails()
+)
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun History.toHistoryByIdUiState(): HistoryByIdUiState = HistoryByIdUiState(
+    historyDetails = this.toHistoryDetails()
+)

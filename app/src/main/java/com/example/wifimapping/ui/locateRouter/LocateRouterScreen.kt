@@ -1,6 +1,7 @@
 package com.example.wifimapping.ui.locateRouter
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,8 +63,8 @@ import kotlin.Unit
 object LocateRouterDestination : NavigationDestination {
     override val route = "locate_router"
     override val titleRes = R.string.locate_router_title
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -80,7 +81,7 @@ fun LocateRouterScreen(
 ){
     val coroutineScope = rememberCoroutineScope()
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
-    var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
+    var data = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableStateOf(0) }
     var chosenIdSsidList = remember { mutableStateListOf<Int>() }
     var chosenSsidList = remember { mutableStateListOf<String>() }
@@ -109,7 +110,7 @@ fun LocateRouterScreen(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState()),
             ){
-                Text("Locate Router Position",
+                Text("Posisi Router",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp))
@@ -192,7 +193,8 @@ fun LocateRouterScreen(
                                         gridViewModel.updateUiState(
                                             gridViewModel.gridUiState.gridDetails.copy(
                                                 id = it.id,
-                                                idCollectData = it.idCollectData,
+                                                idRoom = it.idRoom,
+                                                idHistory = it.idHistory,
                                                 idWifi = 0,
                                                 isClicked = false
                                             )
@@ -215,7 +217,7 @@ fun LocateRouterScreen(
                             enabled = idGridRouterPosition != 0 && chosenIdSsid != 0,
                             shape = RoundedCornerShape(5.dp),
                             onClick = {
-                                navigateToCollectData(gridListDb.gridList[0].idCollectData)
+                                navigateToCollectData(gridListDb.gridList[0].idHistory)
                             }) {
                             Text("Selanjutnya")
                         }
@@ -273,7 +275,7 @@ fun WifiCheckedList(
                                 .background(Color.Transparent)
                         ) {
                             Text(
-                                text = "${it.ssid}",
+                                text = it.ssid,
                                 fontWeight = if (isChosenIdSSid == it.id) FontWeight.Bold else FontWeight.Light,
                                 color = if (it.id in chosenIdSsidList){
                                     Color(0xFF333333)
@@ -293,17 +295,6 @@ fun WifiCheckedList(
         }
     }
 }
-
-fun Modifier.vertical() =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.height, placeable.width) {
-            placeable.place(
-                x = -(placeable.width / 2 - placeable.height / 2),
-                y = -(placeable.height / 2 - placeable.width / 2)
-            )
-        }
-    }
 
 data class WifiLocateRouter(
     var id: Int = 0,

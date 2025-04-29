@@ -38,7 +38,6 @@ import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
-import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,21 +45,22 @@ import kotlinx.coroutines.launch
 object PreviewGridDestination : NavigationDestination {
     override val route = "preview_grid"
     override val titleRes = R.string.preview_grid_title
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreviewGridScreen(
-    navigateToChooseWifi: () -> Unit,
+    navigateToChooseWifi: (Int?) -> Unit,
     canNavigateBack: Boolean = false,
     previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val coroutineScope = rememberCoroutineScope()
-    var lastInputGridId: Int? by remember { mutableStateOf(0) }
+    var lastInputGridIdHistory: Int? by remember { mutableStateOf(0) }
+    var lastHistoryId: Int? by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -70,14 +70,9 @@ fun PreviewGridScreen(
             )
         }
     ) { innerPadding ->
-        var data = RoomParamsDetails()
-        if (previewGridviewModel.getIdCollectData() == 0) {
-            data = previewGridviewModel.roomParamsUiState.roomParamsDetails
-        }else {
-            data = previewGridviewModel.roomParamByIdsUiState.roomParamsDetails
-        }
+        var data = previewGridviewModel.roomParamByIdsUiState.roomParamsDetails
         gridViewModel.updateUiState(
-            gridViewModel.gridUiState.gridDetails.copy(idCollectData = data.id)
+            gridViewModel.gridUiState.gridDetails.copy(idRoom = data.id)
         )
         Surface(
             modifier = Modifier
@@ -125,25 +120,28 @@ fun PreviewGridScreen(
                         shape = RoundedCornerShape(5.dp),
                         onClick = {
                             coroutineScope.launch(Dispatchers.Main) {
-                                lastInputGridId = gridViewModel.lastGridInputId()?.idCollectData
+                                lastInputGridIdHistory = gridViewModel.lastGridInputIdHistory()?.idHistory
+                                lastHistoryId = gridViewModel.getIdHistory()
                                 var gridCmToM = data.gridDistance.toFloat().div(100)
                                 val gridCount = (data.length.toInt() / gridCmToM) * (data.width.toInt() / gridCmToM)
-                                if (lastInputGridId != data.id) {
+                                if (lastInputGridIdHistory != lastHistoryId) {
                                     for (i in 1..gridCount.toInt()) {
                                         var inputGrid = gridViewModel
                                             .gridUiState
                                             .gridDetails
-                                            .copy()
+                                            .copy(idHistory = lastHistoryId!!)
                                         if (i == 1) {
                                             inputGrid = gridViewModel
                                                 .gridUiState
                                                 .gridDetails
-                                                .copy(isClicked = true)
+                                                .copy(
+                                                    idHistory = lastHistoryId!!
+                                                )
                                         }
                                         gridViewModel.saveGrid(inputGrid)
                                     }
                                 }
-                                navigateToChooseWifi()
+                                navigateToChooseWifi(lastHistoryId)
                             }
 
                         }

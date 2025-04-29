@@ -18,14 +18,12 @@ package com.example.gridmapping.data
 
 import com.example.wifimapping.data.Dbm
 import com.example.wifimapping.data.DbmDao
-import com.example.wifimapping.data.Grid
-import com.example.wifimapping.data.GridDao
 import kotlinx.coroutines.flow.Flow
 
 class OfflineDbmRepository(private val dbmDao: DbmDao) : DbmRepository {
 
-    override fun getDbmByIdCollectData(idCollectData: Int): Flow<List<Dbm>> =
-        dbmDao.getDbmByIdCollectData(idCollectData)
+    override fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>> =
+        dbmDao.getDbmByIdHistory(idHistory)
 
     override suspend fun insertDbm(dbm: Dbm) = dbmDao.insert(dbm)
 

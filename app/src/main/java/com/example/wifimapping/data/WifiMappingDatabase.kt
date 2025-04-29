@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import com.example.wifimapping.util.TimeConverter
 import kotlin.also
 import kotlin.jvm.java
 
@@ -13,7 +11,8 @@ import kotlin.jvm.java
     RoomParams::class,
     Wifi::class,
     Grid::class,
-    Dbm::class],
+    Dbm::class,
+    History::class],
     version = 2, exportSchema = false)
 //@TypeConverters(TimeConverter::class)
 abstract class WifiMappingDatabase : RoomDatabase() {
@@ -21,6 +20,7 @@ abstract class WifiMappingDatabase : RoomDatabase() {
     abstract fun wifiDao(): WifiDao
     abstract fun gridDao(): GridDao
     abstract fun dbmDao() : DbmDao
+    abstract fun historyDao() : HistoryDao
 
     companion object {
         @Volatile

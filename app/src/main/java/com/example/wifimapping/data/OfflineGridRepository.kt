@@ -22,8 +22,11 @@ import kotlinx.coroutines.flow.Flow
 
 class OfflineGridRepository(private val gridDao: GridDao) : GridRepository {
 
-    override fun getGridByIdCollectDataStream(idCollectData: Int): Flow<List<Grid>> =
-        gridDao.getGridByIdCollectData(idCollectData)
+    override fun getGridByIdRoomStream(idRoom: Int): Flow<List<Grid>> =
+        gridDao.getGridByIdRoom(idRoom)
+
+    override fun getGridByIdHistoryStream(idHistory: Int): Flow<List<Grid>> =
+        gridDao.getGridByIdHistory(idHistory)
 
     override suspend fun insertGrid(grid: Grid) = gridDao.insert(grid)
 

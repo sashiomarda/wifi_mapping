@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.wifimapping.WifiMappingApplication
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
+import com.example.wifimapping.ui.viewmodel.HistoryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
@@ -45,7 +46,8 @@ object AppViewModelProvider {
         initializer {
             RoomParamsViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.roomParamsRepository
+                inventoryApplication().container.roomParamsRepository,
+                inventoryApplication().container.historyRepository
             )
         }
 
@@ -57,7 +59,7 @@ object AppViewModelProvider {
         initializer {
             GridViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.gridRepository
+                inventoryApplication().container.gridRepository,
             )
         }
 
@@ -65,6 +67,13 @@ object AppViewModelProvider {
             DbmViewModel(
                 this.createSavedStateHandle(),
                 inventoryApplication().container.dbmRepository
+            )
+        }
+
+        initializer {
+            HistoryViewModel(
+                this.createSavedStateHandle(),
+                inventoryApplication().container.historyRepository
             )
         }
     }

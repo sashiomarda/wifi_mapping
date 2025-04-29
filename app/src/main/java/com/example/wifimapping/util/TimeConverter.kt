@@ -1,24 +1,17 @@
 package com.example.wifimapping.util
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.room.TypeConverter
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import android.annotation.SuppressLint
+import java.text.SimpleDateFormat
 
 class TimeConverter {
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    @SuppressLint("SimpleDateFormat")
+    val FORMATTER = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun fromLocalDateTime(date: LocalDateTime): String {
-        return date.format(formatter)
+    fun fromTimestamp(timeStamp: Long?): String? {
+        return timeStamp?.let { FORMATTER.format(timeStamp) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @TypeConverter
-    fun toLocalDateTime(dateString: String): LocalDateTime {
-        return LocalDateTime.parse(dateString, formatter)
+    fun strToTimestamp(timeStamp: String?): Long? {
+        return timeStamp?.let { FORMATTER.parse(it).time }
     }
 }

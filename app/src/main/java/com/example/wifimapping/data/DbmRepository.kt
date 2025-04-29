@@ -29,7 +29,7 @@ interface DbmRepository {
     /**
      * Retrieve all the items from the the given data source.
      */
-    fun getDbmByIdCollectData(idCollectData: Int): Flow<List<Dbm>>
+    fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>>
 
     suspend fun getLastDbm(): Dbm?
     /**

@@ -59,67 +59,64 @@ fun WifiMappingNavHost(
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
-                navigateToNextMenu = {
-                    if (it == RoomListDestination.route) {
-                        navController.navigate("$it/0")
-                    }else{
-                        navController.navigate(it)
-                    }
-                                     },
+                navigateToNextMenu = {navController.navigate("$it/0")},
                 onNavigateUp = { navController.navigateUp() }
             )
         }
 
         composable(route = RoomListDestination.routeWithArgs,
-            arguments = listOf(navArgument(RoomListDestination.idCollectData) {
+            arguments = listOf(navArgument(RoomListDestination.idHistory) {
                 type = NavType.IntType
             })) {
             RoomListScreen(
-//                navigateToNextMenu = { navController.navigate(it) },
-                navigateToRoomParamsEntry = { navController.navigate(ItemEntryDestination.route) },
+                navigateToRoomParamsEntry = { navController.navigate("${ItemEntryDestination.route}/0") },
                 onNavigateUp = { navController.navigateUp() },
-                navigateToPreviewGrid = {navController.navigate("${PreviewGridDestination.route}/${it}") },
+                navigateToHistory = { navController.navigate("${HistoryDestination.route}/${it}") },
             )
         }
-        composable(route = HistoryDestination.route) {
+        composable(route = HistoryDestination.routeWithArgs,
+            arguments = listOf(navArgument(HistoryDestination.idRoom) {
+                type = NavType.IntType
+            })) {
             HistoryScreen(
-//                navigateToNextMenu = { navController.navigate(it) },
-                onNavigateUp = { navController.navigateUp() }
+                onNavigateUp = { navController.navigateUp() },
+                navigateToRoomPreviewGrid = { navController.navigate("${PreviewGridDestination.route}/${it}") },
             )
         }
-        composable(route = ItemEntryDestination.route) {
+        composable(route = ItemEntryDestination.routeWithArgs,
+            arguments = listOf(navArgument(ItemEntryDestination.idRoom) {
+                type = NavType.IntType
+            })) {
             ItemEntryScreen(
-                navigateToPreviewGrid = { navController.navigate("${PreviewGridDestination.route}/0") },
-                onNavigateUp = { navController.navigateUp() }
+                onNavigateUp = { navController.navigateUp() },
+                navigateBack = { navController.popBackStack() },
             )
         }
         composable(
             route = PreviewGridDestination.routeWithArgs,
-            arguments = listOf(navArgument(PreviewGridDestination.idCollectData) {
+            arguments = listOf(navArgument(PreviewGridDestination.idHistory) {
                 type = NavType.IntType
             })
         ) {
             PreviewGridScreen(
-                navigateToChooseWifi = { navController.navigate("${ChooseWifiDestination.route}/0") },
+                navigateToChooseWifi = { navController.navigate("${ChooseWifiDestination.route}/${it}") },
             )
         }
 
         composable(route = ChooseWifiDestination.routeWithArgs,
-            arguments = listOf(navArgument(ChooseWifiDestination.idCollectData) {
+            arguments = listOf(navArgument(ChooseWifiDestination.idHistory) {
                 type = NavType.IntType
             })
         ) {
             ChooseWifiScreen(
-                navigateToLocateRouter = {
-                    navController.navigate("${LocateRouterDestination.route}/${it}")
-                                         },
+                navigateToLocateRouter = {navController.navigate("${LocateRouterDestination.route}/${it}")},
             )
         }
 
 
         composable(
             route = LocateRouterDestination.routeWithArgs,
-            arguments = listOf(navArgument(LocateRouterDestination.idCollectData) {
+            arguments = listOf(navArgument(LocateRouterDestination.idHistory) {
                 type = NavType.IntType
             })
         ) {
@@ -131,12 +128,11 @@ fun WifiMappingNavHost(
 
         composable(
             route = CollectDataDestination.routeWithArgs,
-            arguments = listOf(navArgument(CollectDataDestination.idCollectData) {
+            arguments = listOf(navArgument(CollectDataDestination.idHistory) {
                 type = NavType.IntType
             })
         ) {
             CollectDataScreen(
-//                navigateToCollectData= { navController.navigate(PreviewGridDestination.route) },
                 onNavigateUp = { navController.navigateUp() }
             )
         }

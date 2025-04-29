@@ -12,6 +12,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -38,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -94,8 +96,8 @@ import java.io.File
 object CollectDataDestination : NavigationDestination {
     override val route = "collect_data"
     override val titleRes = R.string.collect_data_title
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 @SuppressLint("UnrememberedMutableState")
@@ -114,7 +116,7 @@ fun CollectDataScreen(
     val context = LocalContext.current
     var wifiList = wifiViewModel.wifiScanList.wifiList
     val coroutineScope = rememberCoroutineScope()
-    var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
+    var data = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableIntStateOf(0) }
     var dbmText by remember { mutableStateOf("") }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
@@ -168,6 +170,12 @@ fun CollectDataScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    "Peta Wifi",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
+                )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Panjang ${data.length} m")
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -392,7 +400,7 @@ fun CollectDataScreen(
                                             modifier = Modifier
                                                 .weight(7f),
                                             fontSize = 10.sp,
-                                            text = "${ssidList[i]}",
+                                            text = ssidList[i],
                                             color = if (dbmList[i] == 0) {
                                                 Color(0xFF000000)
                                             } else if (dbmList[i] >= -67) {
@@ -475,7 +483,7 @@ fun CollectDataScreen(
                                         currentActiveGrid = gridListDb.gridList[0]
                                     }
                                     var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
-                                        idCollectData = data.id,
+                                        idHistory = dbmViewModel.getIdHistory(),
                                         idGrid = currentActiveGrid.id,
                                         dbm = maxDbmFromList
                                     )
@@ -524,8 +532,14 @@ fun CollectDataScreen(
                                     if (prevAndCurrentGrid.isMoveGrid) {
                                         coroutineScope.launch {
                                             gridViewModel.updateChosenGrid(
-                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                                prevAndCurrentGrid.previousActiveGrid.copy(
+                                                    isClicked = false,
+                                                    idHistory = gridViewModel.getIdHistory()
+                                                ),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(
+                                                    isClicked = true,
+                                                    idHistory = gridViewModel.getIdHistory()
+                                                )
                                             )
                                         }
                                     }
@@ -697,6 +711,7 @@ fun CollectDataScreen(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun navButtonClick(
     gridViewModel: GridViewModel,
     gridListDb: GridUiStateList,
@@ -745,7 +760,7 @@ private fun navButtonClick(
         previousActiveGrid = currentActiveGrid
         currentActiveGrid = gridListDb.gridList[
             idGrids.indexOf(chosenIdGrid)
-        ].copy(isClicked = false)
+        ].copy(isClicked = false,)
     }
 
     return PrevAndCurrentGrid(previousActiveGrid, currentActiveGrid, isMoveGrid)

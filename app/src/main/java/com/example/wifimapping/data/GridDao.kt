@@ -19,8 +19,11 @@ interface GridDao {
     @Delete
     suspend fun delete(grid: Grid)
 
-    @Query("SELECT * from grid WHERE idCollectData = :idCollectData")
-    fun getGridByIdCollectData(idCollectData: Int): Flow<List<Grid>>
+    @Query("SELECT * from grid WHERE idRoom = :idRoom")
+    fun getGridByIdRoom(idRoom: Int): Flow<List<Grid>>
+
+    @Query("SELECT * from grid WHERE idHistory = :idHistory")
+    fun getGridByIdHistory(idHistory: Int): Flow<List<Grid>>
 
     @Query("UPDATE grid SET idWifi = 0")
     fun resetInputGrid() : Int

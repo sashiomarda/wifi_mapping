@@ -33,12 +33,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
+import com.example.wifimapping.ui.history.HistoryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.roomList.RoomListDestination
 
@@ -62,9 +64,7 @@ fun HomeScreen(
     navigateToNextMenu: (String) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
-//    viewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -78,43 +78,61 @@ fun HomeScreen(
             .padding(innerPadding)
             .fillMaxWidth()
             .fillMaxHeight()
-        ){
-            val menuNameList = listOf<String>("Ruangan",
-//                "Riwayat"
-            )
-            val nextRouteList = listOf<String>(RoomListDestination.route,
-//                HistoryDestination.route
-            )
-            val imageVectorList = listOf<ImageVector>(Icons.Default.Home,
-//                Icons.Default.Menu
-            )
-            val menuList: MutableList<HomeMenu> = ArrayList()
-            for (i in menuNameList.indices) {
-                menuList.add(
-                    HomeMenu(
-                        menuName =  menuNameList[i],
-                        nextRoute =  nextRouteList[i],
-                        imageVector = imageVectorList[i]
-                    )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Beranda",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
                 )
-            }
-            LazyColumn {
-                items(items = menuList) {
-                    Column(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .border(border = BorderStroke(2.dp, color = Color.LightGray))
-                        .clickable{
-                            navigateToNextMenu(it.nextRoute)
-                        },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ){
-                        Icon(it.imageVector, contentDescription = it.menuName)
-                        Text(it.menuName)
+                val menuNameList = listOf<String>(
+                    "Ruangan",
+                    "Riwayat"
+                )
+                val nextRouteList = listOf<String>(
+                    RoomListDestination.route,
+                    HistoryDestination.route
+                )
+                val imageVectorList = listOf<ImageVector>(
+                    Icons.Default.Home,
+                    Icons.Default.Menu
+                )
+                val menuList: MutableList<HomeMenu> = ArrayList()
+                for (i in menuNameList.indices) {
+                    menuList.add(
+                        HomeMenu(
+                            menuName = menuNameList[i],
+                            nextRoute = nextRouteList[i],
+                            imageVector = imageVectorList[i]
+                        )
+                    )
+                }
+                LazyColumn {
+                    items(items = menuList) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .border(border = BorderStroke(2.dp, color = Color.LightGray))
+                                .clickable {
+                                    navigateToNextMenu(it.nextRoute)
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(it.imageVector, contentDescription = it.menuName)
+                            Text(it.menuName)
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .height(10.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier
-                        .height(10.dp))
                 }
             }
         }

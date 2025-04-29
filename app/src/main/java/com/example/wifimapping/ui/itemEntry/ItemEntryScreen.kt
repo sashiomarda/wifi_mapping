@@ -50,21 +50,22 @@ import com.example.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsUiState
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 object ItemEntryDestination : NavigationDestination {
     override val route = "roomparams_entry"
     override val titleRes = R.string.room_params_entry_title
+    const val idRoom = "idRoom"
+    val routeWithArgs = "${route}/{$idRoom}"
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemEntryScreen(
-    navigateToPreviewGrid: () -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
-    roomParamsEntryViewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    roomParamsEntryViewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    navigateBack: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
@@ -84,7 +85,7 @@ fun ItemEntryScreen(
                     val currentTime = System.currentTimeMillis()
                     roomParamsEntryViewModel.roomParamsUiState.roomParamsDetails.copy(timestamp = currentTime)
                     roomParamsEntryViewModel.saveRoomParams()
-                    navigateToPreviewGrid()
+                    navigateBack()
                 }
             },
             modifier = Modifier
@@ -116,7 +117,6 @@ fun RoomParamsEntryBody(
         RoomParamsInputForm(
             roomParamsDetails = roomParamsUiState.roomParamsDetails,
             onValueChange = onItemValueChange,
-            modifier = Modifier.fillMaxWidth(),
             showWarning = !roomParamsUiState.isEntryValid
         )
         Button(
@@ -136,7 +136,6 @@ fun RoomParamsEntryBody(
 @Composable
 fun RoomParamsInputForm(
     roomParamsDetails: RoomParamsDetails,
-    modifier: Modifier = Modifier,
     onValueChange: (RoomParamsDetails) -> Unit = {},
     enabled: Boolean = true,
     showWarning : Boolean
