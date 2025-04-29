@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sashiomarda.wifimapping.data.History
 import com.sashiomarda.wifimapping.data.HistoryRepository
+import com.sashiomarda.wifimapping.data.HistoryRoom
 import com.sashiomarda.wifimapping.ui.history.HistoryDestination
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,24 +47,24 @@ class HistoryViewModel(
     var historyUiState by mutableStateOf(HistoryUiState())
         private set
 
-    val historyAllUiStateList: StateFlow<HistoryUiStateList> =
+    val historyAllUiStateList: StateFlow<HistoryRoomUiStateList> =
         historyRepository.getAllHistoryStream()
-            .map { HistoryUiStateList(it) }
+            .map { HistoryRoomUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = HistoryUiStateList()
+                initialValue = HistoryRoomUiStateList()
             )
 
     private val idRoom: Int = checkNotNull(savedStateHandle[HistoryDestination.idRoom])
 
-    val historyByIdUiStateList: StateFlow<HistoryUiStateList> =
-        historyRepository.getHistoryByIdRoomStream(idRoom = idRoom)
-            .map { HistoryUiStateList(it) }
+    val historyByIdUiStateList: StateFlow<HistoryRoomUiStateList> =
+        historyRepository.getHistoryRoomByIdRoomStream(idRoom = idRoom)
+            .map { HistoryRoomUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = HistoryUiStateList()
+                initialValue = HistoryRoomUiStateList()
             )
     /**
      * Updates the [historyUiState] with the value provided in the argument. This method also triggers
@@ -122,3 +123,5 @@ fun History.toHistoryDetails(): HistoryDetails = HistoryDetails(
 )
 
 data class HistoryUiStateList(val historyList: List<History> = listOf())
+
+data class HistoryRoomUiStateList(val historyList: List<HistoryRoom> = listOf())

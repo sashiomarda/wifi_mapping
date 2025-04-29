@@ -2,6 +2,7 @@ package com.sashiomarda.wifimapping.ui.history
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -40,15 +41,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
-import com.sashiomarda.wifimapping.data.History
+import com.sashiomarda.wifimapping.data.HistoryRoom
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
-import com.sashiomarda.wifimapping.ui.viewmodel.HistoryUiStateList
+import com.sashiomarda.wifimapping.ui.viewmodel.HistoryRoomUiStateList
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryViewModel
 import com.sashiomarda.wifimapping.util.TimeConverter
 import kotlinx.coroutines.launch
@@ -71,7 +73,7 @@ fun HistoryScreen(
     historyViewModel: HistoryViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var historyList= HistoryUiStateList().historyList
+    var historyList= HistoryRoomUiStateList().historyList
     val historyAllList by historyViewModel.historyAllUiStateList.collectAsState()
     val historyByIdList by historyViewModel.historyByIdUiStateList.collectAsState()
     historyList = historyAllList.historyList
@@ -148,16 +150,16 @@ fun HistoryScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier
-                                .padding(10.dp)
+                                .padding(20.dp)
                         ) {
                             items(
                                 items = historyList,
-                                key = { history: History ->
-                                    history.id
-                                }) {
+                                key = { historyRoom: HistoryRoom ->
+                                    historyRoom.id
+                                }
+                            ) {
                                 Card(
                                     modifier = Modifier
-                                        .padding(10.dp)
                                         .fillMaxWidth()
                                         .clickable {
                                             navigateToRoomPreviewGrid(it.id)
@@ -169,6 +171,7 @@ fun HistoryScreen(
                                     ) {
                                         Column {
                                             val timeConverter = TimeConverter()
+                                            Text(it.roomName, fontWeight = FontWeight.Bold)
                                             Text("${timeConverter.fromTimestamp(it.timestamp)}")
                                         }
                                     }

@@ -28,13 +28,15 @@ interface HistoryRepository {
     /**
      * Retrieve all the items from the the given data source.
      */
-    fun getAllHistoryStream(): Flow<List<History>>
+    fun getAllHistoryStream(): Flow<List<HistoryRoom>>
 
     suspend fun getLastHistoryIdStream(): History?
     /**
      * Retrieve an item from the given data source that matches with the [idRoom].
      */
     fun getHistoryByIdRoomStream(idRoom: Int): Flow<List<History>>
+
+    fun getHistoryRoomByIdRoomStream(idRoom: Int): Flow<List<HistoryRoom>>
 
     suspend fun getHistoryByIdStream(id: Int): Flow<History?>
 
