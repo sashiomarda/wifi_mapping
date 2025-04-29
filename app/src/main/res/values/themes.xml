@@ -2,4 +2,15 @@
 <resources>
 
     <style name="Theme.WifiMapping" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.WifiMapping.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Background color saat splash -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+
+        <!-- Icon yang tampil di tengah -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+
+        <!-- Durasi animasi (opsional) -->
+<!--        <item name="postSplashScreenTheme">@style/Theme.YourApp</item>-->
+    </style>
 </resources>

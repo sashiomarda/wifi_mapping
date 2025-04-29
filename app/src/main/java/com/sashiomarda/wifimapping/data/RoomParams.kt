@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    extra.apply {
-        set("room_version", "2.6.0")
-    }
-}
+package com.sashiomarda.wifimapping.data
 
-plugins {
-    id("com.android.application") version "8.9.0" apply false
-    id("com.android.library") version "8.9.0" apply false
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0" apply false
-    id("com.google.gms.google-services") version "4.4.2" apply false
-}
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-tasks.register("clean", Delete::class) {
-    delete(rootProject.layout.buildDirectory)
-}
+
+/**
+ * Entity data class represents a single row in the database.
+ */
+@Entity(tableName = "room_params")
+data class RoomParams(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val timestamp: Long,
+    val roomName: String,
+    val length: Int,
+    val width: Int,
+    val gridDistance: Int,
+)
