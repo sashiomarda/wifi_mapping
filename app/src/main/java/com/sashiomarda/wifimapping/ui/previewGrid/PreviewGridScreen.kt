@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,8 +59,8 @@ fun PreviewGridScreen(
     dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val coroutineScope = rememberCoroutineScope()
-    var lastInputGridIdHistory: Int? by remember { mutableStateOf(0) }
     var lastHistoryId: Int? by remember { mutableStateOf(0) }
+    val gridListDb by gridViewModel.gridUiStateList.collectAsState()
 
     Scaffold(
         topBar = {
@@ -119,11 +120,10 @@ fun PreviewGridScreen(
                         shape = RoundedCornerShape(5.dp),
                         onClick = {
                             coroutineScope.launch(Dispatchers.Main) {
-                                lastInputGridIdHistory = gridViewModel.lastGridInputIdHistory()?.idHistory
                                 lastHistoryId = gridViewModel.getIdHistory()
                                 var gridCmToM = data.gridDistance.toFloat().div(100)
                                 val gridCount = (data.length.toInt() / gridCmToM) * (data.width.toInt() / gridCmToM)
-                                if (lastInputGridIdHistory != lastHistoryId) {
+                                if (gridListDb.gridList.isEmpty()) {
                                     for (i in 1..gridCount.toInt()) {
                                         var inputGrid = gridViewModel
                                             .gridUiState
