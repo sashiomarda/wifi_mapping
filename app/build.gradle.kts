@@ -3,14 +3,15 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.wifimapping"
+    namespace = "com.sashiomarda.wifimapping"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.wifimapping"
+        applicationId = "com.sashiomarda.wifimapping"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -66,6 +67,10 @@ dependencies {
     //Room
     implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
     implementation("androidx.core:core-ktx:1.15.0")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
@@ -75,4 +80,16 @@ dependencies {
 
     // google location
     implementation ("com.google.android.gms:play-services-location:21.3.0")
+
+    //firebase
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+
+    // Add the dependencies for the Remote Config and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-config")
+    implementation("com.google.firebase:firebase-analytics")
+
+    //splashscreen
+    implementation ("androidx.core:core-splashscreen:1.0.1")
 }
