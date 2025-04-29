@@ -17,6 +17,8 @@
 package com.example.wifimapping.ui
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -25,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.wifimapping.WifiMappingApplication
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
 import com.example.wifimapping.ui.viewmodel.GridViewModel
+import com.example.wifimapping.ui.viewmodel.HistoryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.example.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.example.wifimapping.ui.viewmodel.WifiViewModel
@@ -33,6 +36,7 @@ import com.example.wifimapping.ui.viewmodel.WifiViewModel
  * Provides Factory to create instance of ViewModel for the entire Inventory app
  */
 object AppViewModelProvider {
+    @RequiresApi(Build.VERSION_CODES.O)
     val Factory = viewModelFactory {
         // Initializer for ItemEntryViewModel
         initializer {
@@ -42,7 +46,8 @@ object AppViewModelProvider {
         initializer {
             RoomParamsViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.roomParamsRepository
+                inventoryApplication().container.roomParamsRepository,
+                inventoryApplication().container.historyRepository
             )
         }
 
@@ -54,7 +59,7 @@ object AppViewModelProvider {
         initializer {
             GridViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.gridRepository
+                inventoryApplication().container.gridRepository,
             )
         }
 
@@ -62,6 +67,13 @@ object AppViewModelProvider {
             DbmViewModel(
                 this.createSavedStateHandle(),
                 inventoryApplication().container.dbmRepository
+            )
+        }
+
+        initializer {
+            HistoryViewModel(
+                this.createSavedStateHandle(),
+                inventoryApplication().container.historyRepository
             )
         }
     }

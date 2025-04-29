@@ -22,7 +22,7 @@ interface RoomParamsDao {
     @Query("SELECT * from room_params WHERE id = :id")
     fun getRoomParams(id: Int): Flow<RoomParams>
 
-    @Query("SELECT * from room_params ORDER BY id ASC")
+    @Query("SELECT * from room_params ORDER BY roomName ASC")
     fun getAllRoomParams(): Flow<List<RoomParams>>
 
     @Query("SELECT * from room_params ORDER BY id DESC LIMIT 1")

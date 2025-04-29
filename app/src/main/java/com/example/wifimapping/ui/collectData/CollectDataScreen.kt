@@ -39,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -67,13 +68,13 @@ import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.components.CanvasGrid
 import com.example.wifimapping.data.Grid
 import com.example.wifimapping.ui.AppViewModelProvider
 import com.example.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
-import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.previewGrid.vertical
 import com.example.wifimapping.ui.viewmodel.DbmViewModel
@@ -95,8 +96,8 @@ import java.io.File
 object CollectDataDestination : NavigationDestination {
     override val route = "collect_data"
     override val titleRes = R.string.collect_data_title
-    const val idCollectData = "idCollectData"
-    val routeWithArgs = "${route}/{$idCollectData}"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 @SuppressLint("UnrememberedMutableState")
@@ -115,7 +116,7 @@ fun CollectDataScreen(
     val context = LocalContext.current
     var wifiList = wifiViewModel.wifiScanList.wifiList
     val coroutineScope = rememberCoroutineScope()
-    var data = previewGridViewModel.roomParamsUiState.roomParamsDetails
+    var data = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
     var chosenIdSsid by remember { mutableIntStateOf(0) }
     var dbmText by remember { mutableStateOf("") }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
@@ -153,7 +154,7 @@ fun CollectDataScreen(
     var isButtonDetailsClicked by remember { mutableStateOf(false)}
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
@@ -169,6 +170,12 @@ fun CollectDataScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    "Peta Wifi",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
+                )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Panjang ${data.length} m")
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -393,7 +400,7 @@ fun CollectDataScreen(
                                             modifier = Modifier
                                                 .weight(7f),
                                             fontSize = 10.sp,
-                                            text = "${ssidList[i]}",
+                                            text = ssidList[i],
                                             color = if (dbmList[i] == 0) {
                                                 Color(0xFF000000)
                                             } else if (dbmList[i] >= -67) {
@@ -476,7 +483,7 @@ fun CollectDataScreen(
                                         currentActiveGrid = gridListDb.gridList[0]
                                     }
                                     var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
-                                        idCollectData = data.id,
+                                        idHistory = dbmViewModel.getIdHistory(),
                                         idGrid = currentActiveGrid.id,
                                         dbm = maxDbmFromList
                                     )
@@ -525,8 +532,14 @@ fun CollectDataScreen(
                                     if (prevAndCurrentGrid.isMoveGrid) {
                                         coroutineScope.launch {
                                             gridViewModel.updateChosenGrid(
-                                                prevAndCurrentGrid.previousActiveGrid.copy(isClicked = false),
-                                                prevAndCurrentGrid.currentActiveGrid.copy(isClicked = true)
+                                                prevAndCurrentGrid.previousActiveGrid.copy(
+                                                    isClicked = false,
+                                                    idHistory = gridViewModel.getIdHistory()
+                                                ),
+                                                prevAndCurrentGrid.currentActiveGrid.copy(
+                                                    isClicked = true,
+                                                    idHistory = gridViewModel.getIdHistory()
+                                                )
                                             )
                                         }
                                     }
@@ -698,6 +711,7 @@ fun CollectDataScreen(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun navButtonClick(
     gridViewModel: GridViewModel,
     gridListDb: GridUiStateList,
@@ -746,7 +760,7 @@ private fun navButtonClick(
         previousActiveGrid = currentActiveGrid
         currentActiveGrid = gridListDb.gridList[
             idGrids.indexOf(chosenIdGrid)
-        ].copy(isClicked = false)
+        ].copy(isClicked = false,)
     }
 
     return PrevAndCurrentGrid(previousActiveGrid, currentActiveGrid, isMoveGrid)

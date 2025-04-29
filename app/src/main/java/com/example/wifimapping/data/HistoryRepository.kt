@@ -14,41 +14,42 @@
  * limitations under the License.
  */
 
-package com.example.gridmapping.data
+package com.example.wifimapping.data
 
-import com.example.wifimapping.data.Grid
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Repository that provides insert, update, delete, and retrieve of [Grid] from a given data source.
+ * Repository that provides insert, update, delete, and retrieve of [History] from a given data source.
  */
 /**
- * Repository that provides insert, update, delete, and retrieve of [Grid] from a given data source.
+ * Repository that provides insert, update, delete, and retrieve of [History] from a given data source.
  */
-interface GridRepository {
+interface HistoryRepository {
     /**
      * Retrieve all the items from the the given data source.
      */
-    fun getGridByIdRoomStream(idRoom: Int): Flow<List<Grid>>
+    fun getAllHistoryStream(): Flow<List<History>>
 
-    fun getGridByIdHistoryStream(idHistory: Int): Flow<List<Grid>>
+    suspend fun getLastHistoryIdStream(): History?
+    /**
+     * Retrieve an item from the given data source that matches with the [idRoom].
+     */
+    fun getHistoryByIdRoomStream(idRoom: Int): Flow<List<History>>
 
-    suspend fun getLastGridInputId(): Grid?
+    suspend fun getHistoryByIdStream(id: Int): Flow<History?>
+
     /**
      * Insert item in the data source
      */
-    suspend fun insertGrid(grid: Grid)
+    suspend fun insertHistory(roomParams: History)
 
     /**
      * Delete item from the data source
      */
-    suspend fun deleteGrid(grid: Grid)
+    suspend fun deleteHistory(roomParams: History)
 
     /**
      * Update item in the data source
      */
-    suspend fun updateGrid(grid: Grid)
-
-    suspend fun resetInputGrid(): Int
-
+    suspend fun updateHistory(roomParams: History)
 }

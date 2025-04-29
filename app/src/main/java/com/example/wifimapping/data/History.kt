@@ -23,12 +23,10 @@ import androidx.room.PrimaryKey
 /**
  * Entity data class represents a single row in the database.
  */
-@Entity(tableName = "dbm")
-data class Dbm(
+@Entity(tableName = "history")
+data class History(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val idHistory: Int = 0,
-    val idGrid: Int = 0,
-    val layerNo: Int = 0,
-    val dbm: Int = 0
+    val timestamp: Long,
+    val idRoom: Int = 0,
 )

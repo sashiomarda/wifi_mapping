@@ -42,10 +42,10 @@ class DbmViewModel(
     var dbmUiState by mutableStateOf(DbmUiState())
         private set
 
-    private val idCollectData: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idCollectData])
+    private val idHistory: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idHistory])
 
     val dbmUiStateList: StateFlow<DbmUiStateList> =
-        dbmRepository.getDbmByIdCollectData(idCollectData = idCollectData)
+        dbmRepository.getDbmByIdHistory(idHistory = idHistory)
             .map { DbmUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -54,15 +54,17 @@ class DbmViewModel(
             )
 
     suspend fun saveDbm(dbmDetails: DbmDetails) {
-        Log.d("gridDetails", dbmDetails.toString())
         dbmRepository.insertDbm(dbmDetails.toDbm())
     }
     suspend fun updateDbm(dbm: Dbm) {
-        Log.d("dbm", dbm.toString())
         dbmRepository.updateDbm(dbm)
     }
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
+    }
+
+    fun getIdHistory(): Int {
+        return idHistory
     }
 
 }
@@ -72,7 +74,7 @@ data class DbmUiState(
 
 data class DbmDetails(
     val id: Int = 0,
-    val idCollectData: Int = 0,
+    val idHistory: Int = 0,
     val idGrid: Int = 0,
     val layerNo: Int = 0,
     val dbm: Int = 0
@@ -85,7 +87,7 @@ data class DbmDetails(
 // */
 fun DbmDetails.toDbm(): Dbm = Dbm(
     id = id,
-    idCollectData = idCollectData,
+    idHistory = idHistory,
     idGrid = idGrid,
     layerNo = layerNo,
     dbm = dbm

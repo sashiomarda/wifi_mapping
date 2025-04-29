@@ -2,7 +2,6 @@ package com.example.wifimapping.ui.chooseWifi
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -30,11 +29,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wifimapping.InventoryTopAppBar
+import com.example.wifimapping.WifiMappingTopAppBar
 import com.example.wifimapping.R
 import com.example.wifimapping.data.Wifi
 import com.example.wifimapping.ui.AppViewModelProvider
-import com.example.wifimapping.ui.home.ItemEntryDestination
+import com.example.wifimapping.ui.itemEntry.ItemEntryDestination
 import com.example.wifimapping.ui.navigation.NavigationDestination
 import com.example.wifimapping.ui.viewmodel.WifiDetails
 import com.example.wifimapping.ui.viewmodel.WifiUiState
@@ -60,7 +59,8 @@ import kotlinx.coroutines.*
 object ChooseWifiDestination : NavigationDestination {
     override val route = "choose_wifi"
     override val titleRes = R.string.choose_wifi_title
-    const val SSIDARG = "ssid"
+    const val idHistory = "idHistory"
+    val routeWithArgs = "${route}/{$idHistory}"
 }
 
 const val PERMISSIONS_REQUEST_CODE = 1
@@ -83,7 +83,7 @@ fun ChooseWifiScreen(
 
     Scaffold(
         topBar = {
-            InventoryTopAppBar(
+            WifiMappingTopAppBar(
                 title = stringResource(ItemEntryDestination.titleRes),
                 canNavigateBack = canNavigateBack,
             )
@@ -102,7 +102,7 @@ fun ChooseWifiScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Choose Wifi",
+                Text("Pilih Wifi",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp))
@@ -156,7 +156,7 @@ fun ChooseWifiScreen(
                     Button(
                         shape = RoundedCornerShape(5.dp),
                         onClick = {
-                            var data = previewGridviewModel.roomParamsUiState.roomParamsDetails
+                            var data = previewGridviewModel.historyByIdUiState.historyDetails
                             navigateToLocateRouter(data.id)
                         },
                         enabled = !isNextButtonDisabled,
