@@ -2,7 +2,6 @@ package com.sashiomarda.wifimapping.ui.history
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -48,7 +47,7 @@ import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.data.HistoryRoom
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
-import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryDestination
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryRoomUiStateList
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryViewModel
@@ -87,7 +86,7 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+                title = stringResource(RoomInputDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )

@@ -52,7 +52,7 @@ class RoomParamsEntryViewModel(private val roomParamsRepository: RoomParamsRepos
     private fun validateInput(uiState: RoomParamsDetails = roomParamsUiState.roomParamsDetails): Boolean {
         return with(uiState) {
             roomName.isNotBlank() && length.isNotBlank() && width.isNotBlank()
-                    && gridDistance.isNotBlank()
+                    && gridDistance.isNotBlank() && layerCount.isNotBlank()
         }
     }
     @RequiresApi(Build.VERSION_CODES.O)
@@ -78,6 +78,7 @@ data class RoomParamsDetails(
     val length: String = "",
     val width: String = "",
     val gridDistance: String = "",
+    val layerCount: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -88,7 +89,8 @@ fun RoomParamsDetails.toRoomParams(): RoomParams = RoomParams(
     length = length.toIntOrNull() ?: 0,
     width = width.toIntOrNull() ?: 0,
     gridDistance = gridDistance.toIntOrNull() ?: 0,
-    timestamp = timestamp
+    timestamp = timestamp,
+    layerCount = layerCount.toIntOrNull() ?: 0,
 )
 
 //fun RoomParams.formatedPrice(): String {

@@ -33,8 +33,8 @@ import com.sashiomarda.wifimapping.ui.history.HistoryDestination
 import com.sashiomarda.wifimapping.ui.history.HistoryScreen
 import com.sashiomarda.wifimapping.ui.home.HomeDestination
 import com.sashiomarda.wifimapping.ui.home.HomeScreen
-import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryDestination
-import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryScreen
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputScreen
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterDestination
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterScreen
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
@@ -68,7 +68,7 @@ fun WifiMappingNavHost(
                 type = NavType.IntType
             })) {
             RoomListScreen(
-                navigateToRoomParamsEntry = { navController.navigate("${ItemEntryDestination.route}/0") },
+                navigateToRoomParamsEntry = { navController.navigate("${RoomInputDestination.route}/0") },
                 onNavigateUp = { navController.navigateUp() },
                 navigateToHistory = { navController.navigate("${HistoryDestination.route}/${it}") },
             )
@@ -82,11 +82,11 @@ fun WifiMappingNavHost(
                 navigateToRoomPreviewGrid = { navController.navigate("${PreviewGridDestination.route}/${it}") },
             )
         }
-        composable(route = ItemEntryDestination.routeWithArgs,
-            arguments = listOf(navArgument(ItemEntryDestination.idRoom) {
+        composable(route = RoomInputDestination.routeWithArgs,
+            arguments = listOf(navArgument(RoomInputDestination.idRoom) {
                 type = NavType.IntType
             })) {
-            ItemEntryScreen(
+            RoomInputScreen(
                 onNavigateUp = { navController.navigateUp() },
                 navigateBack = { navController.popBackStack() },
             )
