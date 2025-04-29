@@ -42,7 +42,7 @@ import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.data.RoomParams
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
-import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryDestination
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
 
@@ -68,7 +68,7 @@ fun RoomListScreen(
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+                title = stringResource(RoomInputDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )

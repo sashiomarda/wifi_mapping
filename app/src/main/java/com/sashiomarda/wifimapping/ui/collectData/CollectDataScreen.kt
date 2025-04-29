@@ -73,7 +73,7 @@ import com.sashiomarda.wifimapping.components.CanvasGrid
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
-import com.sashiomarda.wifimapping.ui.itemEntry.ItemEntryDestination
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.vertical
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
@@ -154,7 +154,7 @@ fun CollectDataScreen(
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+                title = stringResource(RoomInputDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )

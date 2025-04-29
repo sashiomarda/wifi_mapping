@@ -13,7 +13,7 @@ import kotlin.jvm.java
     Grid::class,
     Dbm::class,
     History::class],
-    version = 2, exportSchema = false)
+    version = 3, exportSchema = false)
 //@TypeConverters(TimeConverter::class)
 abstract class WifiMappingDatabase : RoomDatabase() {
     abstract fun roomParamsDao(): RoomParamsDao

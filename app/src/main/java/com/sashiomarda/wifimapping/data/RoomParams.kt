@@ -32,4 +32,5 @@ data class RoomParams(
     val length: Int,
     val width: Int,
     val gridDistance: Int,
+    val layerCount: Int,
 )

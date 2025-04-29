@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.sashiomarda.wifimapping.ui.itemEntry
+package com.sashiomarda.wifimapping.ui.roomInput
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -51,7 +51,7 @@ import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsUiState
 import kotlinx.coroutines.launch
 
-object ItemEntryDestination : NavigationDestination {
+object RoomInputDestination : NavigationDestination {
     override val route = "roomparams_entry"
     override val titleRes = R.string.room_params_entry_title
     const val idRoom = "idRoom"
@@ -61,7 +61,7 @@ object ItemEntryDestination : NavigationDestination {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemEntryScreen(
+fun RoomInputScreen(
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
     roomParamsEntryViewModel: RoomParamsEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -71,7 +71,7 @@ fun ItemEntryScreen(
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+                title = stringResource(RoomInputDestination.titleRes),
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )
@@ -188,6 +188,20 @@ fun RoomParamsInputForm(
             onValueChange = { onValueChange(roomParamsDetails.copy(gridDistance = it)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             label = { Text(stringResource(R.string.grid_distance)) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            singleLine = true
+        )
+        OutlinedTextField(
+            value = roomParamsDetails.layerCount,
+            onValueChange = { onValueChange(roomParamsDetails.copy(layerCount = it)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = { Text(stringResource(R.string.layer_count)) },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                 unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
