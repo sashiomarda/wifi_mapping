@@ -19,13 +19,15 @@ package com.sashiomarda.wifimapping.data
 import kotlinx.coroutines.flow.Flow
 
 class OfflineHistoryRepository(private val historyDao: HistoryDao) : HistoryRepository {
-    override fun getAllHistoryStream(): Flow<List<History>> = historyDao.getAllHistory()
+    override fun getAllHistoryStream(): Flow<List<HistoryRoom>> = historyDao.getAllHistory()
 
     override suspend fun getLastHistoryIdStream(): History? = historyDao.getLastHistoryId()
 
     override suspend fun getHistoryByIdStream(id: Int): Flow<History?> = historyDao.getHistoryById(id)
 
     override fun getHistoryByIdRoomStream(idRoom: Int): Flow<List<History>> = historyDao.getHistoryByIdRoom(idRoom)
+
+    override fun getHistoryRoomByIdRoomStream(idRoom: Int): Flow<List<HistoryRoom>> = historyDao.getHistoryRoomByIdRoom(idRoom)
 
     override suspend fun insertHistory(history: History) = historyDao.insert(history)
 

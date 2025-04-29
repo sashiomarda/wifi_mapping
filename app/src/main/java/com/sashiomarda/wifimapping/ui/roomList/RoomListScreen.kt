@@ -121,7 +121,7 @@ fun RoomListScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier
-                                .padding(10.dp)
+                                .padding(20.dp)
                         ) {
                             items(
                                 items = wifiUiStateList.roomParamList,
@@ -130,7 +130,6 @@ fun RoomListScreen(
                                 }) {
                                 Card(
                                     modifier = Modifier
-                                        .padding(10.dp)
                                         .fillMaxWidth()
                                         .clickable {
 //                                        navigateToPreviewGrid(it.id)
