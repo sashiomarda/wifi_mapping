@@ -1,6 +1,7 @@
 package com.sashiomarda.wifimapping.ui.previewGrid
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -116,6 +117,13 @@ fun PreviewGridScreen(
                             addChosenIdList = {ssidId, gridId ->}
                         )
                     }
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 40.dp, top = 5.dp, bottom = 5.dp)
+                    ) {
+                        Text("Jarak grid: ${data.gridDistance} cm")
+                        Text("Jumlah layer: ${data.layerCount}")
+                    }
                     Button(
                         shape = RoundedCornerShape(5.dp),
                         onClick = {
@@ -124,25 +132,30 @@ fun PreviewGridScreen(
                                 var gridCmToM = data.gridDistance.toFloat().div(100)
                                 val gridCount = (data.length.toInt() / gridCmToM) * (data.width.toInt() / gridCmToM)
                                 if (gridListDb.gridList.isEmpty()) {
-                                    for (i in 1..gridCount.toInt()) {
-                                        var inputGrid = gridViewModel
-                                            .gridUiState
-                                            .gridDetails
-                                            .copy(idHistory = lastHistoryId!!)
-                                        if (i == 1) {
-                                            inputGrid = gridViewModel
+                                    for (i in 1..data.layerCount.toInt()) {
+                                        for (j in 1..gridCount.toInt()) {
+                                            var inputGrid = gridViewModel
                                                 .gridUiState
                                                 .gridDetails
                                                 .copy(
-                                                    idHistory = lastHistoryId!!
+                                                    idHistory = lastHistoryId!!,
+                                                    layerNo = i
                                                 )
+                                            if (j == 1) {
+                                                inputGrid = gridViewModel
+                                                    .gridUiState
+                                                    .gridDetails
+                                                    .copy(
+                                                        idHistory = lastHistoryId!!,
+                                                        layerNo = i
+                                                    )
+                                            }
+                                            gridViewModel.saveGrid(inputGrid)
                                         }
-                                        gridViewModel.saveGrid(inputGrid)
                                     }
                                 }
                                 navigateToChooseWifi(lastHistoryId)
                             }
-
                         }
                     ) {
                         Text("Selanjutnya")

@@ -116,4 +116,5 @@ fun RoomParams.toRoomParamsDetails(): RoomParamsDetails = RoomParamsDetails(
     length = length.toString(),
     width = width.toString(),
     gridDistance = gridDistance.toString(),
+    layerCount = layerCount.toString()
 )
