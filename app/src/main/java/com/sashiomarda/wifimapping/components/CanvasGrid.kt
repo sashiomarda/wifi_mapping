@@ -3,6 +3,7 @@ package com.sashiomarda.wifimapping.components
 //noinspection SuspiciousImport
 import android.R
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -67,7 +68,7 @@ fun CanvasGrid(
     grid: Int? = 100,
     gridViewModel: GridViewModel,
     chosenIdSsid: Int = 0,
-    gridListDb: GridUiStateList? = null,
+    gridList : List<Grid>? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
     dbmViewModel: DbmViewModel,
@@ -107,9 +108,9 @@ fun CanvasGrid(
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var dbmGridMap = HashMap<Int,Int>()
     var wifiGridLocationIndex: MutableList<Int> = ArrayList()
-    if (!gridListDb?.gridList.isNullOrEmpty()){
-        for (i in 1..gridListDb.gridList.size) {
-            if (gridListDb.gridList[i-1].idWifi != 0){
+    if (!gridList.isNullOrEmpty()){
+        for (i in 1..gridList.size) {
+            if (gridList.get(i-1).idWifi != 0){
                 wifiGridLocationIndex.add(i-1)
             }
         }
@@ -138,7 +139,7 @@ fun CanvasGrid(
                 drawLayer(graphicsLayer)
                 coroutineScope.launch {
                     var canvasBitmap = graphicsLayer.toImageBitmap()
-                    if (dbmListDb.dbmList.size == gridListDb?.gridList?.size) {
+                    if (dbmListDb.dbmList.size == gridList?.size) {
                         saveCanvasBitmap(canvasBitmap)
                     }
                 }
@@ -147,7 +148,7 @@ fun CanvasGrid(
             Canvas(modifier = Modifier
                 .fillMaxSize(),
             ) {
-                if (gridListDb != null) {
+                if (gridList != null) {
                     val gridHeightPx = localDensity.run { gridHeight.dp.toPx() }
                     val gridWidthPx = localDensity.run { gridWidth.dp.toPx() }
                     val canvasQuadrantSize =
@@ -165,11 +166,11 @@ fun CanvasGrid(
                             repeatX = gridHorizontalAmount.toInt()
                             repeatY = gridVerticalAmount.toInt()
                         }
-                        for (i in gridListDb.gridList.indices) {
+                        for (i in gridList.indices) {
                             var count = 0
                             repeat(repeatY) {y->
                                 repeat(repeatX) {x->
-                                    var dbm = dbmGridMap[gridListDb.gridList[i].id]
+                                    var dbm = dbmGridMap[gridList.get(i).id]
                                     if (dbm != null) {
                                         if (count == i) {
                                             drawRect(
@@ -190,7 +191,7 @@ fun CanvasGrid(
                                                     y = gridHeightPx * y
                                                 ),
                                             )
-                                            if (gridListDb.gridList[i].idWifi != 0) {
+                                            if (gridList.get(i).idWifi != 0) {
                                                 drawImage(
                                                     image = star,
                                                     topLeft = Offset(
@@ -210,14 +211,14 @@ fun CanvasGrid(
             }
         }
 
-        if (gridListDb != null) {
-            if (gridListDb.gridList.isNotEmpty()) {
-                val firstGridID = gridListDb.gridList[0].id
+        if (gridList != null) {
+            if (gridList.isNotEmpty()) {
+                val firstGridID = gridList[0].id
                 LazyVerticalGrid(
                     modifier = Modifier,
                     columns = GridCells.Adaptive(floor(gridWidth).dp-((floor(gridWidth)*0.01).dp))
                 ) {
-                    items(gridListDb.gridList,
+                    items(gridList,
                         key = {
                             grid : Grid ->
                             grid.id
@@ -249,8 +250,8 @@ fun CanvasGrid(
                                     }
                                 }else if (screen == "collect_data"){
                                     var currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                                    if (gridListDb.gridList[0].isClicked){
-                                        currentActiveGrid = gridListDb.gridList[0]
+                                    if (gridList[0].isClicked){
+                                        currentActiveGrid = gridList[0]
                                     }
                                     coroutineScope.launch {
                                         gridViewModel.updateChosenGrid(

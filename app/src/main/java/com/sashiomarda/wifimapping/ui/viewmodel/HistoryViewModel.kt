@@ -58,7 +58,7 @@ class HistoryViewModel(
 
     private val idRoom: Int = checkNotNull(savedStateHandle[HistoryDestination.idRoom])
 
-    val historyByIdUiStateList: StateFlow<HistoryRoomUiStateList> =
+    val historyByIdRoomUiStateList: StateFlow<HistoryRoomUiStateList> =
         historyRepository.getHistoryRoomByIdRoomStream(idRoom = idRoom)
             .map { HistoryRoomUiStateList(it) }
             .stateIn(

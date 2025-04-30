@@ -52,8 +52,8 @@ class GridViewModel(
 
     private val idHistory: Int = checkNotNull(savedStateHandle[PreviewGridDestination.idHistory])
 
-    val gridUiStateList: StateFlow<GridUiStateList> =
-        gridRepository.getGridByIdHistoryStream(idHistory = idHistory)
+    var gridUiStateList: StateFlow<GridUiStateList> =
+        gridRepository.getGridByIdHistoryLayerNoStream(idHistory = idHistory, layerNo = 1)
             .map { GridUiStateList(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -102,6 +102,9 @@ class GridViewModel(
         return idHistory
     }
 
+    suspend fun getGridByLayerNo(layerNo: Int): List<Grid> {
+        return gridRepository.getGridByLayerNo(idHistory, layerNo).map { it }
+    }
 }
 data class GridUiState(
     val gridDetails: GridDetails = GridDetails()

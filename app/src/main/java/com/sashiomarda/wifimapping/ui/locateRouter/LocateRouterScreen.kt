@@ -1,6 +1,7 @@
 package com.sashiomarda.wifimapping.ui.locateRouter
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,6 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.components.CanvasGrid
+import com.sashiomarda.wifimapping.components.DropDownMenu
+import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.data.Wifi
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
@@ -87,6 +90,10 @@ fun LocateRouterScreen(
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
     var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
+    var gridList by remember { mutableStateOf(listOf(Grid())) }
+    if (gridListDb.gridList.isNotEmpty()){
+        gridList = gridListDb.gridList
+    }
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 1
     Scaffold(
         topBar = {
@@ -125,6 +132,27 @@ fun LocateRouterScreen(
                     )
                 }
                 if (data.length != "") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 40.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                        ) {
+                            if (data.layerCount != "") {
+                                val menuItemData = List(data.layerCount.toInt()) { it + 1 }
+                                DropDownMenu(
+                                    menuItemData = menuItemData,
+                                    selectedLayer = {
+                                        coroutineScope.launch {
+                                            gridList = gridViewModel.getGridByLayerNo(it)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Text("Panjang ${data.length} m")
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(
@@ -143,7 +171,8 @@ fun LocateRouterScreen(
                             grid = data.gridDistance.toInt(),
                             gridViewModel = gridViewModel,
                             chosenIdSsid = chosenIdSsid,
-                            gridListDb = gridListDb,
+//                            gridListDb = gridListDb,
+                            gridList = gridList,
                             saveIdGridRouterPosition = { it ->
                                 idGridRouterPosition = it
                             },

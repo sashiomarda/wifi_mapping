@@ -22,12 +22,17 @@ interface GridDao {
     @Query("SELECT * from grid WHERE idRoom = :idRoom")
     fun getGridByIdRoom(idRoom: Int): Flow<List<Grid>>
 
-    @Query("SELECT * from grid WHERE idHistory = :idHistory")
-    fun getGridByIdHistory(idHistory: Int): Flow<List<Grid>>
+    @Query("SELECT * from grid WHERE idHistory = :idHistory " +
+            "AND layerNo = :layerNo")
+    fun getGridByIdHistoryLayerNo(idHistory: Int,layerNo: Int): Flow<List<Grid>>
 
     @Query("UPDATE grid SET idWifi = 0")
     fun resetInputGrid() : Int
 
     @Query("SELECT * from grid ORDER BY id DESC LIMIT 1")
     suspend fun getLastGridInputId(): Grid
+
+    @Query("SELECT * from grid WHERE idHistory = :idHistory" +
+            " AND layerNo = :layerNo")
+    suspend fun getGridByLayerNo(idHistory: Int,layerNo: Int): List<Grid>
 }

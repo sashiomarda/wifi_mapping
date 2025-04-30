@@ -31,7 +31,7 @@ interface GridRepository {
      */
     fun getGridByIdRoomStream(idRoom: Int): Flow<List<Grid>>
 
-    fun getGridByIdHistoryStream(idHistory: Int): Flow<List<Grid>>
+    fun getGridByIdHistoryLayerNoStream(idHistory: Int, layerNo: Int): Flow<List<Grid>>
 
     suspend fun getLastGridInputId(): Grid?
     /**
@@ -51,4 +51,5 @@ interface GridRepository {
 
     suspend fun resetInputGrid(): Int
 
+    suspend fun getGridByLayerNo(idHistory: Int, layerNo: Int): List<Grid>
 }
