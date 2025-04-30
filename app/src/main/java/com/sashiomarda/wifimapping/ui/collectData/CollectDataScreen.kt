@@ -12,6 +12,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -70,6 +72,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.components.CanvasGrid
+import com.sashiomarda.wifimapping.components.DropDownMenu
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
@@ -127,14 +130,19 @@ fun CollectDataScreen(
     var idGrids : MutableList<Int> = ArrayList()
     var ssidList : List<String> = ArrayList()
     var dbmList : List<Int> = ArrayList()
+    var isUpdateGridList by remember { mutableStateOf(false) }
+    var gridList by remember { mutableStateOf(listOf(Grid())) }
     if (gridListDb.gridList.isNotEmpty()) {
-        if (currentActiveGrid.id == 0){
-            currentActiveGrid = gridListDb.gridList[0]
-        }
-        for (i in gridListDb.gridList) {
-            idGrids.add(i.id)
-            if (i.idWifi != 0){
-                chosenIdSsid = i.idWifi
+        if (!isUpdateGridList) {
+            gridList = gridListDb.gridList
+            if (currentActiveGrid.id == 0) {
+                currentActiveGrid = gridListDb.gridList[0]
+            }
+            for (i in gridListDb.gridList) {
+                idGrids.add(i.id)
+                if (i.idWifi != 0) {
+                    chosenIdSsid = i.idWifi
+                }
             }
         }
     }
@@ -173,122 +181,148 @@ fun CollectDataScreen(
                     "Peta Wifi",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
-                        .padding(bottom = 15.dp)
                 )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Panjang ${data.length} m")
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(
-                            modifier = Modifier
-                        ) {
-                            Text(
-                                modifier = Modifier
-                                    .vertical()
-                                    .rotate(-90f),
-                                text = "Lebar ${data.width} m"
-                            )
-                        }
-                        if (data.id != 0) {
-                            CanvasGrid(
-                                length = data.length.toFloat(),
-                                width = data.width.toFloat(),
-                                grid = data.gridDistance.toInt(),
-                                gridViewModel = gridViewModel,
-                                chosenIdSsid = chosenIdSsid,
-                                gridListDb = gridListDb,
-                                saveIdGridRouterPosition = {},
-                                screen = CollectDataDestination.route,
-                                dbmViewModel = dbmViewModel,
-                                saveCanvasBitmap = {bitmap ->
-                                    imageBitmap = bitmap
-                                    if (gridHaveDbm.size == gridListDb.gridList.size) {
-                                        isSaveImageButton = true
-                                    }
-                                },
-                                addChosenIdList = {ssidId, gridId ->}
-                            )
-                        }
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                Card() {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(top = 10.dp, start = 20.dp, end = 20.dp)
-                            .fillMaxWidth()
-                    ) {
+                        .padding(top = 5.dp, bottom = 5.dp)) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(start = 40.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .background(Color(0xFF1AFF00))
-                                    .size(15.dp)
-                            )
-                            Text(
+                            ) {
+                                if (data.layerCount != "") {
+                                    val menuItemData = List(data.layerCount.toInt()) { it + 1 }
+                                    DropDownMenu(
+                                        menuItemData = menuItemData,
+                                        selectedLayer = {
+                                            coroutineScope.launch {
+                                                isUpdateGridList = true
+                                                gridList = gridViewModel.getGridByLayerNo(it)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Text("Panjang ${data.length} m")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(
                                 modifier = Modifier
-                                    .padding(start = 5.dp),
-                                fontSize = 10.sp,
-                                text = "> -67 dbm (sangat kuat)"
-                            )
+                            ) {
+                                Text(
+                                    modifier = Modifier
+                                        .vertical()
+                                        .rotate(-90f),
+                                    text = "Lebar ${data.width} m"
+                                )
+                            }
+                            if (data.id != 0) {
+                                CanvasGrid(
+                                    length = data.length.toFloat(),
+                                    width = data.width.toFloat(),
+                                    grid = data.gridDistance.toInt(),
+                                    gridViewModel = gridViewModel,
+                                    chosenIdSsid = chosenIdSsid,
+//                                    gridListDb = gridListDb,
+                                    gridList = gridList,
+                                    saveIdGridRouterPosition = {},
+                                    screen = CollectDataDestination.route,
+                                    dbmViewModel = dbmViewModel,
+                                    saveCanvasBitmap = { bitmap ->
+                                        imageBitmap = bitmap
+                                        if (gridHaveDbm.size == gridListDb.gridList.size) {
+                                            isSaveImageButton = true
+                                        }
+                                    },
+                                    addChosenIdList = { ssidId, gridId -> }
+                                )
+                            }
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .weight(1f)
+                                .padding(top = 10.dp, start = 20.dp, end = 20.dp)
+                                .fillMaxWidth()
                         ) {
-                            Box(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .background(Color(0xFFFFEB3B))
-                                    .size(15.dp)
-                            )
-                            Text(
+                                    .weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFF1AFF00))
+                                        .size(15.dp)
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .padding(start = 5.dp),
+                                    fontSize = 10.sp,
+                                    text = "> -67 dbm (sangat kuat)"
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .padding(start = 5.dp),
-                                fontSize = 10.sp,
-                                text = "-68 dbm s/d -70 dbm (kuat)"
-                            )
+                                    .weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFFFFEB3B))
+                                        .size(15.dp)
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .padding(start = 5.dp),
+                                    fontSize = 10.sp,
+                                    text = "-68 dbm s/d -70 dbm (kuat)"
+                                )
+                            }
                         }
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(start = 20.dp, end = 20.dp)
-                            .fillMaxWidth()
-                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .weight(1f)
+                                .padding(start = 20.dp, end = 20.dp)
+                                .fillMaxWidth()
                         ) {
-                            Box(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .background(Color(0xFFFF9800))
-                                    .size(15.dp)
-                            )
-                            Text(
+                                    .weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFFFF9800))
+                                        .size(15.dp)
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .padding(start = 5.dp),
+                                    fontSize = 10.sp,
+                                    text = "-71 dbm s/d -80 dbm (lemah)"
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .padding(start = 5.dp),
-                                fontSize = 10.sp,
-                                text = "-71 dbm s/d -80 dbm (lemah)"
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .background(Color(0xFFFF0000))
-                                    .size(15.dp)
-                            )
-                            Text(
-                                modifier = Modifier
-                                    .padding(start = 5.dp),
-                                fontSize = 10.sp,
-                                text = "< -80 dbm (sangat lemah)"
-                            )
+                                    .weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFFFF0000))
+                                        .size(15.dp)
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .padding(start = 5.dp),
+                                    fontSize = 10.sp,
+                                    text = "< -80 dbm (sangat lemah)"
+                                )
+                            }
                         }
                     }
                 }
