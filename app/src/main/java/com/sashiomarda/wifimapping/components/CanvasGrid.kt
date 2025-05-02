@@ -4,6 +4,7 @@ package com.sashiomarda.wifimapping.components
 import android.R
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -50,8 +51,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sashiomarda.wifimapping.data.Grid
+import com.sashiomarda.wifimapping.ui.locateRouter.RouterPosition
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
-import com.sashiomarda.wifimapping.ui.viewmodel.GridUiStateList
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
 import kotlinx.coroutines.launch
@@ -73,7 +74,9 @@ fun CanvasGrid(
     screen: String,
     dbmViewModel: DbmViewModel,
     saveCanvasBitmap: (ImageBitmap) -> Unit,
-    addChosenIdList: (Int, Int) -> Unit
+    addChosenIdList: (Int, Int) -> Unit,
+    updateGridList: (Int) -> Unit,
+    routerPositions: List<RouterPosition>? = null
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -232,20 +235,36 @@ fun CanvasGrid(
                             onClick = {
                                 if (screen == "locate_router") {
                                     if (chosenIdSsid != 0) {
-                                        chosenIdGridRouterPosition = it.id
-                                        saveIdGridRouterPosition(chosenIdGridRouterPosition)
-                                        addChosenIdList(chosenIdSsid,chosenIdGridRouterPosition)
-                                        coroutineScope.launch {
-                                            gridViewModel.updateUiState(
-                                                gridViewModel.gridUiState.gridDetails.copy(
-                                                    id = it.id,
-                                                    idRoom = it.idRoom,
-                                                    idHistory = it.idHistory,
-                                                    idWifi = chosenIdSsid,
-                                                    isClicked = it.isClicked
-                                                )
+                                        val foundSsidId = routerPositions?.firstOrNull { it.ssidId == chosenIdSsid }
+                                        if (foundSsidId == null) {
+                                            chosenIdGridRouterPosition = it.id
+                                            saveIdGridRouterPosition(chosenIdGridRouterPosition)
+                                            addChosenIdList(
+                                                chosenIdSsid,
+                                                chosenIdGridRouterPosition
                                             )
-                                            gridViewModel.updateGrid()
+                                            coroutineScope.launch {
+                                                gridViewModel.updateUiState(
+                                                    gridViewModel.gridUiState.gridDetails.copy(
+                                                        id = it.id,
+                                                        idRoom = it.idRoom,
+                                                        idHistory = it.idHistory,
+                                                        idWifi = chosenIdSsid,
+                                                        isClicked = it.isClicked,
+                                                        layerNo = it.layerNo
+                                                    )
+                                                )
+                                                gridViewModel.updateGrid()
+                                                updateGridList(it.layerNo)
+                                            }
+                                        }else{
+                                            val gridTxt = foundSsidId.grid - firstGridID + 1
+                                            Toast.makeText(context,
+                                                "${foundSsidId.ssid} sudah ditambahkan " +
+                                                        "di Layer ${foundSsidId.layer} " +
+                                                        "Grid ${gridTxt}",
+                                                Toast.LENGTH_SHORT)
+                                                .show()
                                         }
                                     }
                                 }else if (screen == "collect_data"){

@@ -114,7 +114,8 @@ fun PreviewGridScreen(
                             screen = PreviewGridDestination.route,
                             dbmViewModel = dbmViewModel,
                             saveCanvasBitmap = {},
-                            addChosenIdList = {ssidId, gridId ->}
+                            addChosenIdList = { ssidId, gridId -> },
+                            updateGridList = {}
                         )
                     }
                     Column(modifier = Modifier

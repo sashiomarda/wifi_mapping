@@ -201,7 +201,23 @@ fun CollectDataScreen(
                                         selectedLayer = {
                                             coroutineScope.launch {
                                                 isUpdateGridList = true
+                                                val foundGrid = gridList.firstOrNull{it.isClicked == true}
+                                                if (foundGrid != null)
+                                                gridViewModel.updateUiState(
+                                                    gridViewModel.gridUiState.gridDetails.copy(
+                                                        id = foundGrid!!.id,
+                                                        idRoom = foundGrid.idRoom,
+                                                        idHistory = foundGrid.idHistory,
+                                                        idWifi = chosenIdSsid,
+                                                        isClicked = false,
+                                                        layerNo = foundGrid.layerNo
+                                                    )
+                                                )
+                                                gridViewModel.updateGrid()
                                                 gridList = gridViewModel.getGridByLayerNo(it)
+                                                for (i in gridList) {
+                                                    idGrids.add(i.id)
+                                                }
                                             }
                                         }
                                     )
@@ -227,7 +243,6 @@ fun CollectDataScreen(
                                     grid = data.gridDistance.toInt(),
                                     gridViewModel = gridViewModel,
                                     chosenIdSsid = chosenIdSsid,
-//                                    gridListDb = gridListDb,
                                     gridList = gridList,
                                     saveIdGridRouterPosition = {},
                                     screen = CollectDataDestination.route,
@@ -238,7 +253,8 @@ fun CollectDataScreen(
                                             isSaveImageButton = true
                                         }
                                     },
-                                    addChosenIdList = { ssidId, gridId -> }
+                                    addChosenIdList = { ssidId, gridId -> },
+                                    updateGridList = {}
                                 )
                             }
                         }
@@ -554,7 +570,7 @@ fun CollectDataScreen(
                                 onClick = {
                                     var prevAndCurrentGrid = navButtonClick(
                                         gridViewModel,
-                                        gridListDb,
+                                        gridList,
                                         data,
                                         idGrids,
                                         firstGridId,
@@ -595,7 +611,7 @@ fun CollectDataScreen(
                                 onClick = {
                                     var prevAndCurrentGrid = navButtonClick(
                                         gridViewModel,
-                                        gridListDb,
+                                        gridList,
                                         data,
                                         idGrids,
                                         firstGridId,
@@ -627,7 +643,7 @@ fun CollectDataScreen(
                                 onClick = {
                                     var prevAndCurrentGrid = navButtonClick(
                                         gridViewModel,
-                                        gridListDb,
+                                        gridList,
                                         data,
                                         idGrids,
                                         firstGridId,
@@ -666,7 +682,7 @@ fun CollectDataScreen(
                                 onClick = {
                                     var prevAndCurrentGrid = navButtonClick(
                                         gridViewModel,
-                                        gridListDb,
+                                        gridList,
                                         data,
                                         idGrids,
                                         firstGridId,
@@ -747,7 +763,7 @@ fun CollectDataScreen(
 @RequiresApi(Build.VERSION_CODES.O)
 private fun navButtonClick(
     gridViewModel: GridViewModel,
-    gridListDb: GridUiStateList,
+    gridList: List<Grid>,
     data: RoomParamsDetails,
     idGrids: MutableList<Int>,
     firstGridId: Int,
@@ -755,12 +771,13 @@ private fun navButtonClick(
     direction: String
 ): PrevAndCurrentGrid {
     var currentActiveGrid = gridViewModel.currentGrid.toGrid()
-    if (currentActiveGrid.id == 0){
-        currentActiveGrid = gridListDb.gridList[0]
+    var foundGrid = gridList.firstOrNull{it.id == currentActiveGrid.id}
+    if (currentActiveGrid.id == 0 || foundGrid == null){
+        currentActiveGrid = gridList[0]
     }
     var previousActiveGrid = gridViewModel.previousGrid.toGrid()
     var isMoveGrid = false
-    var currentActiveGridPosition = currentActiveGrid.id - firstGridId + 1
+    var currentActiveGridPosition = currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
     var chosenIdGrid = 0
     var gridCmToM = data.gridDistance.toFloat().div(100)
     if (direction == "up") {
@@ -775,8 +792,8 @@ private fun navButtonClick(
         }
     } else if (direction == "right") {
         if (currentActiveGrid.id == 0){
-            currentActiveGrid = gridListDb.gridList[0]
-            currentActiveGridPosition = gridListDb.gridList[0].id - firstGridId + 1
+            currentActiveGrid = gridList[0]
+            currentActiveGridPosition = gridList[0].id - firstGridId + 1
         }
         if (currentActiveGridPosition < lastGridId - firstGridId + 1) {
             isMoveGrid = true
@@ -791,9 +808,10 @@ private fun navButtonClick(
 
     if (isMoveGrid){
         previousActiveGrid = currentActiveGrid
-        currentActiveGrid = gridListDb.gridList[
-            idGrids.indexOf(chosenIdGrid)
-        ].copy(isClicked = false,)
+        foundGrid = gridList.firstOrNull{it.id == chosenIdGrid}
+        if (foundGrid != null){
+            currentActiveGrid = foundGrid
+        }
     }
 
     return PrevAndCurrentGrid(previousActiveGrid, currentActiveGrid, isMoveGrid)
