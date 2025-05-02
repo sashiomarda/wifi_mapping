@@ -17,6 +17,7 @@
 package com.sashiomarda.wifimapping.ui.viewmodel
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
@@ -88,13 +90,42 @@ fun LocateRouterScreen(
     var chosenSsidList = remember { mutableStateListOf<String>() }
     var chosenIdGridList = remember { mutableStateListOf<Int>() }
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
+    var isFirstLoadGridList by remember { mutableStateOf(true) }
     var idGridRouterPosition by remember { mutableStateOf(0) }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     var gridList by remember { mutableStateOf(listOf(Grid())) }
+    var firstGridId by remember { mutableStateOf(1) }
+    var selectedLayer by remember { mutableStateOf(1) }
     if (gridListDb.gridList.isNotEmpty()){
-        gridList = gridListDb.gridList
+        if (isFirstLoadGridList) {
+            gridList = gridListDb.gridList
+            if (gridList[0].layerNo == 1) {
+                firstGridId = gridList[0].id
+            }
+        }
     }
-    val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 1
+    val allWifiUiStateList by wifiViewModel.allWifiUiStateList.collectAsState()
+    var routerPositions by remember { mutableStateOf(emptyList<RouterPosition>()) }
+    if (data.layerCount!="") {
+        for (i in 1..data.layerCount.toInt()) {
+            LaunchedEffect(gridViewModel) {
+                val gridLayer = gridViewModel.getGridByLayerNo(i)
+                for (grid in gridLayer){
+                    if (grid.idWifi != 0){
+                        val foundRouter = allWifiUiStateList.wifiList.firstOrNull{it.id == grid.idWifi}
+                        if (foundRouter != null){
+                            routerPositions = routerPositions + RouterPosition(
+                                layer = grid.layerNo,
+                                grid = grid.id,
+                                ssidId = foundRouter.id,
+                                ssid = foundRouter.ssid
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -120,7 +151,8 @@ fun LocateRouterScreen(
                     modifier = Modifier
                         .padding(bottom = 15.dp))
                 Box(modifier = Modifier
-                    .padding(start = 5.dp, end = 5.dp)) {
+                    .padding(start = 5.dp, end = 5.dp, bottom = 15.dp)
+                ) {
                     WifiCheckedList(
                         wifiCheckListDb = wifiCheckedUiStateList.wifiList,
                         saveCurrentChosenIdSsid = {
@@ -128,125 +160,165 @@ fun LocateRouterScreen(
                             isResetChosenIdSsid = false
                         },
                         isResetChosenIdSsid = isResetChosenIdSsid,
-                        chosenIdSsidList = chosenIdSsidList
+                        chosenIdSsidList = chosenIdSsidList,
+                        routerPositions = routerPositions
                     )
                 }
                 if (data.length != "") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 40.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                        ) {
-                            if (data.layerCount != "") {
-                                val menuItemData = List(data.layerCount.toInt()) { it + 1 }
-                                DropDownMenu(
-                                    menuItemData = menuItemData,
-                                    selectedLayer = {
+                    Card(modifier = Modifier) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 40.dp,
+                                        top = 5.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                ) {
+                                    if (data.layerCount != "") {
+                                        val menuItemData = List(data.layerCount.toInt()) { it + 1 }
+                                        DropDownMenu(
+                                            menuItemData = menuItemData,
+                                            selectedLayer = {
+                                                coroutineScope.launch {
+                                                    isFirstLoadGridList = false
+                                                    gridList = gridViewModel.getGridByLayerNo(it)
+                                                    selectedLayer = it
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            Text("Panjang ${data.length} m")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(
+                                    modifier = Modifier
+                                ) {
+                                    Text(
+                                        modifier = Modifier
+                                            .vertical()
+                                            .rotate(-90f),
+                                        text = "Lebar ${data.width} m"
+                                    )
+                                }
+                                CanvasGrid(
+                                    length = data.length.toFloat(),
+                                    width = data.width.toFloat(),
+                                    grid = data.gridDistance.toInt(),
+                                    gridViewModel = gridViewModel,
+                                    chosenIdSsid = chosenIdSsid,
+                                    gridList = gridList,
+                                    saveIdGridRouterPosition = { it ->
+                                        idGridRouterPosition = it
+                                        coroutineScope.launch {
+                                            gridList = gridViewModel.getGridByLayerNo(1)
+                                        }
+                                    },
+                                    screen = LocateRouterDestination.route,
+                                    dbmViewModel = dbmViewModel,
+                                    saveCanvasBitmap = {},
+                                    addChosenIdList = { ssidId, gridId ->
+                                        chosenIdSsidList.add(ssidId)
+                                        for (wifi in wifiCheckedUiStateList.wifiList) {
+                                            if (wifi.id == ssidId) {
+                                                val foundSsid = routerPositions.firstOrNull{ it.ssid == wifi.ssid}
+                                                if (foundSsid == null) {
+                                                    routerPositions =
+                                                        routerPositions + RouterPosition(
+                                                            layer = gridList[0].layerNo,
+                                                            grid = gridId,
+                                                            ssidId = wifi.id,
+                                                            ssid = wifi.ssid
+                                                        )
+                                                }
+                                            }
+                                        }
+                                    },
+                                    updateGridList = {
                                         coroutineScope.launch {
                                             gridList = gridViewModel.getGridByLayerNo(it)
                                         }
-                                    }
+                                    },
+                                    routerPositions = routerPositions
                                 )
                             }
-                        }
-                    }
-                    Text("Panjang ${data.length} m")
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(
-                            modifier = Modifier
-                        ) {
-                            Text(
+                            Column(
                                 modifier = Modifier
-                                    .vertical()
-                                    .rotate(-90f),
-                                text = "Lebar ${data.width} m"
-                            )
-                        }
-                        CanvasGrid(
-                            length = data.length.toFloat(),
-                            width = data.width.toFloat(),
-                            grid = data.gridDistance.toInt(),
-                            gridViewModel = gridViewModel,
-                            chosenIdSsid = chosenIdSsid,
-//                            gridListDb = gridListDb,
-                            gridList = gridList,
-                            saveIdGridRouterPosition = { it ->
-                                idGridRouterPosition = it
-                            },
-                            screen = LocateRouterDestination.route,
-                            dbmViewModel = dbmViewModel,
-                            saveCanvasBitmap = {},
-                            addChosenIdList = {ssidId, gridId ->
-                                chosenIdSsidList.add(ssidId)
-                                for (wifi in wifiCheckedUiStateList.wifiList) {
-                                    if (wifi.id == ssidId) {
-                                        chosenSsidList.add(wifi.ssid)
-                                        chosenIdGridList.add(gridId)
-                                    }
-                                }
-                            }
-                        )
-                    }
-                    Column(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 40.dp),
-                        horizontalAlignment = Alignment.Start) {
-                        if (idGridRouterPosition != 0) {
-                            for (i in 0..chosenSsidList.size - 1) {
-                                Text(
-                                    modifier = Modifier
-                                        .padding(top = 10.dp),
-                                    text = "Grid ${chosenIdGridList[i] - firstGridId + 1} : ${chosenSsidList[i]}"
-                                )
-                            }
-                        } else {
-                            Text(
-                                modifier = Modifier
-                                    .padding(top = 10.dp),
-                                text = ""
-                            )
-                        }
-                    }
-                    Row {
-                        Button(modifier = Modifier
-                            .padding(end = 3.dp),
-                            shape = RoundedCornerShape(5.dp),
-                            onClick = {
-                                coroutineScope.launch {
-                                    for (it in gridListDb.gridList) {
-                                        gridViewModel.updateUiState(
-                                            gridViewModel.gridUiState.gridDetails.copy(
-                                                id = it.id,
-                                                idRoom = it.idRoom,
-                                                idHistory = it.idHistory,
-                                                idWifi = 0,
-                                                isClicked = false
-                                            )
+                                    .fillMaxWidth()
+                                    .padding(start = 40.dp, top = 10.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                if (routerPositions.isNotEmpty()) {
+                                    for (i in routerPositions.indices) {
+                                        Text(
+                                            modifier = Modifier,
+                                            text = "Layer ${routerPositions[i].layer} " +
+                                                    "Grid ${(routerPositions[i].grid - (firstGridId + (4 * (routerPositions[i].layer - 1))) + 1)} : " +
+                                                    routerPositions[i].ssid,
+                                            fontSize = 12.sp
                                         )
-                                        gridViewModel.updateGrid()
-                                        chosenIdSsid = 0
-                                        idGridRouterPosition = 0
-                                        isResetChosenIdSsid = true
                                     }
-                                    chosenIdSsidList.removeAll(chosenIdSsidList)
-                                    chosenSsidList.removeAll(chosenSsidList)
+                                } else {
+                                    Text(
+                                        modifier = Modifier
+                                            .padding(top = 10.dp),
+                                        text = ""
+                                    )
                                 }
-                            }) {
-                            Text("Reset Lokasi Router")
-                        }
+                            }
+                            Row(modifier = Modifier
+                                .padding(bottom = 5.dp)) {
+                                Button(
+                                    modifier = Modifier
+                                        .padding(end = 3.dp),
+                                    shape = RoundedCornerShape(5.dp),
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            for (wifi in wifiCheckedUiStateList.wifiList){
+                                                for (layerNo in 1..data.layerCount.toInt()) {
+                                                    gridList = gridViewModel.getGridByLayerNo(layerNo)
+                                                    val foundWifiGrid =
+                                                        gridList.firstOrNull { it.idWifi != 0 }
+                                                    if (foundWifiGrid != null) {
+                                                        gridViewModel.updateUiState(
+                                                            gridViewModel.gridUiState.gridDetails.copy(
+                                                                id = foundWifiGrid.id,
+                                                                idRoom = foundWifiGrid.idRoom,
+                                                                idHistory = foundWifiGrid.idHistory,
+                                                                idWifi = 0,
+                                                                isClicked = false,
+                                                                layerNo = foundWifiGrid.layerNo
+                                                            )
+                                                        )
+                                                        gridViewModel.updateGrid()
+                                                        chosenIdSsid = 0
+                                                        idGridRouterPosition = 0
+                                                        isResetChosenIdSsid = true
+                                                    }
+                                                }
+                                            }
+                                            chosenIdSsidList.removeAll(chosenIdSsidList)
+                                            chosenSsidList.removeAll(chosenSsidList)
+                                            routerPositions = emptyList()
+                                            gridList = gridViewModel.getGridByLayerNo(selectedLayer)
+                                        }
+                                    }) {
+                                    Text("Reset Lokasi Router")
+                                }
 
-                        Button(
-                            modifier = Modifier
-                                .padding(start = 3.dp),
-                            enabled = idGridRouterPosition != 0 && chosenIdSsid != 0,
-                            shape = RoundedCornerShape(5.dp),
-                            onClick = {
-                                navigateToCollectData(gridListDb.gridList[0].idHistory)
-                            }) {
-                            Text("Selanjutnya")
+                                Button(
+                                    modifier = Modifier
+                                        .padding(start = 3.dp),
+                                    enabled = routerPositions.isNotEmpty(),
+                                    shape = RoundedCornerShape(5.dp),
+                                    onClick = {
+                                        navigateToCollectData(gridListDb.gridList[0].idHistory)
+                                    }) {
+                                    Text("Selanjutnya")
+                                }
+                            }
                         }
                     }
                 }
@@ -261,6 +333,7 @@ fun WifiCheckedList(
     saveCurrentChosenIdSsid: (Int) -> Unit,
     isResetChosenIdSsid: Boolean,
     chosenIdSsidList: SnapshotStateList<Int>,
+    routerPositions: List<RouterPosition>,
 ){
     var wifiLocateList : MutableList<WifiLocateRouter> = ArrayList()
     for (wifi in wifiCheckListDb){
@@ -269,30 +342,27 @@ fun WifiCheckedList(
     var isChosenIdSSid by remember { mutableStateOf(0) }
     LazyColumn(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(start = 10.dp, end = 10.dp)
             .fillMaxWidth()
             .heightIn(min = 80.dp, max = 500.dp)
     ) {
-        items(items = wifiLocateList) {
+        items(items = wifiLocateList) { wifi ->
             Surface(
-                color = if (isChosenIdSSid == it.id && isResetChosenIdSsid == false) {
+                color = if (isChosenIdSSid == wifi.id && isResetChosenIdSsid == false) {
                     Color(0xFF464646)
                 } else Color.Transparent,
                 ) {
                 Column {
+                    val foundWifiId = routerPositions.firstOrNull{it.ssidId == wifi.id}
                     Card(
                         modifier = Modifier
                             .padding(10.dp)
                             .fillMaxWidth()
                             .clickable(
-                                enabled = if (it.id in chosenIdSsidList){
-                                    false
-                                }else{
-                                    true
-                                }
+                                enabled = foundWifiId == null
                             ) {
-                                isChosenIdSSid = it.id
-                                saveCurrentChosenIdSsid(it.id)
+                                isChosenIdSSid = wifi.id
+                                saveCurrentChosenIdSsid(wifi.id)
                             },
                         colors = CardDefaults.cardColors(Color.Transparent)
                     ) {
@@ -302,9 +372,9 @@ fun WifiCheckedList(
                                 .background(Color.Transparent)
                         ) {
                             Text(
-                                text = it.ssid,
-                                fontWeight = if (isChosenIdSSid == it.id) FontWeight.Bold else FontWeight.Light,
-                                color = if (it.id in chosenIdSsidList){
+                                text = wifi.ssid,
+                                fontWeight = if (isChosenIdSSid == wifi.id) FontWeight.Bold else FontWeight.Light,
+                                color = if (foundWifiId != null){
                                     Color(0xFF333333)
                                 }else{
                                     Color.Unspecified
@@ -315,7 +385,6 @@ fun WifiCheckedList(
                     HorizontalDivider(
                         color = Color.LightGray,
                         modifier = Modifier
-                            .padding(bottom = 10.dp)
                     )
                 }
             }
@@ -336,4 +405,11 @@ fun Wifi.toWifiLocateRouter(): WifiLocateRouter = WifiLocateRouter(
     ssid = ssid,
     isCheckedDb = isChecked,
     dbm = dbm
+)
+
+data class RouterPosition(
+    val layer: Int = 0,
+    val grid: Int = 0,
+    val ssidId: Int = 0,
+    val ssid: String = ""
 )
