@@ -28,6 +28,7 @@ import androidx.lifecycle.viewModelScope
 import com.sashiomarda.gridmapping.data.GridRepository
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -50,6 +51,9 @@ class GridViewModel(
 
     var currentGrid by mutableStateOf(GridDetails())
         private set
+
+    private val _isUpdateCurrentGrid = MutableStateFlow<Boolean>(false)
+    val isUpdateCurrentGrid: StateFlow<Boolean> = _isUpdateCurrentGrid
 
     private val idHistory: Int = checkNotNull(savedStateHandle[PreviewGridDestination.idHistory])
 
@@ -81,10 +85,14 @@ class GridViewModel(
     suspend fun updateChosenGrid(prevGrid: Grid, currGrid: Grid) {
         previousGrid = prevGrid.toGridDetails()
         currentGrid = currGrid.toGridDetails()
+        updateCurrentGrid(true)
         gridRepository.updateGrid(previousGrid.toGrid())
         gridRepository.updateGrid(currentGrid.toGrid())
     }
 
+    fun updateCurrentGrid(isUpdate: Boolean){
+        _isUpdateCurrentGrid.value = isUpdate
+    }
 
     suspend fun resetInputGrid() {
         gridRepository.resetInputGrid()

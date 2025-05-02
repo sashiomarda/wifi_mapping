@@ -209,7 +209,8 @@ fun LocateRouterScreen(
                                     grid = data.gridDistance.toInt(),
                                     gridViewModel = gridViewModel,
                                     chosenIdSsid = chosenIdSsid,
-                                    gridList = gridList,
+                                    gridListDb = gridList,
+                                    selectedLayer = selectedLayer,
                                     saveIdGridRouterPosition = { it ->
                                         idGridRouterPosition = it
                                         coroutineScope.launch {

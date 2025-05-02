@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,7 +81,6 @@ import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.vertical
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
-import com.sashiomarda.wifimapping.ui.viewmodel.GridUiStateList
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
@@ -107,7 +107,6 @@ object CollectDataDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectDataScreen(
-//    navigateToPreviewGrid: () -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
     gridViewModel: GridViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -159,6 +158,14 @@ fun CollectDataScreen(
     var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsidList)
     var maxDbmFromList by remember { mutableIntStateOf(-100)}
     var isButtonDetailsClicked by remember { mutableStateOf(false)}
+    var selectedLayer by remember { mutableIntStateOf(1)}
+    val isUpdateGrid by gridViewModel.isUpdateCurrentGrid.collectAsState()
+    if (isUpdateGrid){
+        LaunchedEffect(Unit) {
+            gridList = gridViewModel.getGridByLayerNo(selectedLayer)
+            gridViewModel.updateCurrentGrid(false)
+        }
+    }
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -199,25 +206,29 @@ fun CollectDataScreen(
                                     DropDownMenu(
                                         menuItemData = menuItemData,
                                         selectedLayer = {
+                                            selectedLayer = it
                                             coroutineScope.launch {
                                                 isUpdateGridList = true
-                                                val foundGrid = gridList.firstOrNull{it.isClicked == true}
-                                                if (foundGrid != null)
-                                                gridViewModel.updateUiState(
-                                                    gridViewModel.gridUiState.gridDetails.copy(
-                                                        id = foundGrid!!.id,
-                                                        idRoom = foundGrid.idRoom,
-                                                        idHistory = foundGrid.idHistory,
-                                                        idWifi = chosenIdSsid,
-                                                        isClicked = false,
-                                                        layerNo = foundGrid.layerNo
+                                                val foundGrid =
+                                                    gridList.firstOrNull { it.isClicked == true }
+                                                if (foundGrid != null) {
+                                                    gridViewModel.updateUiState(
+                                                        gridViewModel.gridUiState.gridDetails.copy(
+                                                            id = foundGrid!!.id,
+                                                            idRoom = foundGrid.idRoom,
+                                                            idHistory = foundGrid.idHistory,
+                                                            idWifi = chosenIdSsid,
+                                                            isClicked = false,
+                                                            layerNo = foundGrid.layerNo
+                                                        )
                                                     )
-                                                )
-                                                gridViewModel.updateGrid()
-                                                gridList = gridViewModel.getGridByLayerNo(it)
-                                                for (i in gridList) {
-                                                    idGrids.add(i.id)
+                                                    gridViewModel.updateGrid()
+                                                    gridList = gridViewModel.getGridByLayerNo(it)
+                                                    for (i in gridList) {
+                                                        idGrids.add(i.id)
+                                                    }
                                                 }
+                                                gridViewModel.updateCurrentGrid(true)
                                             }
                                         }
                                     )
@@ -243,7 +254,8 @@ fun CollectDataScreen(
                                     grid = data.gridDistance.toInt(),
                                     gridViewModel = gridViewModel,
                                     chosenIdSsid = chosenIdSsid,
-                                    gridList = gridList,
+                                    gridListDb = gridList,
+                                    selectedLayer = selectedLayer,
                                     saveIdGridRouterPosition = {},
                                     screen = CollectDataDestination.route,
                                     dbmViewModel = dbmViewModel,
@@ -254,7 +266,12 @@ fun CollectDataScreen(
                                         }
                                     },
                                     addChosenIdList = { ssidId, gridId -> },
-                                    updateGridList = {}
+                                    updateGridList = {
+                                        coroutineScope.launch {
+                                            gridList = gridViewModel.getGridByLayerNo(it)
+                                            gridViewModel.updateCurrentGrid(true)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -352,17 +369,24 @@ fun CollectDataScreen(
                             .weight(1f)
                     ) {
                         currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                        val activeGridText = if (currentActiveGrid.id != 0) {
-                            currentActiveGrid.id - firstGridId + 1
-                        } else {
-                            1
+                        if (currentActiveGrid.id == 0){
+                            currentActiveGrid = gridList[0]
                         }
-                        Row(
+                        var currentActiveGridPosition = currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                                .fillMaxWidth()
                         ) {
-                            Text(text = "Posisi Grid Aktif: ${activeGridText}")
+                            Text(
+                                text = "Posisi Aktif:",
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Layer ${gridList[0].layerNo} Grid ${currentActiveGridPosition}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Column(modifier = Modifier
                             .fillMaxWidth()
