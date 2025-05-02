@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -69,7 +70,8 @@ fun CanvasGrid(
     grid: Int? = 100,
     gridViewModel: GridViewModel,
     chosenIdSsid: Int = 0,
-    gridList : List<Grid>? = null,
+    gridListDb : List<Grid>? = null,
+    selectedLayer: Int? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
     dbmViewModel: DbmViewModel,
@@ -111,12 +113,14 @@ fun CanvasGrid(
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var dbmGridMap = HashMap<Int,Int>()
     var wifiGridLocationIndex: MutableList<Int> = ArrayList()
-    if (!gridList.isNullOrEmpty()){
-        for (i in 1..gridList.size) {
-            if (gridList.get(i-1).idWifi != 0){
+    var gridList by remember { mutableStateOf(listOf(Grid())) }
+    if (!gridListDb.isNullOrEmpty()){
+        for (i in 1..gridListDb.size) {
+            if (gridListDb.get(i-1).idWifi != 0){
                 wifiGridLocationIndex.add(i-1)
             }
         }
+        gridList = gridListDb
     }
     if (dbmListDb.dbmList.isNotEmpty()){
         for (i in dbmListDb.dbmList) {
@@ -142,7 +146,7 @@ fun CanvasGrid(
                 drawLayer(graphicsLayer)
                 coroutineScope.launch {
                     var canvasBitmap = graphicsLayer.toImageBitmap()
-                    if (dbmListDb.dbmList.size == gridList?.size) {
+                    if (dbmListDb.dbmList.size == gridListDb?.size) {
                         saveCanvasBitmap(canvasBitmap)
                     }
                 }
@@ -151,7 +155,7 @@ fun CanvasGrid(
             Canvas(modifier = Modifier
                 .fillMaxSize(),
             ) {
-                if (gridList != null) {
+                if (gridListDb != null) {
                     val gridHeightPx = localDensity.run { gridHeight.dp.toPx() }
                     val gridWidthPx = localDensity.run { gridWidth.dp.toPx() }
                     val canvasQuadrantSize =
@@ -169,11 +173,11 @@ fun CanvasGrid(
                             repeatX = gridHorizontalAmount.toInt()
                             repeatY = gridVerticalAmount.toInt()
                         }
-                        for (i in gridList.indices) {
+                        for (i in gridListDb.indices) {
                             var count = 0
                             repeat(repeatY) {y->
                                 repeat(repeatX) {x->
-                                    var dbm = dbmGridMap[gridList.get(i).id]
+                                    var dbm = dbmGridMap[gridListDb.get(i).id]
                                     if (dbm != null) {
                                         if (count == i) {
                                             drawRect(
@@ -194,7 +198,7 @@ fun CanvasGrid(
                                                     y = gridHeightPx * y
                                                 ),
                                             )
-                                            if (gridList.get(i).idWifi != 0) {
+                                            if (gridListDb.get(i).idWifi != 0) {
                                                 drawImage(
                                                     image = star,
                                                     topLeft = Offset(
@@ -214,108 +218,113 @@ fun CanvasGrid(
             }
         }
 
-        if (gridList != null) {
-            if (gridList.isNotEmpty()) {
-                val firstGridID = gridList[0].id
-                LazyVerticalGrid(
-                    modifier = Modifier,
-                    columns = GridCells.Adaptive(floor(gridWidth).dp-((floor(gridWidth)*0.01).dp))
-                ) {
-                    items(gridList,
-                        key = {
-                            grid : Grid ->
-                            grid.id
-                        }) { it ->
-                        OutlinedButton(
-                            modifier = Modifier
-                                .width(gridWidth.dp)
-                                .height(gridHeight.dp),
-//                            .background(Color(0xFFFF5858)),
-                            shape = RectangleShape,
-                            onClick = {
-                                if (screen == "locate_router") {
-                                    if (chosenIdSsid != 0) {
-                                        val foundSsidId = routerPositions?.firstOrNull { it.ssidId == chosenIdSsid }
-                                        if (foundSsidId == null) {
-                                            chosenIdGridRouterPosition = it.id
-                                            saveIdGridRouterPosition(chosenIdGridRouterPosition)
-                                            addChosenIdList(
-                                                chosenIdSsid,
-                                                chosenIdGridRouterPosition
-                                            )
-                                            coroutineScope.launch {
-                                                gridViewModel.updateUiState(
-                                                    gridViewModel.gridUiState.gridDetails.copy(
-                                                        id = it.id,
-                                                        idRoom = it.idRoom,
-                                                        idHistory = it.idHistory,
-                                                        idWifi = chosenIdSsid,
-                                                        isClicked = it.isClicked,
-                                                        layerNo = it.layerNo
-                                                    )
+        if (gridListDb != null) {
+            if (gridListDb.isNotEmpty()) {
+                if (selectedLayer != null) {
+                    val firstGridID = gridListDb[0].id
+                    LazyVerticalGrid(
+                        modifier = Modifier,
+                        columns = GridCells.Adaptive(floor(gridWidth).dp - ((floor(gridWidth) * 0.01).dp))
+                    ) {
+                        items(
+                            gridList,
+                            key = { grid: Grid ->
+                                grid.id
+                            }) { it ->
+                            OutlinedButton(
+                                modifier = Modifier
+                                    .width(gridWidth.dp)
+                                    .height(gridHeight.dp),
+                                shape = RectangleShape,
+                                onClick = {
+                                    if (screen == "locate_router") {
+                                        if (chosenIdSsid != 0) {
+                                            val foundSsidId =
+                                                routerPositions?.firstOrNull { it.ssidId == chosenIdSsid }
+                                            if (foundSsidId == null) {
+                                                chosenIdGridRouterPosition = it.id
+                                                saveIdGridRouterPosition(chosenIdGridRouterPosition)
+                                                addChosenIdList(
+                                                    chosenIdSsid,
+                                                    chosenIdGridRouterPosition
                                                 )
-                                                gridViewModel.updateGrid()
-                                                updateGridList(it.layerNo)
+                                                coroutineScope.launch {
+                                                    gridViewModel.updateUiState(
+                                                        gridViewModel.gridUiState.gridDetails.copy(
+                                                            id = it.id,
+                                                            idRoom = it.idRoom,
+                                                            idHistory = it.idHistory,
+                                                            idWifi = chosenIdSsid,
+                                                            isClicked = it.isClicked,
+                                                            layerNo = it.layerNo
+                                                        )
+                                                    )
+                                                    gridViewModel.updateGrid()
+                                                    updateGridList(it.layerNo)
+                                                }
+                                            } else {
+                                                val gridTxt = foundSsidId.grid - firstGridID + 1
+                                                Toast.makeText(
+                                                    context,
+                                                    "${foundSsidId.ssid} sudah ditambahkan " +
+                                                            "di Layer ${foundSsidId.layer} " +
+                                                            "Grid ${gridTxt}",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                    .show()
                                             }
-                                        }else{
-                                            val gridTxt = foundSsidId.grid - firstGridID + 1
-                                            Toast.makeText(context,
-                                                "${foundSsidId.ssid} sudah ditambahkan " +
-                                                        "di Layer ${foundSsidId.layer} " +
-                                                        "Grid ${gridTxt}",
-                                                Toast.LENGTH_SHORT)
-                                                .show()
+                                        }
+                                    } else if (screen == "collect_data") {
+                                        var currentActiveGrid = gridViewModel.currentGrid.toGrid()
+                                        if (gridList[0].isClicked) {
+                                            currentActiveGrid = gridList[0]
+                                        }
+                                        coroutineScope.launch {
+                                            gridViewModel.updateChosenGrid(
+                                                currentActiveGrid.copy(isClicked = false),
+                                                it.copy(isClicked = true)
+                                            )
+                                            updateGridList(it.layerNo)
                                         }
                                     }
-                                }else if (screen == "collect_data"){
-                                    var currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                                    if (gridList[0].isClicked){
-                                        currentActiveGrid = gridList[0]
-                                    }
-                                    coroutineScope.launch {
-                                        gridViewModel.updateChosenGrid(
-                                            currentActiveGrid.copy(isClicked = false),
-                                            it.copy(isClicked = true)
-                                        )
-                                    }
-                                }
-                            },
-                            border = BorderStroke(
-                                width = if (screen == "collect_data") {
-                                    if (it.isClicked) {
-                                        3.dp
+                                },
+                                border = BorderStroke(
+                                    width = if (screen == "collect_data") {
+                                        if (it.isClicked) {
+                                            3.dp
+                                        } else {
+                                            1.dp
+                                        }
                                     } else {
                                         1.dp
-                                    }
-                                }else{
-                                    1.dp
-                                },
-                                color = if (screen == "collect_data") {
-                                    if (it.isClicked) {
-                                        Color.Blue
-                                    }else {
+                                    },
+                                    color = if (screen == "collect_data") {
+                                        if (it.isClicked) {
+                                            Color.Blue
+                                        } else {
+                                            Color.Black
+                                        }
+                                    } else {
                                         Color.Black
                                     }
-                                } else {
-                                    Color.Black
-                                }
-                            ),
-                            enabled = if (screen != "locate_router"){
-                                true
-                            }else{
-                                if (it.idWifi == 0){
+                                ),
+                                enabled = if (screen != "locate_router") {
                                     true
-                                }else{
-                                    false
+                                } else {
+                                    if (it.idWifi == 0) {
+                                        true
+                                    } else {
+                                        false
+                                    }
                                 }
-                            }
-                        ) {
-                            Text(
-                                fontSize = 10.sp,
-                                text = "${it.id - firstGridID + 1}"
-                            )
-                            if (it.idWifi != 0 && screen == "locate_router") {
-                                Icon(Icons.Default.Star, contentDescription = "Wifi Location")
+                            ) {
+                                Text(
+                                    fontSize = 10.sp,
+                                    text = "${it.id - firstGridID + 1}"
+                                )
+                                if (it.idWifi != 0 && screen == "locate_router") {
+                                    Icon(Icons.Default.Star, contentDescription = "Wifi Location")
+                                }
                             }
                         }
                     }
