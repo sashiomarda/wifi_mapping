@@ -45,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,27 +70,27 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
+import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.components.CanvasGrid
 import com.sashiomarda.wifimapping.components.DropDownMenu
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
-import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.vertical
+import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
+import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
-import com.sashiomarda.wifimapping.util.ObserveChosenSsidDbm
-import com.sashiomarda.wifimapping.util.getDbmList
-import com.sashiomarda.wifimapping.util.getSsidList
-import com.sashiomarda.wifimapping.util.scanWifi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -113,6 +114,7 @@ fun CollectDataScreen(
     previewGridViewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
     dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    wifiScannerViewModel: WifiScannerViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
     var wifiList = wifiViewModel.wifiScanList.wifiList
@@ -123,12 +125,14 @@ fun CollectDataScreen(
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
     val lastGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
-    var currentActiveGrid by remember { mutableStateOf(
-        gridViewModel.currentGrid.toGrid()
-    ) }
-    var idGrids : MutableList<Int> = ArrayList()
-    var ssidList : List<String> = ArrayList()
-    var dbmList : List<Int> = ArrayList()
+    var currentActiveGrid by remember {
+        mutableStateOf(
+            gridViewModel.currentGrid.toGrid()
+        )
+    }
+    var idGrids: MutableList<Int> = ArrayList()
+    var ssidList: MutableList<String> = ArrayList()
+    var dbmList: MutableList<Int> = ArrayList()
     var isUpdateGridList by remember { mutableStateOf(false) }
     var gridList by remember { mutableStateOf(listOf(Grid())) }
     if (gridListDb.gridList.isNotEmpty()) {
@@ -146,21 +150,45 @@ fun CollectDataScreen(
         }
     }
     var gridHaveDbm = remember { mutableStateListOf<Int>() }
-    var imageBitmap by mutableStateOf(ImageBitmap(500,500))
-    var isSaveImageButton by remember { mutableStateOf(false)}
+    var imageBitmap by mutableStateOf(ImageBitmap(500, 500))
+    var isSaveImageButton by remember { mutableStateOf(false) }
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
-    var chosenSsidList : MutableList<String> = ArrayList()
+    var chosenSsidList: MutableList<String> = ArrayList()
     if (wifiCheckedUiStateList.wifiList.isNotEmpty()) {
-        for (wifi in wifiCheckedUiStateList.wifiList){
+        for (wifi in wifiCheckedUiStateList.wifiList) {
             chosenSsidList.add(wifi.ssid)
         }
     }
-    var observeChosenSsidDbm = ObserveChosenSsidDbm(context, chosenSsidList)
-    var maxDbmFromList by remember { mutableIntStateOf(-100)}
-    var isButtonDetailsClicked by remember { mutableStateOf(false)}
-    var selectedLayer by remember { mutableIntStateOf(1)}
+    LaunchedEffect(Unit) {
+        wifiScannerViewModel.startScanning()
+    }
+
+    OnResumeScan(
+        onResume = {
+            wifiScannerViewModel.startScanning()
+        }
+    )
+
+    val ssidDbmsScan by wifiScannerViewModel.ssidDbms.collectAsState()
+    if (ssidDbmsScan.isNotEmpty()){
+        for (ssid in chosenSsidList) {
+            for (ssidDbm in ssidDbmsScan) {
+                if (ssid == ssidDbm.ssid) {
+                    ssidList.add(ssidDbm.ssid)
+                    dbmList.add(ssidDbm.dbm)
+                }
+            }
+            if (ssid !in ssidList){
+                ssidList.add(ssid)
+                dbmList.add(-100)
+            }
+        }
+    }
+    var maxDbmFromList by remember { mutableIntStateOf(-100) }
+    var isButtonDetailsClicked by remember { mutableStateOf(false) }
+    var selectedLayer by remember { mutableIntStateOf(1) }
     val isUpdateGrid by gridViewModel.isUpdateCurrentGrid.collectAsState()
-    if (isUpdateGrid){
+    if (isUpdateGrid) {
         LaunchedEffect(Unit) {
             gridList = gridViewModel.getGridByLayerNo(selectedLayer)
             gridViewModel.updateCurrentGrid(false)
@@ -175,8 +203,9 @@ fun CollectDataScreen(
             )
         }
     ) { innerPadding ->
-        Surface(modifier = Modifier
-            .padding(innerPadding)
+        Surface(
+            modifier = Modifier
+                .padding(innerPadding)
         ) {
             Column(
                 modifier = Modifier
@@ -189,10 +218,12 @@ fun CollectDataScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                 )
-                Card() {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                Card {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                        .padding(top = 5.dp, bottom = 5.dp)) {
+                            .padding(top = 5.dp, bottom = 5.dp)
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -369,10 +400,11 @@ fun CollectDataScreen(
                             .weight(1f)
                     ) {
                         currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                        if (currentActiveGrid.id == 0){
+                        if (currentActiveGrid.id == 0) {
                             currentActiveGrid = gridList[0]
                         }
-                        var currentActiveGridPosition = currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
+                        var currentActiveGridPosition =
+                            currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
@@ -388,14 +420,13 @@ fun CollectDataScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Column(modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable{
-                                isButtonDetailsClicked = !isButtonDetailsClicked
-                            }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    isButtonDetailsClicked = !isButtonDetailsClicked
+                                }
                         ) {
-                            ssidList = observeChosenSsidDbm.getSsidList
-                            dbmList = observeChosenSsidDbm.getDbmList
                             maxDbmFromList = dbmList.maxOrNull() ?: 0
                             dbmText = if (maxDbmFromList != 0) {
                                 if (maxDbmFromList == -100) {
@@ -467,8 +498,10 @@ fun CollectDataScreen(
                                     } else {
                                         "--"
                                     }
-                                    Row(verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
                                         Text(
                                             modifier = Modifier
                                                 .weight(7f),
@@ -527,12 +560,8 @@ fun CollectDataScreen(
                                 color = Color.LightGray
                             ),
                             onClick = {
-                                var ssidDbmMap = HashMap<String,Int>()
+                                var ssidDbmMap = HashMap<String, Int>()
                                 currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                                var scanWifiResult = scanWifi(context)
-                                if (scanWifiResult.isNotEmpty()) {
-                                    wifiList = scanWifiResult
-                                }
                                 for (ssid in chosenSsidList) {
                                     if (!wifiList.isNullOrEmpty()) {
                                         for (wifi in wifiList) {
@@ -541,12 +570,12 @@ fun CollectDataScreen(
                                             }
                                         }
                                     }
-                                    if (ssidDbmMap[ssid] == null){
+                                    if (ssidDbmMap[ssid] == null) {
                                         ssidDbmMap[ssid] = -100
                                     }
                                 }
-                                for (i in ssidDbmMap){
-                                    if (i.value > maxDbmFromList){
+                                for (i in ssidDbmMap) {
+                                    if (i.value > maxDbmFromList) {
                                         maxDbmFromList = i.value
                                     }
                                 }
@@ -758,7 +787,7 @@ fun CollectDataScreen(
                                     shareBitmap(context, uri)
                                 }
                             }
-                        }else{
+                        } else {
                             coroutineScope.launch {
                                 val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
                                 shareBitmap(context, uri)
@@ -766,20 +795,20 @@ fun CollectDataScreen(
                         }
                     }
                 ) {
-                    Row(modifier = Modifier
+                    Row(
+                        modifier = Modifier
                     ) {
                         Text("Bagikan gambar peta grid")
-                        Icon(modifier = Modifier
-                            .padding(start = 5.dp),
+                        Icon(
+                            modifier = Modifier
+                                .padding(start = 5.dp),
                             imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share button")
+                            contentDescription = "Share button"
+                        )
                     }
                 }
             }
         }
-    }
-    LaunchedEffect(observeChosenSsidDbm) {
-        observeChosenSsidDbm.run()
     }
 }
 
@@ -795,13 +824,14 @@ private fun navButtonClick(
     direction: String
 ): PrevAndCurrentGrid {
     var currentActiveGrid = gridViewModel.currentGrid.toGrid()
-    var foundGrid = gridList.firstOrNull{it.id == currentActiveGrid.id}
-    if (currentActiveGrid.id == 0 || foundGrid == null){
+    var foundGrid = gridList.firstOrNull { it.id == currentActiveGrid.id }
+    if (currentActiveGrid.id == 0 || foundGrid == null) {
         currentActiveGrid = gridList[0]
     }
     var previousActiveGrid = gridViewModel.previousGrid.toGrid()
     var isMoveGrid = false
-    var currentActiveGridPosition = currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
+    var currentActiveGridPosition =
+        currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
     var chosenIdGrid = 0
     var gridCmToM = data.gridDistance.toFloat().div(100)
     if (direction == "up") {
@@ -815,7 +845,7 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id - 1
         }
     } else if (direction == "right") {
-        if (currentActiveGrid.id == 0){
+        if (currentActiveGrid.id == 0) {
             currentActiveGrid = gridList[0]
             currentActiveGridPosition = gridList[0].id - firstGridId + 1
         }
@@ -824,16 +854,16 @@ private fun navButtonClick(
             chosenIdGrid = currentActiveGrid.id + 1
         }
     } else if (direction == "down") {
-        if (currentActiveGridPosition + (data.length.toInt() / gridCmToM).toInt()  <= lastGridId - firstGridId + 1) {
+        if (currentActiveGridPosition + (data.length.toInt() / gridCmToM).toInt() <= lastGridId - firstGridId + 1) {
             isMoveGrid = true
             chosenIdGrid = currentActiveGrid.id + (data.length.toInt() / gridCmToM).toInt()
         }
     }
 
-    if (isMoveGrid){
+    if (isMoveGrid) {
         previousActiveGrid = currentActiveGrid
-        foundGrid = gridList.firstOrNull{it.id == chosenIdGrid}
-        if (foundGrid != null){
+        foundGrid = gridList.firstOrNull { it.id == chosenIdGrid }
+        if (foundGrid != null) {
             currentActiveGrid = foundGrid
         }
     }
@@ -874,7 +904,7 @@ private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
             if (scannedUri == null) {
                 continuation.cancel(Exception("File $filePath could not be scanned"))
             } else {
-                continuation.resume(scannedUri,onCancellation = null)
+                continuation.resume(scannedUri, onCancellation = null)
             }
         }
     }
@@ -889,4 +919,23 @@ private suspend fun Bitmap.saveToDisk(context: Context): Uri {
     file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
 
     return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
+}
+
+@Composable
+fun OnResumeScan(onResume: () -> Unit){
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                onResume()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 }

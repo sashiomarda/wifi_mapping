@@ -30,6 +30,7 @@ import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
+import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
 
 /**
@@ -38,43 +39,45 @@ import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
 object AppViewModelProvider {
     @RequiresApi(Build.VERSION_CODES.O)
     val Factory = viewModelFactory {
-        // Initializer for ItemEntryViewModel
         initializer {
-            RoomParamsEntryViewModel(inventoryApplication().container.roomParamsRepository)
+            RoomParamsEntryViewModel(WifiMappingApplication().container.roomParamsRepository)
         }
 
         initializer {
             RoomParamsViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.roomParamsRepository,
-                inventoryApplication().container.historyRepository
+                WifiMappingApplication().container.roomParamsRepository,
+                WifiMappingApplication().container.historyRepository
             )
         }
 
-        // Initializer for ItemEntryViewModel
         initializer {
-            WifiViewModel(inventoryApplication().container.wifiRepository)
+            WifiViewModel(WifiMappingApplication().container.wifiRepository)
         }
 
         initializer {
             GridViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.gridRepository,
+                WifiMappingApplication().container.gridRepository,
             )
         }
 
         initializer {
             DbmViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.dbmRepository
+                WifiMappingApplication().container.dbmRepository
             )
         }
 
         initializer {
             HistoryViewModel(
                 this.createSavedStateHandle(),
-                inventoryApplication().container.historyRepository
+                WifiMappingApplication().container.historyRepository
             )
+        }
+
+        initializer {
+            WifiScannerViewModel(WifiMappingApplication())
         }
     }
 }
@@ -83,5 +86,5 @@ object AppViewModelProvider {
  * Extension function to queries for [Application] object and returns an instance of
  * [WifiMappingApplication].
  */
-fun CreationExtras.inventoryApplication(): WifiMappingApplication =
+fun CreationExtras.WifiMappingApplication(): WifiMappingApplication =
     (this[AndroidViewModelFactory.APPLICATION_KEY] as WifiMappingApplication)
