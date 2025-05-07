@@ -88,7 +88,6 @@ fun LocateRouterScreen(
     var chosenIdSsid by remember { mutableStateOf(0) }
     var chosenIdSsidList = remember { mutableStateListOf<Int>() }
     var chosenSsidList = remember { mutableStateListOf<String>() }
-    var chosenIdGridList = remember { mutableStateListOf<Int>() }
     var isResetChosenIdSsid by remember { mutableStateOf(false) }
     var isFirstLoadGridList by remember { mutableStateOf(true) }
     var idGridRouterPosition by remember { mutableStateOf(0) }

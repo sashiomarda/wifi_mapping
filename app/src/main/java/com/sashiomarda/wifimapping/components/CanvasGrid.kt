@@ -311,11 +311,7 @@ fun CanvasGrid(
                                 enabled = if (screen != "locate_router") {
                                     true
                                 } else {
-                                    if (it.idWifi == 0) {
-                                        true
-                                    } else {
-                                        false
-                                    }
+                                    it.idWifi == 0
                                 }
                             ) {
                                 Text(

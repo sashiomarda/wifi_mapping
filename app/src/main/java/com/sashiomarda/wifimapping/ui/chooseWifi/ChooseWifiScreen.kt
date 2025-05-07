@@ -2,7 +2,6 @@ package com.sashiomarda.wifimapping.ui.chooseWifi
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +54,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
-import com.sashiomarda.wifimapping.util.scanWifi
+import com.sashiomarda.wifimapping.ui.viewmodel.WifiScan
+import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import kotlinx.coroutines.*
 
 object ChooseWifiDestination : NavigationDestination {
@@ -75,12 +75,16 @@ fun ChooseWifiScreen(
     navigateToLocateRouter: (Int) -> Unit,
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     previewGridviewModel: RoomParamsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    wifiScannerViewModel: WifiScannerViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ){
     val wifiUiStateList by wifiViewModel.allWifiUiStateList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var wifiScanList by remember { mutableStateOf(scanWifi(context)) }
-    wifiViewModel.updateWifiScanList(wifiScanList)
+    LaunchedEffect(Unit) {
+        wifiScannerViewModel.startScanning()
+    }
+    val wifiScanList by wifiScannerViewModel.ssidDbms.collectAsState()
+    wifiScannerViewModel.updateScreen("choose_wifi")
     var isNextButtonDisabled by remember { mutableStateOf(true) }
 
     Scaffold(
@@ -114,7 +118,7 @@ fun ChooseWifiScreen(
                     .fillMaxWidth()
                     .padding(start = 5.dp, end = 5.dp)) {
                     WifiList(
-                        wifiViewModel = wifiViewModel,
+                        wifiScanList = wifiScanList,
                         wifiListDb = wifiUiStateList.wifiList,
                         wifiUiState = wifiViewModel.wifiUiState,
                         addUpdateWifi = wifiViewModel::updateUiState,
@@ -135,7 +139,8 @@ fun ChooseWifiScreen(
                             CoroutineScope(Dispatchers.IO).launch {
                                 wifiViewModel.resetCheckedWifi()
                             }
-                        }
+                        },
+                        wifiScannerViewModel = wifiScannerViewModel
                     )
                 }
                 Row {
@@ -145,14 +150,7 @@ fun ChooseWifiScreen(
                             .padding(1.dp)
                             .padding(5.dp),
                         onClick = {
-                            var scanWifiResult = scanWifi(context)
-                            if (scanWifiResult.isNotEmpty()) {
-                                wifiScanList = scanWifiResult
-                            }else{
-                                Toast.makeText(context,
-                                    "Too fast clicking!",
-                                    Toast.LENGTH_SHORT).show()
-                            }
+                            wifiScannerViewModel.updateIsRefreshWifiScan(true)
                         }
                     ) {
                         Text("Refresh Wifi")
@@ -185,7 +183,7 @@ fun ChooseWifiScreen(
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun WifiList(
-    wifiViewModel: WifiViewModel,
+    wifiScanList: List<WifiScan>,
     wifiListDb: List<Wifi>,
     wifiUiState: WifiUiState,
     addUpdateWifi: (WifiDetails) -> Unit,
@@ -193,8 +191,9 @@ fun WifiList(
     updateWifi: () -> Unit,
     isNextButtonDisabled: (Boolean) -> Unit,
     resetWifiChecked: () -> Unit,
+    wifiScannerViewModel: WifiScannerViewModel,
 ){
-    var wifiList = wifiViewModel.wifiScanList.wifiList
+    var wifiListDisplay : MutableList<Wifi> = ArrayList()
     var ssidListDb : MutableList<String> = ArrayList()
     var idListDb : MutableList<Int> = ArrayList()
     for (wifi in wifiListDb){
@@ -207,11 +206,10 @@ fun WifiList(
         resetWifiChecked()
         isResetWifiChecked = false
     }
-    if (wifiList.isNotEmpty()) {
-        var wifiListDisplay: MutableList<Wifi> = ArrayList()
+    if (wifiScanList.isNotEmpty()) {
         if (ssidListDb.isNotEmpty()) {
-            for (wifi in wifiList) {
-                val wifiSsid = wifi.ssid
+            for (i in wifiScanList.indices) {
+                val wifiSsid = wifiScanList[i].ssid
                 if (wifiSsid != "") {
                     val isSsidNotExist = !ssidListDb.contains(wifiSsid)
                     if (isSsidNotExist) {
@@ -226,29 +224,28 @@ fun WifiList(
                                 idListDisplay.add(wifiDisplay.id)
                             }
                             if (!ssidListDisplay.contains(wifiSsid)) {
-                                wifiListDisplay.add(
-                                    Wifi(
+                                wifiListDisplay.add(Wifi(
                                         id = idListDb[ssidListDb.indexOf(wifiSsid)],
                                         ssid = wifiSsid,
                                         isChecked = false,
-                                        dbm = wifi.dbm
+                                        dbm = wifiScanList[i].dbm
                                     )
                                 )
                             }
-                        }else {
+                        } else {
                             wifiListDisplay.add(
                                 Wifi(
                                     id = idListDb[ssidListDb.indexOf(wifiSsid)],
                                     ssid = wifiSsid,
                                     isChecked = false,
-                                    dbm = wifi.dbm
+                                    dbm = wifiScanList[i].dbm
                                 )
                             )
                         }
                     }
                 }
             }
-        }else {
+        } else {
             addUpdateWifi(wifiUiState.wifiDetails.copy(ssid = "testwifimapping"))
             insertWifi()
         }
@@ -262,9 +259,9 @@ fun WifiList(
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                items(items = wifiListDisplay,
-                    key = {
-                        wifi : Wifi ->
+                items(
+                    items = wifiListDisplay,
+                    key = { wifi: Wifi ->
                         wifi.id
                     }) {
                     var isChecked by remember { mutableStateOf(false) }
@@ -278,23 +275,25 @@ fun WifiList(
                                 isChecked = !isChecked
                                 if (isChecked) {
                                     checkedCount = checkedCount + 1
-                                }else{
+                                } else {
                                     if (checkedCount > 0) {
                                         checkedCount = checkedCount - 1
                                     }
                                 }
-                                if (checkedCount > 0){
+                                if (checkedCount > 0) {
                                     isNextButtonDisabled(false)
-                                }else{
+                                } else {
                                     isNextButtonDisabled(true)
                                 }
 
-                                addUpdateWifi(wifiUiState
-                                    .wifiDetails.copy(
-                                        id = ssidId,
-                                        ssid = ssid,
-                                        isChecked = isChecked
-                                    ))
+                                addUpdateWifi(
+                                    wifiUiState
+                                        .wifiDetails.copy(
+                                            id = ssidId,
+                                            ssid = ssid,
+                                            isChecked = isChecked
+                                        )
+                                )
                                 updateWifi()
                             }) {
                         Row(
@@ -319,22 +318,24 @@ fun WifiList(
                                             isChecked = it
                                             if (isChecked) {
                                                 checkedCount = checkedCount + 1
-                                            }else{
+                                            } else {
                                                 if (checkedCount > 0) {
                                                     checkedCount = checkedCount - 1
                                                 }
                                             }
-                                            if (checkedCount > 0){
+                                            if (checkedCount > 0) {
                                                 isNextButtonDisabled(false)
-                                            }else{
+                                            } else {
                                                 isNextButtonDisabled(true)
                                             }
-                                            addUpdateWifi(wifiUiState
-                                                .wifiDetails.copy(
-                                                    id = ssidId,
-                                                    ssid = ssid,
-                                                    isChecked = isChecked
-                                                ))
+                                            addUpdateWifi(
+                                                wifiUiState
+                                                    .wifiDetails.copy(
+                                                        id = ssidId,
+                                                        ssid = ssid,
+                                                        isChecked = isChecked
+                                                    )
+                                            )
                                             updateWifi()
                                         }
                                     )

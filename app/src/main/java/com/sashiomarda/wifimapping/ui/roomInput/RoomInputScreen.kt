@@ -140,8 +140,7 @@ fun RoomParamsInputForm(
     enabled: Boolean = true,
     showWarning : Boolean
 ) {
-    Column(
-    ) {
+    Column {
         OutlinedTextField(
             value = roomParamsDetails.roomName,
             onValueChange = { onValueChange(roomParamsDetails.copy(roomName = it)) },
