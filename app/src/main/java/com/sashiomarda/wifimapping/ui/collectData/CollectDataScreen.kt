@@ -134,21 +134,7 @@ fun CollectDataScreen(
     var ssidList: MutableList<String> = ArrayList()
     var dbmList: MutableList<Int> = ArrayList()
     var isUpdateGridList by remember { mutableStateOf(false) }
-    var gridList by remember { mutableStateOf(listOf(Grid())) }
-    if (gridListDb.gridList.isNotEmpty()) {
-        if (!isUpdateGridList) {
-            gridList = gridListDb.gridList
-            if (currentActiveGrid.id == 0) {
-                currentActiveGrid = gridListDb.gridList[0]
-            }
-            for (i in gridListDb.gridList) {
-                idGrids.add(i.id)
-                if (i.idWifi != 0) {
-                    chosenIdSsid = i.idWifi
-                }
-            }
-        }
-    }
+    val gridList by gridViewModel.gridList.collectAsState()
     var gridHaveDbm = remember { mutableStateListOf<Int>() }
     var imageBitmap by mutableStateOf(ImageBitmap(500, 500))
     var isSaveImageButton by remember { mutableStateOf(false) }
@@ -158,9 +144,6 @@ fun CollectDataScreen(
         for (wifi in wifiCheckedUiStateList.wifiList) {
             chosenSsidList.add(wifi.ssid)
         }
-    }
-    LaunchedEffect(Unit) {
-        wifiScannerViewModel.startScanning()
     }
 
     OnResumeScan(
@@ -186,14 +169,13 @@ fun CollectDataScreen(
     }
     var maxDbmFromList by remember { mutableIntStateOf(-100) }
     var isButtonDetailsClicked by remember { mutableStateOf(false) }
-    var selectedLayer by remember { mutableIntStateOf(1) }
-    val isUpdateGrid by gridViewModel.isUpdateCurrentGrid.collectAsState()
-    if (isUpdateGrid) {
-        LaunchedEffect(Unit) {
-            gridList = gridViewModel.getGridByLayerNo(selectedLayer)
-            gridViewModel.updateCurrentGrid(false)
-        }
+    val selectedLayer by gridViewModel.selectedLayer.collectAsState()
+
+    LaunchedEffect(Unit) {
+        wifiScannerViewModel.startScanning()
+        gridViewModel.startUpdateGridJob()
     }
+
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -237,8 +219,8 @@ fun CollectDataScreen(
                                     DropDownMenu(
                                         menuItemData = menuItemData,
                                         selectedLayer = {
-                                            selectedLayer = it
                                             coroutineScope.launch {
+                                                gridViewModel.updateSelectedLayer(it)
                                                 isUpdateGridList = true
                                                 val foundGrid =
                                                     gridList.firstOrNull { it.isClicked == true }
@@ -254,12 +236,10 @@ fun CollectDataScreen(
                                                         )
                                                     )
                                                     gridViewModel.updateGrid()
-                                                    gridList = gridViewModel.getGridByLayerNo(it)
                                                     for (i in gridList) {
                                                         idGrids.add(i.id)
                                                     }
                                                 }
-                                                gridViewModel.updateCurrentGrid(true)
                                             }
                                         }
                                     )
@@ -297,12 +277,7 @@ fun CollectDataScreen(
                                         }
                                     },
                                     addChosenIdList = { ssidId, gridId -> },
-                                    updateGridList = {
-                                        coroutineScope.launch {
-                                            gridList = gridViewModel.getGridByLayerNo(it)
-                                            gridViewModel.updateCurrentGrid(true)
-                                        }
-                                    }
+                                    updateGridList = {}
                                 )
                             }
                         }
@@ -400,25 +375,27 @@ fun CollectDataScreen(
                             .weight(1f)
                     ) {
                         currentActiveGrid = gridViewModel.currentGrid.toGrid()
-                        if (currentActiveGrid.id == 0) {
-                            currentActiveGrid = gridList[0]
-                        }
-                        var currentActiveGridPosition =
-                            currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Posisi Aktif:",
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = "Layer ${gridList[0].layerNo} Grid ${currentActiveGridPosition}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                        if (gridList.isNotEmpty()) {
+                            if (currentActiveGrid.id == 0) {
+                                currentActiveGrid = gridList[0]
+                            }
+                            var currentActiveGridPosition =
+                                currentActiveGrid.id - (firstGridId + (4 * (gridList[0].layerNo - 1))) + 1
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Posisi Aktif:",
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Layer ${gridList[0].layerNo} Grid ${currentActiveGridPosition}",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                         Column(
                             modifier = Modifier
@@ -625,7 +602,6 @@ fun CollectDataScreen(
                                         gridViewModel,
                                         gridList,
                                         data,
-                                        idGrids,
                                         firstGridId,
                                         lastGridId,
                                         "up"
@@ -666,7 +642,6 @@ fun CollectDataScreen(
                                         gridViewModel,
                                         gridList,
                                         data,
-                                        idGrids,
                                         firstGridId,
                                         lastGridId,
                                         "left"
@@ -698,7 +673,6 @@ fun CollectDataScreen(
                                         gridViewModel,
                                         gridList,
                                         data,
-                                        idGrids,
                                         firstGridId,
                                         lastGridId,
                                         "right"
@@ -737,7 +711,6 @@ fun CollectDataScreen(
                                         gridViewModel,
                                         gridList,
                                         data,
-                                        idGrids,
                                         firstGridId,
                                         lastGridId,
                                         "down"
@@ -818,7 +791,6 @@ private fun navButtonClick(
     gridViewModel: GridViewModel,
     gridList: List<Grid>,
     data: RoomParamsDetails,
-    idGrids: MutableList<Int>,
     firstGridId: Int,
     lastGridId: Int,
     direction: String

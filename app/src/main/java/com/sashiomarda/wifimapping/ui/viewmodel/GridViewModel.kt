@@ -28,11 +28,15 @@ import androidx.lifecycle.viewModelScope
 import com.sashiomarda.gridmapping.data.GridRepository
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel to validate and insert wifi in the Room database.
@@ -52,8 +56,11 @@ class GridViewModel(
     var currentGrid by mutableStateOf(GridDetails())
         private set
 
-    private val _isUpdateCurrentGrid = MutableStateFlow<Boolean>(false)
-    val isUpdateCurrentGrid: StateFlow<Boolean> = _isUpdateCurrentGrid
+    private var _selectedLayer = MutableStateFlow<Int>(1)
+    val selectedLayer: StateFlow<Int> = _selectedLayer
+
+    private val _gridList = MutableStateFlow<List<Grid>>(emptyList())
+    val gridList: StateFlow<List<Grid>> = _gridList
 
     private val idHistory: Int = checkNotNull(savedStateHandle[PreviewGridDestination.idHistory])
 
@@ -85,13 +92,8 @@ class GridViewModel(
     suspend fun updateChosenGrid(prevGrid: Grid, currGrid: Grid) {
         previousGrid = prevGrid.toGridDetails()
         currentGrid = currGrid.toGridDetails()
-        updateCurrentGrid(true)
         gridRepository.updateGrid(previousGrid.toGrid())
         gridRepository.updateGrid(currentGrid.toGrid())
-    }
-
-    fun updateCurrentGrid(isUpdate: Boolean){
-        _isUpdateCurrentGrid.value = isUpdate
     }
 
     suspend fun resetInputGrid() {
@@ -113,6 +115,28 @@ class GridViewModel(
 
     suspend fun getGridByLayerNo(layerNo: Int): List<Grid> {
         return gridRepository.getGridByLayerNo(idHistory, layerNo).map { it }
+    }
+
+    init {
+        viewModelScope.launch {
+            _gridList.value =  getGridByLayerNo(_selectedLayer.value)
+        }
+    }
+
+    suspend fun updateSelectedLayer(selectedLayer: Int){
+        _selectedLayer.value = selectedLayer
+        _gridList.value =  getGridByLayerNo(selectedLayer)
+    }
+
+    private var updateGridJob: Job? = null
+
+    fun startUpdateGridJob() {
+        updateGridJob = viewModelScope.launch {
+            while (isActive) {
+                updateSelectedLayer(_selectedLayer.value)
+                delay(100)
+            }
+        }
     }
 }
 data class GridUiState(
