@@ -220,7 +220,7 @@ fun CollectDataScreen(
                                         menuItemData = menuItemData,
                                         selectedLayer = {
                                             coroutineScope.launch {
-                                                gridViewModel.updateSelectedLayer(it)
+                                                gridViewModel.updateSelectedLayer(it, true)
                                                 isUpdateGridList = true
                                                 val foundGrid =
                                                     gridList.firstOrNull { it.isClicked == true }
@@ -376,6 +376,12 @@ fun CollectDataScreen(
                     ) {
                         currentActiveGrid = gridViewModel.currentGrid.toGrid()
                         if (gridList.isNotEmpty()) {
+                            if (isUpdateGridList){
+                                currentActiveGrid = gridList[0]
+                                if (currentActiveGrid.layerNo == gridList[0].layerNo) {
+                                    isUpdateGridList = false
+                                }
+                            }
                             if (currentActiveGrid.id == 0) {
                                 currentActiveGrid = gridList[0]
                             }

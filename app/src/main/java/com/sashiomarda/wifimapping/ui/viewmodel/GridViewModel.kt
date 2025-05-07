@@ -123,9 +123,13 @@ class GridViewModel(
         }
     }
 
-    suspend fun updateSelectedLayer(selectedLayer: Int){
+    suspend fun updateSelectedLayer(selectedLayer: Int, isUpdateCurrentGrid: Boolean){
+        val oldGridList = _gridList.value
         _selectedLayer.value = selectedLayer
         _gridList.value =  getGridByLayerNo(selectedLayer)
+        if (isUpdateCurrentGrid){
+            updateChosenGrid(oldGridList[0], _gridList.value[0])
+        }
     }
 
     private var updateGridJob: Job? = null
@@ -133,7 +137,7 @@ class GridViewModel(
     fun startUpdateGridJob() {
         updateGridJob = viewModelScope.launch {
             while (isActive) {
-                updateSelectedLayer(_selectedLayer.value)
+                updateSelectedLayer(_selectedLayer.value, false)
                 delay(100)
             }
         }
