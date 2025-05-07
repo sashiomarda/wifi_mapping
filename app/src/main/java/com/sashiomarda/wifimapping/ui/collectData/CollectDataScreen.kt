@@ -220,7 +220,6 @@ fun CollectDataScreen(
                                         menuItemData = menuItemData,
                                         selectedLayer = {
                                             coroutineScope.launch {
-                                                gridViewModel.updateSelectedLayer(it, true)
                                                 isUpdateGridList = true
                                                 val foundGrid =
                                                     gridList.firstOrNull { it.isClicked == true }
@@ -240,6 +239,7 @@ fun CollectDataScreen(
                                                         idGrids.add(i.id)
                                                     }
                                                 }
+                                                gridViewModel.updateSelectedLayer(it, true)
                                             }
                                         }
                                     )
