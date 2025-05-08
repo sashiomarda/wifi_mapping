@@ -29,4 +29,5 @@ data class History(
     val id: Int = 0,
     val timestamp: Long,
     val idRoom: Int = 0,
+    val isComplete: Boolean = false
 )

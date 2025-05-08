@@ -121,8 +121,8 @@ fun CanvasGrid(
         }
         gridList = gridListDb
     }
-    if (dbmListDb.dbmList.isNotEmpty()){
-        for (i in dbmListDb.dbmList) {
+    if (dbmListDb.isNotEmpty()){
+        for (i in dbmListDb) {
             dbmGridMap[i.idGrid] = i.dbm
         }
     }
@@ -145,7 +145,7 @@ fun CanvasGrid(
                 drawLayer(graphicsLayer)
                 coroutineScope.launch {
                     var canvasBitmap = graphicsLayer.toImageBitmap()
-                    if (dbmListDb.dbmList.size == gridListDb?.size) {
+                    if (dbmListDb.size == gridListDb?.size) {
                         saveCanvasBitmap(canvasBitmap)
                     }
                 }

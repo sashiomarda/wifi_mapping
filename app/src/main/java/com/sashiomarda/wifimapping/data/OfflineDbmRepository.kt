@@ -25,6 +25,9 @@ class OfflineDbmRepository(private val dbmDao: DbmDao) : DbmRepository {
     override fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>> =
         dbmDao.getDbmByIdHistory(idHistory)
 
+    override suspend fun getDbmByIdHistoryLayerNo(idHistory: Int, layerNo: Int): List<Dbm> =
+        dbmDao.getDbmByIdHistoryLayerNo(idHistory, layerNo)
+
     override suspend fun insertDbm(dbm: Dbm) = dbmDao.insert(dbm)
 
     override suspend fun deleteDbm(dbm: Dbm) = dbmDao.delete(dbm)

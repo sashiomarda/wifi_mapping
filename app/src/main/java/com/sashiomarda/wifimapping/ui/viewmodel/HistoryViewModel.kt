@@ -105,21 +105,24 @@ data class HistoryUiState(
 data class HistoryDetails(
     val id: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
-    val idRoom: Int = 0
+    val idRoom: Int = 0,
+    val isComplete: Boolean = false
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun HistoryDetails.toHistory(): History = History(
     id = id,
     timestamp = timestamp,
-    idRoom = idRoom
+    idRoom = idRoom,
+    isComplete = isComplete
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun History.toHistoryDetails(): HistoryDetails = HistoryDetails(
     id = id,
     timestamp = timestamp,
-    idRoom = idRoom
+    idRoom = idRoom,
+    isComplete = isComplete
 )
 
 data class HistoryUiStateList(val historyList: List<History> = listOf())
