@@ -29,6 +29,8 @@ import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiScreen
 import com.sashiomarda.wifimapping.ui.collectData.CollectDataDestination
 import com.sashiomarda.wifimapping.ui.collectData.CollectDataScreen
+import com.sashiomarda.wifimapping.ui.downloadMap.DownloadMapDestination
+import com.sashiomarda.wifimapping.ui.downloadMap.DownloadMapScreen
 import com.sashiomarda.wifimapping.ui.history.HistoryDestination
 import com.sashiomarda.wifimapping.ui.history.HistoryScreen
 import com.sashiomarda.wifimapping.ui.home.HomeDestination
@@ -132,6 +134,18 @@ fun WifiMappingNavHost(
             })
         ) {
             CollectDataScreen(
+                navigateToDownloadMap = { navController.navigate("${DownloadMapDestination.route}/${it}") },
+                onNavigateUp = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = DownloadMapDestination.routeWithArgs,
+            arguments = listOf(navArgument(DownloadMapDestination.idHistory) {
+                type = NavType.IntType
+            })
+        ) {
+            DownloadMapScreen(
                 onNavigateUp = { navController.navigateUp() }
             )
         }

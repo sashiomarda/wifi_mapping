@@ -29,6 +29,9 @@ interface GridDao {
     @Query("UPDATE grid SET idWifi = 0")
     fun resetInputGrid() : Int
 
+    @Query("update grid set isClicked = 0")
+    suspend fun resetIsClicked() : Int
+
     @Query("SELECT * from grid ORDER BY id DESC LIMIT 1")
     suspend fun getLastGridInputId(): Grid
 

@@ -12,7 +12,6 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -115,6 +113,7 @@ fun CollectDataScreen(
     dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiScannerViewModel: WifiScannerViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    navigateToDownloadMap: () -> Unit,
 ) {
     val context = LocalContext.current
     var wifiList = wifiViewModel.wifiScanList.wifiList
@@ -772,18 +771,13 @@ fun CollectDataScreen(
                                 shareBitmap(context, uri)
                             }
                         }
+                        navigateToDownloadMap()
                     }
                 ) {
                     Row(
                         modifier = Modifier
                     ) {
-                        Text("Bagikan gambar peta grid")
-                        Icon(
-                            modifier = Modifier
-                                .padding(start = 5.dp),
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share button"
-                        )
+                        Text("Selanjutnya")
                     }
                 }
             }

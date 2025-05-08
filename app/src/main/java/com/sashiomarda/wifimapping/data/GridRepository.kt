@@ -51,5 +51,7 @@ interface GridRepository {
 
     suspend fun resetInputGrid(): Int
 
+    suspend fun resetIsClicked(): Int
+
     suspend fun getGridByLayerNo(idHistory: Int, layerNo: Int): List<Grid>
 }
