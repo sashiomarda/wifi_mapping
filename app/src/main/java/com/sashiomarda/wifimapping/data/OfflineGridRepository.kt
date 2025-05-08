@@ -35,6 +35,9 @@ class OfflineGridRepository(private val gridDao: GridDao) : GridRepository {
     override suspend fun updateGrid(grid: Grid) = gridDao.update(grid)
 
     override suspend fun resetInputGrid(): Int = gridDao.resetInputGrid()
+
+    override suspend fun resetIsClicked(): Int = gridDao.resetIsClicked()
+
     override suspend fun getGridByLayerNo(
         idHistory: Int,
         layerNo: Int

@@ -100,6 +100,10 @@ class GridViewModel(
         gridRepository.resetInputGrid()
     }
 
+    suspend fun resetIsClicked() {
+        gridRepository.resetIsClicked()
+    }
+
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
     }
@@ -120,6 +124,8 @@ class GridViewModel(
     init {
         viewModelScope.launch {
             _gridList.value =  getGridByLayerNo(_selectedLayer.value)
+            resetIsClicked()
+            updateSelectedLayer(_selectedLayer.value, true)
         }
     }
 
