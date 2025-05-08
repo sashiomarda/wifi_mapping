@@ -16,6 +16,7 @@
 
 package com.sashiomarda.wifimapping.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -24,11 +25,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sashiomarda.gridmapping.data.DbmRepository
 import com.sashiomarda.wifimapping.data.Dbm
+import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterDestination
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel to validate and insert wifi in the Room database.
@@ -43,14 +47,18 @@ class DbmViewModel(
 
     private val idHistory: Int = checkNotNull(savedStateHandle[LocateRouterDestination.idHistory])
 
-    val dbmUiStateList: StateFlow<DbmUiStateList> =
-        dbmRepository.getDbmByIdHistory(idHistory = idHistory)
-            .map { DbmUiStateList(it) }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = DbmUiStateList()
-            )
+    private var _selectedLayer = MutableStateFlow<Int>(1)
+    val selectedLayer: StateFlow<Int> = _selectedLayer
+
+    private var _dbmUiStateList = MutableStateFlow<List<Dbm>>(emptyList())
+
+    val dbmUiStateList: StateFlow<List<Dbm>> = _dbmUiStateList
+
+    init {
+        viewModelScope.launch {
+            _dbmUiStateList.value = dbmRepository.getDbmByIdHistoryLayerNo(idHistory = idHistory, layerNo = _selectedLayer.value)
+        }
+    }
 
     suspend fun saveDbm(dbmDetails: DbmDetails) {
         dbmRepository.insertDbm(dbmDetails.toDbm())
@@ -66,6 +74,10 @@ class DbmViewModel(
         return idHistory
     }
 
+    suspend fun updateDbmUiStateList(selectedLayer: Int){
+        _selectedLayer.value = selectedLayer
+        _dbmUiStateList.value = dbmRepository.getDbmByIdHistoryLayerNo(idHistory = idHistory, layerNo = _selectedLayer.value)
+    }
 }
 data class DbmUiState(
     val dbmDetails: DbmDetails = DbmDetails()

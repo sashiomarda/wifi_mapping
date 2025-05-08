@@ -69,7 +69,6 @@ class WifiScannerViewModel(application: Application) : AndroidViewModel(applicat
 
     override fun onCleared() {
         super.onCleared()
-        context.unregisterReceiver(receiver)
         scanningJob?.cancel()
     }
 

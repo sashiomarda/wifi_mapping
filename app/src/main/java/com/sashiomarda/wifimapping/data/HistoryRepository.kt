@@ -43,15 +43,15 @@ interface HistoryRepository {
     /**
      * Insert item in the data source
      */
-    suspend fun insertHistory(roomParams: History)
+    suspend fun insertHistory(history: History)
 
     /**
      * Delete item from the data source
      */
-    suspend fun deleteHistory(roomParams: History)
+    suspend fun deleteHistory(history: History)
 
     /**
      * Update item in the data source
      */
-    suspend fun updateHistory(roomParams: History)
+    suspend fun updateHistory(history: History)
 }

@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.sashiomarda.wifimapping.WifiMappingApplication
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
+import com.sashiomarda.wifimapping.ui.viewmodel.HistoryByIdViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
@@ -78,6 +79,13 @@ object AppViewModelProvider {
 
         initializer {
             WifiScannerViewModel(WifiMappingApplication())
+        }
+
+        initializer {
+            HistoryByIdViewModel(
+                this.createSavedStateHandle(),
+                WifiMappingApplication().container.historyRepository
+            )
         }
     }
 }

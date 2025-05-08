@@ -12,6 +12,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -84,11 +85,13 @@ import com.sashiomarda.wifimapping.ui.previewGrid.vertical
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
+import com.sashiomarda.wifimapping.ui.viewmodel.HistoryByIdViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
+import com.sashiomarda.wifimapping.ui.viewmodel.toHistory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -113,7 +116,8 @@ fun CollectDataScreen(
     dbmViewModel: DbmViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiViewModel: WifiViewModel = viewModel(factory = AppViewModelProvider.Factory),
     wifiScannerViewModel: WifiScannerViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    navigateToDownloadMap: () -> Unit,
+    navigateToDownloadMap: (Int) -> Unit,
+    historyByIdViewModel: HistoryByIdViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
     var wifiList = wifiViewModel.wifiScanList.wifiList
@@ -122,6 +126,7 @@ fun CollectDataScreen(
     var chosenIdSsid by remember { mutableIntStateOf(0) }
     var dbmText by remember { mutableStateOf("") }
     val gridListDb by gridViewModel.gridUiStateList.collectAsState()
+    val historyById by historyByIdViewModel.historyByIdUiState.collectAsState()
     val firstGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList[0].id else 0
     val lastGridId = if (gridListDb.gridList.isNotEmpty()) gridListDb.gridList.last().id else 0
     var currentActiveGrid by remember {
@@ -134,9 +139,19 @@ fun CollectDataScreen(
     var dbmList: MutableList<Int> = ArrayList()
     var isUpdateGridList by remember { mutableStateOf(false) }
     val gridList by gridViewModel.gridList.collectAsState()
-    var gridHaveDbm = remember { mutableStateListOf<Int>() }
+    val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var imageBitmap by mutableStateOf(ImageBitmap(500, 500))
-    var isSaveImageButton by remember { mutableStateOf(false) }
+    var isNextButtonEnabled by remember { mutableStateOf(false) }
+    var layerFinishAllGrid = remember { mutableStateListOf<Int>() }
+    if (dbmListDb.isNotEmpty() && gridList.isNotEmpty()) {
+        if (dbmListDb.size == gridList.size && dbmListDb[0].layerNo == gridList[0].layerNo) {
+            if (gridList[0].layerNo !in layerFinishAllGrid) {
+                layerFinishAllGrid.add(gridList[0].layerNo)
+            }
+        } else {
+            isNextButtonEnabled = false
+        }
+    }
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
     var chosenSsidList: MutableList<String> = ArrayList()
     if (wifiCheckedUiStateList.wifiList.isNotEmpty()) {
@@ -173,6 +188,7 @@ fun CollectDataScreen(
     LaunchedEffect(Unit) {
         wifiScannerViewModel.startScanning()
         gridViewModel.startUpdateGridJob()
+        historyByIdViewModel.startUpdateHistoryJob()
     }
 
     Scaffold(
@@ -239,6 +255,7 @@ fun CollectDataScreen(
                                                     }
                                                 }
                                                 gridViewModel.updateSelectedLayer(it, true)
+                                                dbmViewModel.updateDbmUiStateList(selectedLayer)
                                             }
                                         }
                                     )
@@ -271,9 +288,6 @@ fun CollectDataScreen(
                                     dbmViewModel = dbmViewModel,
                                     saveCanvasBitmap = { bitmap ->
                                         imageBitmap = bitmap
-                                        if (gridHaveDbm.size == gridListDb.gridList.size) {
-                                            isSaveImageButton = true
-                                        }
                                     },
                                     addChosenIdList = { ssidId, gridId -> },
                                     updateGridList = {}
@@ -569,12 +583,14 @@ fun CollectDataScreen(
                                     var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
                                         idHistory = dbmViewModel.getIdHistory(),
                                         idGrid = currentActiveGrid.id,
-                                        dbm = maxDbmFromList
+                                        dbm = maxDbmFromList,
+                                        layerNo = selectedLayer
                                     )
-                                    if (currentActiveGrid.id !in gridHaveDbm) {
+                                    val foundGridDbm = dbmListDb.firstOrNull{it.idGrid == currentActiveGrid.id}
+                                    if (foundGridDbm == null){
                                         dbmViewModel.saveDbm(inputDbm)
-                                        gridHaveDbm.add(currentActiveGrid.id)
                                     }
+                                    dbmViewModel.updateDbmUiStateList(selectedLayer)
                                 }
                             },
                         ) {
@@ -739,11 +755,33 @@ fun CollectDataScreen(
                         }
                     }
                 }
+                if (gridList.isNotEmpty()) {
+                    LaunchedEffect(gridList) {
+                        historyByIdViewModel.updateIdHistory(gridList[0].idHistory)
+                        historyByIdViewModel.getHistoryByIdHistory(gridList[0].idHistory)
+                    }
+                }
+
+                if (data.layerCount != "") {
+                    if (layerFinishAllGrid.size == data.layerCount.toInt()) {
+                        LaunchedEffect(maxDbmFromList) {
+                            historyByIdViewModel.updateHistoryDb(
+                                historyById.toHistory()
+                                .copy(isComplete = true)
+                            )
+                            historyByIdViewModel.updateIdHistory(gridList[0].idHistory)
+                            historyByIdViewModel.getHistoryByIdHistory(gridList[0].idHistory)
+                        }
+                    }
+                }
+                if (historyById.isComplete){
+                    isNextButtonEnabled = true
+                }
                 Button(
                     modifier = Modifier
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
-                    enabled = isSaveImageButton,
+                    enabled = isNextButtonEnabled,
                     onClick = {
                         val activity = context as Activity
                         if (Build.VERSION.SDK_INT < 34) {
@@ -771,7 +809,7 @@ fun CollectDataScreen(
                                 shareBitmap(context, uri)
                             }
                         }
-                        navigateToDownloadMap()
+                        navigateToDownloadMap((gridListDb.gridList[0].idHistory))
                     }
                 ) {
                     Row(

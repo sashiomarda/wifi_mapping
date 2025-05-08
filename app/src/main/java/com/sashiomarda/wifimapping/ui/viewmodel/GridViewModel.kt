@@ -134,8 +134,10 @@ class GridViewModel(
         _selectedLayer.value = selectedLayer
         _gridList.value =  getGridByLayerNo(selectedLayer)
         if (isUpdateCurrentGrid){
-            gridRepository.updateGrid(_gridList.value[0].copy(isClicked = true))
-            updateChosenGrid(oldGridList[0], _gridList.value[0].copy(isClicked = true))
+            if (_gridList.value.isNotEmpty()) {
+                gridRepository.updateGrid(_gridList.value[0].copy(isClicked = true))
+                updateChosenGrid(oldGridList[0], _gridList.value[0].copy(isClicked = true))
+            }
         }
     }
 
