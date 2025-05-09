@@ -73,6 +73,15 @@ class GridViewModel(
                 initialValue = GridUiStateList()
             )
 
+    var allGridUiStateList: StateFlow<GridUiStateList> =
+        gridRepository.getGridByIdHistoryStream(idHistory = idHistory)
+            .map { GridUiStateList(it) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = GridUiStateList()
+            )
+
     suspend fun lastGridInputIdHistory() : Grid? {
         return gridRepository.getLastGridInputId()
     }

@@ -217,8 +217,6 @@ fun LocateRouterScreen(
                                         }
                                     },
                                     screen = LocateRouterDestination.route,
-                                    dbmViewModel = dbmViewModel,
-                                    saveCanvasBitmap = {},
                                     addChosenIdList = { ssidId, gridId ->
                                         chosenIdSsidList.add(ssidId)
                                         for (wifi in wifiCheckedUiStateList.wifiList) {

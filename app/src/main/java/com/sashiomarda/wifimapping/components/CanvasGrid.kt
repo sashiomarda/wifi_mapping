@@ -26,7 +26,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,14 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -50,9 +46,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sashiomarda.wifimapping.data.Dbm
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.locateRouter.RouterPosition
-import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
 import kotlinx.coroutines.launch
@@ -69,15 +65,14 @@ fun CanvasGrid(
     grid: Int? = 100,
     gridViewModel: GridViewModel,
     chosenIdSsid: Int = 0,
-    gridListDb : List<Grid>? = null,
+    gridListDb: List<Grid>? = null,
     selectedLayer: Int? = null,
     saveIdGridRouterPosition: (Int) -> Unit,
     screen: String,
-    dbmViewModel: DbmViewModel,
-    saveCanvasBitmap: (ImageBitmap) -> Unit,
     addChosenIdList: (Int, Int) -> Unit,
     updateGridList: (Int) -> Unit,
-    routerPositions: List<RouterPosition>? = null
+    routerPositions: List<RouterPosition>? = null,
+    dbmListDb: List<Dbm>? = null
 ){
     val coroutineScope = rememberCoroutineScope()
     val localDensity = LocalDensity.current
@@ -108,8 +103,6 @@ fun CanvasGrid(
     val gridHeight = canvasWidth * gridCmToM / width
     val gridWidth = canvasHeight * gridCmToM / length
     var chosenIdGridRouterPosition by remember { mutableIntStateOf(0) }
-
-    val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
     var dbmGridMap = HashMap<Int,Int>()
     var wifiGridLocationIndex: MutableList<Int> = ArrayList()
     var gridList by remember { mutableStateOf(listOf(Grid())) }
@@ -121,16 +114,14 @@ fun CanvasGrid(
         }
         gridList = gridListDb
     }
-    if (dbmListDb.isNotEmpty()){
+    if (!dbmListDb.isNullOrEmpty()){
         for (i in dbmListDb) {
             dbmGridMap[i.idGrid] = i.dbm
         }
     }
-    val graphicsLayer = rememberGraphicsLayer()
     val star = ImageBitmap.imageResource(id = R.drawable.star_on)
 
     Surface(modifier = Modifier
-//        .background(Color.White)
         .padding(start = 5.dp)
         .width((canvasHeight ).dp)
         .height(canvasWidth.dp)
@@ -138,18 +129,6 @@ fun CanvasGrid(
     ) {
         Box(modifier = Modifier
             .background(Color.White)
-            .drawWithContent {
-                graphicsLayer.record {
-                    this@drawWithContent.drawContent()
-                }
-                drawLayer(graphicsLayer)
-                coroutineScope.launch {
-                    var canvasBitmap = graphicsLayer.toImageBitmap()
-                    if (dbmListDb.size == gridListDb?.size) {
-                        saveCanvasBitmap(canvasBitmap)
-                    }
-                }
-            }
         ){
             Canvas(modifier = Modifier
                 .fillMaxSize(),
@@ -162,7 +141,7 @@ fun CanvasGrid(
                             (gridWidthPx * 1)-5,
                             (gridHeightPx * 1)-5
                         )
-                    if (screen == "collect_data"){
+                    if (screen == "collect_data" || screen == "download_map"){
                         var repeatX = 0
                         var repeatY = 0
                         if (length > width) {
