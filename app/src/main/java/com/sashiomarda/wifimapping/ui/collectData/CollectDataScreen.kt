@@ -140,7 +140,6 @@ fun CollectDataScreen(
     var isUpdateGridList by remember { mutableStateOf(false) }
     val gridList by gridViewModel.gridList.collectAsState()
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
-    var imageBitmap by mutableStateOf(ImageBitmap(500, 500))
     var isNextButtonEnabled by remember { mutableStateOf(false) }
     var layerFinishAllGrid = remember { mutableStateListOf<Int>() }
     if (dbmListDb.isNotEmpty() && gridList.isNotEmpty()) {
@@ -285,12 +284,9 @@ fun CollectDataScreen(
                                     selectedLayer = selectedLayer,
                                     saveIdGridRouterPosition = {},
                                     screen = CollectDataDestination.route,
-                                    dbmViewModel = dbmViewModel,
-                                    saveCanvasBitmap = { bitmap ->
-                                        imageBitmap = bitmap
-                                    },
                                     addChosenIdList = { ssidId, gridId -> },
-                                    updateGridList = {}
+                                    updateGridList = {},
+                                    dbmListDb = dbmListDb
                                 )
                             }
                         }
@@ -783,32 +779,6 @@ fun CollectDataScreen(
                     shape = RoundedCornerShape(50.dp),
                     enabled = isNextButtonEnabled,
                     onClick = {
-                        val activity = context as Activity
-                        if (Build.VERSION.SDK_INT < 34) {
-                            if (checkSelfPermission(
-                                    context.applicationContext,
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                ) != PackageManager.PERMISSION_GRANTED
-                            ) {
-                                requestPermissions(
-                                    activity,
-                                    arrayOf(
-                                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                    ),
-                                    PERMISSIONS_REQUEST_CODE
-                                )
-                            } else {
-                                coroutineScope.launch {
-                                    val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
-                                    shareBitmap(context, uri)
-                                }
-                            }
-                        } else {
-                            coroutineScope.launch {
-                                val uri = imageBitmap.asAndroidBitmap().saveToDisk(context)
-                                shareBitmap(context, uri)
-                            }
-                        }
                         navigateToDownloadMap((gridListDb.gridList[0].idHistory))
                     }
                 ) {
@@ -886,50 +856,6 @@ data class PrevAndCurrentGrid(
     val currentActiveGrid: Grid,
     val isMoveGrid: Boolean
 )
-
-private fun shareBitmap(context: Context, uri: Uri) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "image/png"
-        putExtra(Intent.EXTRA_STREAM, uri)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    startActivity(context, createChooser(intent, "Share your image"), null)
-}
-
-private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
-    outputStream().use { out ->
-        bitmap.compress(format, quality, out)
-        out.flush()
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
-    return suspendCancellableCoroutine { continuation ->
-        MediaScannerConnection.scanFile(
-            context,
-            arrayOf(filePath),
-            arrayOf("image/png")
-        ) { _, scannedUri ->
-            if (scannedUri == null) {
-                continuation.cancel(Exception("File $filePath could not be scanned"))
-            } else {
-                continuation.resume(scannedUri, onCancellation = null)
-            }
-        }
-    }
-}
-
-private suspend fun Bitmap.saveToDisk(context: Context): Uri {
-    val file = File(
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-        "screenshot-${System.currentTimeMillis()}.png"
-    )
-
-    file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
-
-    return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
-}
 
 @Composable
 fun OnResumeScan(onResume: () -> Unit){

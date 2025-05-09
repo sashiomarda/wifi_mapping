@@ -112,8 +112,6 @@ fun PreviewGridScreen(
                             gridViewModel = gridViewModel,
                             saveIdGridRouterPosition = {},
                             screen = PreviewGridDestination.route,
-                            dbmViewModel = dbmViewModel,
-                            saveCanvasBitmap = {},
                             addChosenIdList = { ssidId, gridId -> },
                             updateGridList = {}
                         )

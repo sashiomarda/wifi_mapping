@@ -54,6 +54,15 @@ class DbmViewModel(
 
     val dbmUiStateList: StateFlow<List<Dbm>> = _dbmUiStateList
 
+    var allDbmUiStateList: StateFlow<DbmUiStateList> =
+        dbmRepository.getDbmByIdHistory(idHistory = idHistory)
+            .map { DbmUiStateList(it) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = DbmUiStateList()
+            )
+
     init {
         viewModelScope.launch {
             _dbmUiStateList.value = dbmRepository.getDbmByIdHistoryLayerNo(idHistory = idHistory, layerNo = _selectedLayer.value)

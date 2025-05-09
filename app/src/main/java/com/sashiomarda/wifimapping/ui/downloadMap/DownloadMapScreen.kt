@@ -12,84 +12,56 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.Share
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.components.CanvasGrid
-import com.sashiomarda.wifimapping.components.DropDownMenu
+import com.sashiomarda.wifimapping.data.Dbm
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
 import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
-import com.sashiomarda.wifimapping.ui.previewGrid.vertical
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
-import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsDetails
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
-import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -117,6 +89,51 @@ fun DownloadMapScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val allDbmListDb by dbmViewModel.allDbmUiStateList.collectAsState()
+    val allgridListDb by gridViewModel.allGridUiStateList.collectAsState()
+    var roomData = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
+    var layerListDisplay: MutableList<LayerList> = ArrayList()
+
+    var gridPerLayer = if (allDbmListDb.dbmList.isEmpty()){
+        1
+    }else{
+        if (roomData.layerCount != "") {
+            allDbmListDb.dbmList.size / roomData.layerCount.toInt()
+        }else{
+            1
+        }
+    }
+
+    var dbmList: MutableList<Dbm> = ArrayList()
+    var gridList: MutableList<Grid> = ArrayList()
+    var gridCount = 1
+    for (i in allDbmListDb.dbmList.indices){
+        if (gridCount > gridPerLayer){
+            gridCount = 1
+        }
+        if (gridCount <= gridPerLayer){
+            dbmList.add(
+                allDbmListDb.dbmList[i]
+            )
+            gridList.add(
+                allgridListDb.gridList[i]
+            )
+            if (gridCount == gridPerLayer){
+                val layerNoDb = allDbmListDb.dbmList[i].layerNo
+                layerListDisplay.add(
+                    LayerList(
+                        layerNo = layerNoDb,
+                        dbmListPerLayer = dbmList.toMutableList(),
+                        gridListPerLayer = gridList.toMutableList()
+                    )
+                )
+                dbmList.clear()
+                gridList.clear()
+            }
+        }
+        gridCount++
+    }
+
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -130,7 +147,157 @@ fun DownloadMapScreen(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
-            Text("DownloadMapScreen")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Download Peta",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier
+                )
+                if (layerListDisplay.isNotEmpty() && roomData.id != 0) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(10.dp)
+                    ) {
+                        items(
+                            items = layerListDisplay,
+                            key = { layerList: LayerList ->
+                                layerList.layerNo
+                            }) {
+                            Card(modifier = Modifier
+                                .padding(bottom = 8.dp)
+                            ) {
+                                Column(modifier = Modifier
+                                    .padding(8.dp)
+                                ) {
+                                    var imageBitmap by mutableStateOf(ImageBitmap(500, 500))
+                                    val graphicsLayer = rememberGraphicsLayer()
+                                    Column(modifier = Modifier
+                                        .background(Color.White)
+                                        .padding(12.dp)
+                                        .drawWithContent {
+                                            graphicsLayer.record {
+                                                this@drawWithContent.drawContent()
+                                            }
+                                            drawLayer(graphicsLayer)
+                                            coroutineScope.launch {
+                                                var canvasBitmap = graphicsLayer.toImageBitmap()
+                                                imageBitmap =  canvasBitmap
+                                            }
+                                        }
+                                    ){
+                                        Text(
+                                            text = "Layer ${it.layerNo}",
+                                            color = Color.Black
+                                        )
+                                        CanvasGrid(
+                                            length = roomData.length.toFloat(),
+                                            width = roomData.width.toFloat(),
+                                            grid = roomData.gridDistance.toInt(),
+                                            gridViewModel = gridViewModel,
+                                            gridListDb = it.gridListPerLayer,
+                                            dbmListDb = it.dbmListPerLayer,
+                                            saveIdGridRouterPosition = {},
+                                            screen = DownloadMapDestination.route,
+                                            addChosenIdList = { ssidId, gridId -> },
+                                            updateGridList = {}
+                                        )
+                                    }
+                                    Button(modifier = Modifier
+                                        .padding(start = 8.dp),
+                                        onClick = {
+                                            val activity = context as Activity
+                                            if (Build.VERSION.SDK_INT < 34) {
+                                                if (checkSelfPermission(
+                                                        context.applicationContext,
+                                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                    ) != PackageManager.PERMISSION_GRANTED
+                                                ) {
+                                                    requestPermissions(
+                                                        activity,
+                                                        arrayOf(
+                                                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                                        ),
+                                                        PERMISSIONS_REQUEST_CODE
+                                                    )
+                                                } else {
+                                                    coroutineScope.launch {
+                                                        val uri = imageBitmap.asAndroidBitmap()
+                                                            .saveToDisk(context)
+                                                        shareBitmap(context, uri)
+                                                    }
+                                                }
+                                            } else {
+                                                coroutineScope.launch {
+                                                    val uri = imageBitmap.asAndroidBitmap()
+                                                        .saveToDisk(context)
+                                                    shareBitmap(context, uri)
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Text("Download")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
+}
+
+data class LayerList(
+    val layerNo: Int = 0,
+    val dbmListPerLayer: MutableList<Dbm>,
+    val gridListPerLayer: MutableList<Grid>
+)
+
+
+private fun shareBitmap(context: Context, uri: Uri) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    startActivity(context, createChooser(intent, "Share your image"), null)
+}
+
+private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+    outputStream().use { out ->
+        bitmap.compress(format, quality, out)
+        out.flush()
+    }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
+    return suspendCancellableCoroutine { continuation ->
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(filePath),
+            arrayOf("image/png")
+        ) { _, scannedUri ->
+            if (scannedUri == null) {
+                continuation.cancel(Exception("File $filePath could not be scanned"))
+            } else {
+                continuation.resume(scannedUri, onCancellation = null)
+            }
+        }
+    }
+}
+
+private suspend fun Bitmap.saveToDisk(context: Context): Uri {
+    val file = File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+        "screenshot-${System.currentTimeMillis()}.png"
+    )
+
+    file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
+
+    return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
 }

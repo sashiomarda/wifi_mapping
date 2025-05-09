@@ -28,6 +28,9 @@ class OfflineGridRepository(private val gridDao: GridDao) : GridRepository {
     override fun getGridByIdHistoryLayerNoStream(idHistory: Int, layerNo: Int): Flow<List<Grid>> =
         gridDao.getGridByIdHistoryLayerNo(idHistory, layerNo)
 
+    override fun getGridByIdHistoryStream(idHistory: Int): Flow<List<Grid>> =
+        gridDao.getGridByIdHistory(idHistory)
+
     override suspend fun insertGrid(grid: Grid) = gridDao.insert(grid)
 
     override suspend fun deleteGrid(grid: Grid) = gridDao.delete(grid)
