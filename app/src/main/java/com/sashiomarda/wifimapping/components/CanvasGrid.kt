@@ -38,6 +38,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -159,7 +160,9 @@ fun CanvasGrid(
                                     if (dbm != null) {
                                         if (count == i) {
                                             drawRect(
-                                                color = if (dbm >= -67) {
+                                                color = if (dbm == 0) {
+                                                    Color(0xFFFFFFFF)
+                                                } else if (dbm >= -67) {
                                                     Color(0xFF1AFF00)
                                                 } else if (dbm >= -70 && dbm <= -68) {
                                                     Color(0xFFFFEB3B)
@@ -175,6 +178,15 @@ fun CanvasGrid(
                                                     x = gridWidthPx * x,
                                                     y = gridHeightPx * y
                                                 ),
+                                            )
+                                            drawRect(
+                                                color = Color.Black,
+                                                topLeft = Offset(
+                                                    x = gridWidthPx * x,
+                                                    y = gridHeightPx * y
+                                                ),
+                                                size = canvasQuadrantSize,
+                                                style = Stroke(width = 1f)
                                             )
                                             if (gridListDb.get(i).idWifi != 0) {
                                                 drawImage(

@@ -22,6 +22,9 @@ interface DbmDao {
     @Query("SELECT * from dbm WHERE idHistory = :idHistory ORDER BY idGrid ASC")
     fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>>
 
+    @Query("SELECT * from dbm WHERE idHistory = :idHistory ORDER BY idGrid ASC")
+    suspend fun getDbmByIdHistorySuspend(idHistory: Int): List<Dbm>
+
     @Query("SELECT * from dbm WHERE idHistory = :idHistory " +
             "AND layerNo = :layerNo ORDER BY idGrid ASC")
     suspend fun getDbmByIdHistoryLayerNo(idHistory: Int,layerNo: Int): List<Dbm>

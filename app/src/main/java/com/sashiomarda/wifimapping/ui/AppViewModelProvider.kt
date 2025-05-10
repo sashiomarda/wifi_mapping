@@ -60,6 +60,7 @@ object AppViewModelProvider {
             GridViewModel(
                 this.createSavedStateHandle(),
                 WifiMappingApplication().container.gridRepository,
+                WifiMappingApplication().container.dbmRepository,
             )
         }
 

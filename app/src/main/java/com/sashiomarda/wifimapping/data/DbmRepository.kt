@@ -31,6 +31,8 @@ interface DbmRepository {
      */
     fun getDbmByIdHistory(idHistory: Int): Flow<List<Dbm>>
 
+    suspend fun getDbmByIdHistorySuspend(idHistory: Int): List<Dbm>
+
     suspend fun getDbmByIdHistoryLayerNo(idHistory: Int, layerNo: Int): List<Dbm>
 
     suspend fun getLastDbm(): Dbm?
