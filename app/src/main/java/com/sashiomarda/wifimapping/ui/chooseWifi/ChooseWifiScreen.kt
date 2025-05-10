@@ -2,6 +2,7 @@ package com.sashiomarda.wifimapping.ui.chooseWifi
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

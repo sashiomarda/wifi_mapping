@@ -12,15 +12,17 @@ import kotlin.jvm.java
     Wifi::class,
     Grid::class,
     Dbm::class,
-    History::class],
-    version = 4, exportSchema = false)
-//@TypeConverters(TimeConverter::class)
+    History::class,
+    ImageFile::class],
+    version = 5, exportSchema = false)
+
 abstract class WifiMappingDatabase : RoomDatabase() {
     abstract fun roomParamsDao(): RoomParamsDao
     abstract fun wifiDao(): WifiDao
     abstract fun gridDao(): GridDao
     abstract fun dbmDao() : DbmDao
     abstract fun historyDao() : HistoryDao
+    abstract fun imageFileDao() : ImageFileDao
 
     companion object {
         @Volatile
