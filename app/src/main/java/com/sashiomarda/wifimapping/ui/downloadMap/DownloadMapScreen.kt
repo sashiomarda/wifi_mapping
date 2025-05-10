@@ -177,7 +177,6 @@ fun DownloadMapScreen(
                                     val graphicsLayer = rememberGraphicsLayer()
                                     Column(modifier = Modifier
                                         .background(Color.White)
-                                        .padding(12.dp)
                                         .drawWithContent {
                                             graphicsLayer.record {
                                                 this@drawWithContent.drawContent()

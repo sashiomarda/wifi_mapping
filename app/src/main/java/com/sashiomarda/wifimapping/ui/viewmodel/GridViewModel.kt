@@ -25,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sashiomarda.gridmapping.data.DbmRepository
 import com.sashiomarda.gridmapping.data.GridRepository
+import com.sashiomarda.wifimapping.data.Dbm
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
 import kotlinx.coroutines.Job
@@ -45,6 +47,7 @@ import kotlinx.coroutines.launch
 class GridViewModel(
     savedStateHandle: SavedStateHandle,
     private val gridRepository: GridRepository,
+    private val dbmRepository: DbmRepository,
 ) : ViewModel() {
 
     var gridUiState by mutableStateOf(GridUiState())
@@ -130,11 +133,34 @@ class GridViewModel(
         return gridRepository.getGridByLayerNo(idHistory, layerNo).map { it }
     }
 
+    suspend fun checkedDbmByIdHistory(): Boolean{
+        val allDbmUiStateList = MutableStateFlow<List<Dbm>>(emptyList())
+        allDbmUiStateList.value = dbmRepository.getDbmByIdHistorySuspend(idHistory)
+        return if (allDbmUiStateList.value.isNotEmpty()){
+            true
+        }else{
+            false
+        }
+    }
+
     init {
         viewModelScope.launch {
             _gridList.value =  getGridByLayerNo(_selectedLayer.value)
             resetIsClicked()
             updateSelectedLayer(_selectedLayer.value, true)
+            val isDbmGridExist = checkedDbmByIdHistory()
+            if (!isDbmGridExist){
+                val allGridListByIdHistory = MutableStateFlow<List<Grid>>(emptyList())
+                allGridListByIdHistory.value = gridRepository.getGridByIdHistorySuspendStream(idHistory)
+                for (grid in allGridListByIdHistory.value){
+                    dbmRepository.insertDbm(Dbm(
+                        idHistory = grid.idHistory,
+                        idGrid = grid.id,
+                        layerNo = grid.layerNo,
+                        dbm = 0
+                    ))
+                }
+            }
         }
     }
 

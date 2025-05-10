@@ -1,18 +1,7 @@
 package com.sashiomarda.wifimapping.ui.collectData
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.content.Intent.createChooser
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -58,17 +47,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -79,7 +63,6 @@ import com.sashiomarda.wifimapping.components.CanvasGrid
 import com.sashiomarda.wifimapping.components.DropDownMenu
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
-import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.vertical
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
@@ -92,10 +75,7 @@ import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.toGrid
 import com.sashiomarda.wifimapping.ui.viewmodel.toHistory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.File
 
 object CollectDataDestination : NavigationDestination {
     override val route = "collect_data"
@@ -140,15 +120,12 @@ fun CollectDataScreen(
     var isUpdateGridList by remember { mutableStateOf(false) }
     val gridList by gridViewModel.gridList.collectAsState()
     val dbmListDb by dbmViewModel.dbmUiStateList.collectAsState()
-    var isNextButtonEnabled by remember { mutableStateOf(false) }
     var layerFinishAllGrid = remember { mutableStateListOf<Int>() }
     if (dbmListDb.isNotEmpty() && gridList.isNotEmpty()) {
         if (dbmListDb.size == gridList.size && dbmListDb[0].layerNo == gridList[0].layerNo) {
             if (gridList[0].layerNo !in layerFinishAllGrid) {
                 layerFinishAllGrid.add(gridList[0].layerNo)
             }
-        } else {
-            isNextButtonEnabled = false
         }
     }
     val wifiCheckedUiStateList by wifiViewModel.wifiCheckedUiStateList.collectAsState()
@@ -576,15 +553,11 @@ fun CollectDataScreen(
                                     if (currentActiveGrid.id == 0) {
                                         currentActiveGrid = gridListDb.gridList[0]
                                     }
-                                    var inputDbm = dbmViewModel.dbmUiState.dbmDetails.copy(
-                                        idHistory = dbmViewModel.getIdHistory(),
-                                        idGrid = currentActiveGrid.id,
-                                        dbm = maxDbmFromList,
-                                        layerNo = selectedLayer
-                                    )
                                     val foundGridDbm = dbmListDb.firstOrNull{it.idGrid == currentActiveGrid.id}
-                                    if (foundGridDbm == null){
-                                        dbmViewModel.saveDbm(inputDbm)
+                                    if (foundGridDbm != null) {
+                                        dbmViewModel.updateDbm(foundGridDbm.copy(
+                                            dbm = maxDbmFromList
+                                        ))
                                     }
                                     dbmViewModel.updateDbmUiStateList(selectedLayer)
                                 }
@@ -770,14 +743,10 @@ fun CollectDataScreen(
                         }
                     }
                 }
-                if (historyById.isComplete){
-                    isNextButtonEnabled = true
-                }
                 Button(
                     modifier = Modifier
                         .padding(5.dp),
                     shape = RoundedCornerShape(50.dp),
-                    enabled = isNextButtonEnabled,
                     onClick = {
                         navigateToDownloadMap((gridListDb.gridList[0].idHistory))
                     }

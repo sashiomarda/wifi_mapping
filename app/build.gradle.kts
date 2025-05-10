@@ -92,4 +92,7 @@ dependencies {
 
     //splashscreen
     implementation ("androidx.core:core-splashscreen:1.0.1")
+
+    implementation ("androidx.compose.ui:ui-graphics:1.5.0")
+
 }

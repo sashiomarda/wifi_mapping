@@ -29,6 +29,9 @@ interface GridDao {
     @Query("SELECT * from grid WHERE idHistory = :idHistory ORDER BY id ASC")
     fun getGridByIdHistory(idHistory: Int): Flow<List<Grid>>
 
+    @Query("SELECT * from grid WHERE idHistory = :idHistory ORDER BY id ASC")
+    suspend fun getGridByIdHistorySuspend(idHistory: Int): List<Grid>
+
     @Query("UPDATE grid SET idWifi = 0")
     fun resetInputGrid() : Int
 
