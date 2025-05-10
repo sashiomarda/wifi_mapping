@@ -51,9 +51,8 @@ class WifiScannerViewModel(application: Application) : AndroidViewModel(applicat
 
     private var scanningJob: Job? = null
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun startScanning() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(receiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION), Context.RECEIVER_EXPORTED)
         } else {
             context.registerReceiver(receiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))

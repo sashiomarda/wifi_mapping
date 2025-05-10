@@ -29,6 +29,7 @@ import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryByIdViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.HistoryViewModel
+import com.sashiomarda.wifimapping.ui.viewmodel.ImageFileViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsEntryViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.WifiScannerViewModel
@@ -86,6 +87,13 @@ object AppViewModelProvider {
             HistoryByIdViewModel(
                 this.createSavedStateHandle(),
                 WifiMappingApplication().container.historyRepository
+            )
+        }
+
+        initializer {
+            ImageFileViewModel(
+                this.createSavedStateHandle(),
+                WifiMappingApplication().container.imageFileRepository
             )
         }
     }

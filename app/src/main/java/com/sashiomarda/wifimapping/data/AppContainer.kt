@@ -21,6 +21,7 @@ import com.sashiomarda.gridmapping.data.DbmRepository
 import com.sashiomarda.gridmapping.data.GridRepository
 import com.sashiomarda.gridmapping.data.OfflineDbmRepository
 import com.sashiomarda.gridmapping.data.OfflineGridRepository
+import com.sashiomarda.imageFilemapping.data.ImageFileRepository
 
 /**
  * App container for Dependency injection.
@@ -31,6 +32,7 @@ interface AppContainer {
     val gridRepository : GridRepository
     val dbmRepository : DbmRepository
     val historyRepository : HistoryRepository
+    val imageFileRepository: ImageFileRepository
 }
 
 /**
@@ -58,5 +60,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val historyRepository : HistoryRepository by lazy {
         OfflineHistoryRepository(WifiMappingDatabase.getDatabase(context).historyDao())
+    }
+
+    override val imageFileRepository by lazy {
+        OfflineImageFileRepository(WifiMappingDatabase.getDatabase(context).imageFileDao())
     }
 }

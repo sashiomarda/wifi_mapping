@@ -138,22 +138,20 @@ class MainActivity : ComponentActivity() {
 
 fun askTurnOnLocation(isLocationEnabled: Boolean, PRIORITY_HIGH_ACCURACY: Int, context: Context) {
     val activity = context as Activity
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        if (checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(activity,
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.ACCESS_NETWORK_STATE
-                ),
-                PERMISSIONS_REQUEST_CODE
-            )
-        }
+    if (checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+        checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+        checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED ||
+        checkSelfPermission(context.applicationContext, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED
+    ) {
+        requestPermissions(activity,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.ACCESS_NETWORK_STATE
+            ),
+            PERMISSIONS_REQUEST_CODE
+        )
     }
     val locationRequest = LocationRequest.create().apply {
         interval = 3000
