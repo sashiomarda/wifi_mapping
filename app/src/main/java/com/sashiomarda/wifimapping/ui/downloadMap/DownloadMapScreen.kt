@@ -215,42 +215,7 @@ fun DownloadMapScreen(
                             ) {
                                 var imageBitmap by mutableStateOf(ImageBitmap(1, 1))
                                 val graphicsLayer = rememberGraphicsLayer()
-                                Column(
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .drawWithContent {
-                                            graphicsLayer.record {
-                                                this@drawWithContent.drawContent()
-                                            }
-                                            drawLayer(graphicsLayer)
-                                            coroutineScope.launch {
-                                                var canvasBitmap = graphicsLayer.toImageBitmap()
-                                                imageBitmap = canvasBitmap
-                                                it.imageBitmap = imageBitmap
-                                            }
-                                        }
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .background(Color.White)
-                                    ) {
-                                        Text(
-                                            text = "Layer ${it.layerNo}",
-                                            color = Color.Black
-                                        )
-                                        CanvasGrid(
-                                            length = roomData.length.toFloat(),
-                                            width = roomData.width.toFloat(),
-                                            grid = roomData.gridDistance.toInt(),
-                                            gridViewModel = gridViewModel,
-                                            gridListDb = it.gridListPerLayer,
-                                            dbmListDb = it.dbmListPerLayer,
-                                            saveIdGridRouterPosition = {},
-                                            screen = DownloadMapDestination.route,
-                                            addChosenIdList = { ssidId, gridId -> },
-                                            updateGridList = {}
-                                        )
-                                    }
+                                Column {
                                     var isSaveImage = false
                                     if (allImageFileListDb.isNotEmpty()) {
                                         val foundImageFileDb =
@@ -265,13 +230,70 @@ fun DownloadMapScreen(
                                     } else {
                                         isSaveImage = true
                                     }
-                                    if (isSaveImage) {
-                                        if (timestampSaveImage == 0.toLong()) {
-                                            timestampSaveImage = System.currentTimeMillis()
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .drawWithContent {
+                                                graphicsLayer.record {
+                                                    this@drawWithContent.drawContent()
+                                                }
+                                                drawLayer(graphicsLayer)
+                                                coroutineScope.launch {
+                                                    var canvasBitmap = graphicsLayer.toImageBitmap()
+                                                    imageBitmap = canvasBitmap
+                                                    it.imageBitmap = imageBitmap
+                                                }
+                                            }
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .background(Color.White)
+                                        ) {
+                                            Text(
+                                                text = "Layer ${it.layerNo}",
+                                                color = Color.Black,
+                                                modifier = Modifier
+                                                    .padding(start = 4.dp)
+                                            )
+                                            CanvasGrid(
+                                                length = roomData.length.toFloat(),
+                                                width = roomData.width.toFloat(),
+                                                grid = roomData.gridDistance.toInt(),
+                                                gridViewModel = gridViewModel,
+                                                gridListDb = it.gridListPerLayer,
+                                                dbmListDb = it.dbmListPerLayer,
+                                                saveIdGridRouterPosition = {},
+                                                screen = DownloadMapDestination.route,
+                                                addChosenIdList = { ssidId, gridId -> },
+                                                updateGridList = {}
+                                            )
                                         }
-                                        if (Build.VERSION.SDK_INT < 34) {
-                                            LaunchedEffect(isPermissionGranted.value) {
-                                                if (isPermissionGranted.value == true) {
+                                        if (isSaveImage) {
+                                            if (timestampSaveImage == 0.toLong()) {
+                                                timestampSaveImage = System.currentTimeMillis()
+                                            }
+                                            if (Build.VERSION.SDK_INT < 34) {
+                                                LaunchedEffect(isPermissionGranted.value) {
+                                                    if (isPermissionGranted.value == true) {
+                                                        coroutineScope.launch {
+                                                            if (it.imageBitmap != null) {
+                                                                val uriFilePath =
+                                                                    it.imageBitmap!!.asAndroidBitmap()
+                                                                        .saveToDisk(
+                                                                            context,
+                                                                            it.layerNo,
+                                                                            it.gridListPerLayer[0].idHistory,
+                                                                            imageFileViewModel,
+                                                                            timestampSaveImage
+                                                                        )
+                                                                it.filePath = uriFilePath.filePath
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+                                            } else {
+                                                LaunchedEffect(allGridListDb) {
                                                     coroutineScope.launch {
                                                         if (it.imageBitmap != null) {
                                                             val uriFilePath =
@@ -284,26 +306,7 @@ fun DownloadMapScreen(
                                                                         timestampSaveImage
                                                                     )
                                                             it.filePath = uriFilePath.filePath
-//                                                        }
                                                         }
-                                                    }
-
-                                                }
-                                            }
-                                        } else {
-                                            LaunchedEffect(allGridListDb) {
-                                                coroutineScope.launch {
-                                                    if (it.imageBitmap != null) {
-                                                        val uriFilePath =
-                                                            it.imageBitmap!!.asAndroidBitmap()
-                                                                .saveToDisk(
-                                                                    context,
-                                                                    it.layerNo,
-                                                                    it.gridListPerLayer[0].idHistory,
-                                                                    imageFileViewModel,
-                                                                    timestampSaveImage
-                                                                )
-                                                        it.filePath = uriFilePath.filePath
                                                     }
                                                 }
                                             }
@@ -317,7 +320,7 @@ fun DownloadMapScreen(
                                                 if (Build.VERSION.SDK_INT < 34) {
                                                     isSaveImage = false
                                                     layerNoClicked = it.layerNo
-                                                    if (isShareImageButton == true){
+                                                    if (isShareImageButton == true) {
                                                         val uriImage =
                                                             scanFilePath(context, it.filePath)
                                                         shareBitmap(context, uriImage)
@@ -335,6 +338,7 @@ fun DownloadMapScreen(
                                                 ) == PackageManager.PERMISSION_GRANTED -> {
                                                     isPermissionGranted.value = true
                                                 }
+
                                                 else -> {
                                                     permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                                 }
