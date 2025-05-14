@@ -97,6 +97,10 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
+import java.io.FileOutputStream
+import kotlin.io.copyTo
 
 object DownloadMapDestination : NavigationDestination {
     override val route = "download_map"
@@ -366,20 +370,56 @@ fun DownloadMapScreen(
                                             .padding(8.dp)
                                             .clickable {
                                                 isButton3DExpandClicked = !isButton3DExpandClicked
-                                                if (Build.VERSION.SDK_INT < 34) {
-                                                    when {
-                                                        checkSelfPermission(
-                                                            context,
-                                                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                        ) == PackageManager.PERMISSION_GRANTED -> {
-                                                            isPermissionGranted.value = true
-                                                        }
+                                                val found3DImage = allImageFileListDb.firstOrNull{it.is3d == true}
+                                                if (found3DImage == null) {
+                                                    if (Build.VERSION.SDK_INT < 34) {
+                                                        when {
+                                                            checkSelfPermission(
+                                                                context,
+                                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                            ) == PackageManager.PERMISSION_GRANTED -> {
+                                                                isPermissionGranted.value = true
+                                                            }
 
-                                                        else -> {
-                                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                                            else -> {
+                                                                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                                            }
                                                         }
-                                                    }
-                                                    if (isPermissionGranted.value) {
+                                                        if (isPermissionGranted.value) {
+                                                            if (allImageFileListDb.isNotEmpty()) {
+                                                                val imageParts =
+                                                                    getImageParts(allImageFileListDb = allImageFileListDb)
+                                                                CoroutineScope(Dispatchers.IO).launch {
+                                                                    try {
+                                                                        val response =
+                                                                            RetrofitClient.instance.uploadImages(
+                                                                                imageParts
+                                                                            )
+                                                                        withContext(Dispatchers.Main) {
+                                                                            isUploading2DImages =
+                                                                                false
+                                                                            resultUploading2DImages =
+                                                                                if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
+                                                                            if (response.isSuccessful) {
+                                                                                save3dImage(response = response,
+                                                                                    allImageFileListDb = allImageFileListDb,
+                                                                                    imageFileViewModel = imageFileViewModel
+                                                                                )
+                                                                            }
+
+                                                                        }
+                                                                    } catch (e: Exception) {
+                                                                        withContext(Dispatchers.Main) {
+                                                                            isUploading2DImages =
+                                                                                false
+                                                                            resultUploading2DImages =
+                                                                                "Error: ${e.localizedMessage}"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
                                                         if (allImageFileListDb.isNotEmpty()) {
                                                             val imageParts =
                                                                 getImageParts(allImageFileListDb = allImageFileListDb)
@@ -393,6 +433,12 @@ fun DownloadMapScreen(
                                                                         isUploading2DImages = false
                                                                         resultUploading2DImages =
                                                                             if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
+                                                                        if (response.isSuccessful) {
+                                                                            save3dImage(response = response,
+                                                                                allImageFileListDb = allImageFileListDb,
+                                                                                imageFileViewModel = imageFileViewModel
+                                                                            )
+                                                                        }
                                                                     }
                                                                 } catch (e: Exception) {
                                                                     withContext(Dispatchers.Main) {
@@ -400,30 +446,6 @@ fun DownloadMapScreen(
                                                                         resultUploading2DImages =
                                                                             "Error: ${e.localizedMessage}"
                                                                     }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                } else {
-                                                    if (allImageFileListDb.isNotEmpty()) {
-                                                        val imageParts =
-                                                            getImageParts(allImageFileListDb = allImageFileListDb)
-                                                        CoroutineScope(Dispatchers.IO).launch {
-                                                            try {
-                                                                val response =
-                                                                    RetrofitClient.instance.uploadImages(
-                                                                        imageParts
-                                                                    )
-                                                                withContext(Dispatchers.Main) {
-                                                                    isUploading2DImages = false
-                                                                    resultUploading2DImages =
-                                                                        if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
-                                                                }
-                                                            } catch (e: Exception) {
-                                                                withContext(Dispatchers.Main) {
-                                                                    isUploading2DImages = false
-                                                                    resultUploading2DImages =
-                                                                        "Error: ${e.localizedMessage}"
                                                                 }
                                                             }
                                                         }
@@ -498,6 +520,67 @@ fun DownloadMapScreen(
                 }
             }
         }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+suspend fun save3dImage(
+    response: Response<ResponseBody>,
+    allImageFileListDb: List<ImageFile>,
+    imageFileViewModel: ImageFileViewModel
+) {
+    val inputStream =
+        response.body()
+            ?.byteStream()
+    if (inputStream != null) {
+        val timestamp =
+            allImageFileListDb[0].timestamp
+        val idHistory =
+            allImageFileListDb[0].idHistory
+        val layerNo = 0
+
+        val sb =
+            StringBuilder()
+        for (i in 1..5) {
+            sb.append(
+                Random.nextInt(
+                    0,
+                    9
+                ).toString()
+            )
+        }
+        val randomNumber =
+            sb.toString()
+        val outputFileName =
+            "${timestamp}_${idHistory}_${layerNo}_${randomNumber}_3d.png"
+
+        val outputFile =
+            File(
+                Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES
+                ),
+                outputFileName
+            )
+        val outputStream =
+            FileOutputStream(
+                outputFile
+            )
+
+        inputStream.copyTo(
+            outputStream
+        )
+        outputStream.close()
+        inputStream.close()
+
+        imageFileViewModel.saveImageFile(
+            ImageFile(
+                timestamp = timestamp,
+                fileName = outputFileName,
+                idHistory = idHistory,
+                layerNo = layerNo,
+                is3d = true
+            )
+        )
     }
 }
 
