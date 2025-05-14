@@ -733,7 +733,7 @@ suspend fun saveGridCanvasAsImage(
     }
 
     val borderPaint = Paint().apply {
-        color = 0x00000000
+        color = "#000000".toColorInt()
         style = Paint.Style.STROKE
         strokeWidth = 4f
     }
