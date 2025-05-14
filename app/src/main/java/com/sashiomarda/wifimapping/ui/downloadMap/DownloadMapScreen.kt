@@ -4,6 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.createChooser
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -78,6 +80,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -87,7 +90,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.core.content.ContextCompat.startActivity
 import com.sashiomarda.wifimapping.components.ImageFromFile
+import com.sashiomarda.wifimapping.components.loadImageBitmapFromFile
 import com.sashiomarda.wifimapping.components.scanFilePath
 import com.sashiomarda.wifimapping.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
@@ -330,29 +335,30 @@ fun DownloadMapScreen(
                                                 key = { imageFile: ImageFile ->
                                                     imageFile.layerNo
                                                 }) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .padding(10.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "Layer ${it.layerNo}",
+                                                if (it.is3d == false) {
+                                                    Column(
                                                         modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(bottom = 4.dp),
-                                                        textAlign = TextAlign.Center
-                                                    )
-                                                    ImageFromFile(
-                                                        imageFileName = it.fileName,
-                                                        context = context,
-                                                        coroutineScope = coroutineScope
+                                                            .padding(10.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "Layer ${it.layerNo}",
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(bottom = 4.dp),
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                        ImageFromFile(
+                                                            imageFileName = it.fileName,
+                                                            context = context,
+                                                            coroutineScope = coroutineScope
+                                                        )
+                                                    }
+                                                    HorizontalDivider(
+                                                        color = Color.LightGray,
+                                                        modifier = Modifier
+                                                            .padding(bottom = 10.dp)
                                                     )
                                                 }
-//                                            }
-                                                HorizontalDivider(
-                                                    color = Color.LightGray,
-                                                    modifier = Modifier
-                                                        .padding(bottom = 10.dp)
-                                                )
                                             }
                                         }
 
@@ -469,6 +475,12 @@ fun DownloadMapScreen(
                                         val brokenImage = painterResource(id = R.drawable.ic_broken_image)
                                         val loadingImage = painterResource(id = R.drawable.loading_img)
                                         Box() {
+                                            val image3DFileName =
+                                                allImageFileListDb.firstOrNull { it.is3d == true }
+                                            if (image3DFileName != null) {
+                                                isUploading2DImages = false
+                                            }
+
                                             if (isUploading2DImages) {
                                                 Image(
                                                     painter = loadingImage,
@@ -481,16 +493,60 @@ fun DownloadMapScreen(
                                                     Spacer(modifier = Modifier.height(12.dp))
                                                     Text("Tunggu sebentar sedang memproses gambar...")
                                                 }
-                                            }else{
-                                                Image(
-                                                    painter = brokenImage, //ganti brokenImage dengan image respon dari server
-                                                    contentDescription = "peta 3D",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier
-                                                        .size(200.dp)
-                                                )
+                                            } else {
+                                                Column(
+                                                    modifier = Modifier,
+                                                ) {
+                                                    val image3DFileName =
+                                                        allImageFileListDb.firstOrNull { it.is3d == true }
+                                                    if (image3DFileName != null) {
+                                                        val filePath = File(
+                                                            Environment.getExternalStoragePublicDirectory(
+                                                                Environment.DIRECTORY_PICTURES
+                                                            ),
+                                                            image3DFileName.fileName
+                                                        ).path
+                                                        val image3DBitmap = remember(filePath) {
+                                                            loadImageBitmapFromFile(filePath)
+                                                        }
+                                                        if (image3DBitmap != null) {
+                                                            Row(modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(10.dp),
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                horizontalArrangement = Arrangement.Center,
+                                                            ) {
+                                                                Image(
+                                                                    bitmap = image3DBitmap,
+                                                                    contentDescription = "Image from file",
+                                                                    modifier = Modifier
+                                                                )
+                                                                Button(
+                                                                    modifier = Modifier
+                                                                        .padding(start = 8.dp),
+                                                                    onClick = {
+                                                                        coroutineScope.launch {
+                                                                            val uriImage =
+                                                                                scanFilePath(context, filePath)
+                                                                            shareBitmap(context, uriImage)
+                                                                        }
+                                                                    }
+                                                                ) {
+                                                                    Text("Download")
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Image(
+                                                            painter = brokenImage,
+                                                            contentDescription = "peta 3D",
+                                                            contentScale = ContentScale.Crop,
+                                                            modifier = Modifier
+                                                                .size(200.dp)
+                                                        )
+                                                    }
+                                                }
                                             }
-
                                         }
                                     }
                                 }
@@ -758,15 +814,20 @@ data class LayerList(
     var imageBitmap: ImageBitmap? = null
 )
 
-data class UriFilePath(
-    val uri: Uri,
-    val filePath: String
-)
-
-
 private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
     outputStream().use { out ->
         bitmap.compress(format, quality, out)
         out.flush()
+    }
+}
+
+private fun shareBitmap(context: Context, uri: Uri?) {
+    if (uri != null) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(context, createChooser(intent, "Share your image"), null)
     }
 }
