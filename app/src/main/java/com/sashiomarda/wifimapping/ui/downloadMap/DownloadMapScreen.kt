@@ -693,7 +693,8 @@ suspend fun saveGridCanvasAsImage(
     val gridHeight = canvasWidth * gridCmToM / width
     val gridWidth = canvasHeight * gridCmToM / length
     val layerNo = layerList.layerNo
-    val cellSize = (gridWidth * 1) - 5
+    val cellSizeX = gridWidth
+    val cellSizeY = gridHeight
     var repeatX = 0
     var repeatY = 0
     if (length > width) {
@@ -706,7 +707,6 @@ suspend fun saveGridCanvasAsImage(
 
     val bitmap = createBitmap(canvasHeight.toInt(), canvasWidth.toInt())
     val canvas = Canvas(bitmap)
-
 
     val whitePaint = Paint().apply {
         color = "#FFFFFFFF".toColorInt()
@@ -753,10 +753,10 @@ suspend fun saveGridCanvasAsImage(
                 var dbm = dbmGridMap[gridListDb.get(i).id]
                 if (dbm != null) {
                     if (count == i) {
-                        val left = col * cellSize.toFloat()
-                        val top = row * cellSize.toFloat()
-                        val right = left + cellSize
-                        val bottom = top + cellSize
+                        val left = col * cellSizeX.toFloat()
+                        val top = row * cellSizeY.toFloat()
+                        val right = left + cellSizeX
+                        val bottom = top + cellSizeY
 
                         val fillPaint = if (dbm == 0) {
                             whitePaint
