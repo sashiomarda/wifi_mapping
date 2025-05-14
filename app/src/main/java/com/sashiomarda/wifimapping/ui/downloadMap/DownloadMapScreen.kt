@@ -4,11 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.Intent.createChooser
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.media.MediaScannerConnection
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -17,12 +18,17 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,38 +47,44 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
-import com.sashiomarda.wifimapping.components.CanvasGrid
 import com.sashiomarda.wifimapping.data.Dbm
 import com.sashiomarda.wifimapping.data.Grid
 import com.sashiomarda.wifimapping.data.ImageFile
 import com.sashiomarda.wifimapping.ui.AppViewModelProvider
-import com.sashiomarda.wifimapping.ui.chooseWifi.PERMISSIONS_REQUEST_CODE
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.viewmodel.DbmViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.GridViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.ImageFileViewModel
 import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import kotlin.random.Random
+import androidx.core.graphics.toColorInt
+import com.sashiomarda.wifimapping.ui.viewmodel.RoomParamsDetails
+import androidx.core.graphics.createBitmap
+import kotlin.math.ceil
+import androidx.core.graphics.scale
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat.checkSelfPermission
+import com.sashiomarda.wifimapping.components.ImageFromFile
+import com.sashiomarda.wifimapping.components.scanFilePath
 
 object DownloadMapDestination : NavigationDestination {
     override val route = "download_map"
@@ -111,29 +122,22 @@ fun DownloadMapScreen(
         if (isGranted) {
             isPermissionGranted.value = true
         } else {
-            Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
-        }
-    }
-    var roomData = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
-    var layerListDisplay: MutableList<LayerList> = ArrayList()
-    var layerNoClicked by remember { mutableIntStateOf(0) }
-    var isShareImageButton by remember { mutableStateOf(false) }
-    LaunchedEffect(allImageFileListDb) {
-        if (Build.VERSION.SDK_INT < 34) {
-            if (isPermissionGranted.value == true){
-                val foundLayerNo = layerListDisplay.firstOrNull{it.layerNo == layerNoClicked}
-                if (foundLayerNo != null) {
-                    val uriImage =
-                        scanFilePath(
-                            context,
-                            foundLayerNo.filePath
-                        )
-                    shareBitmap(context, uriImage)
-                    isShareImageButton = true
-                }
+            if (Build.VERSION.SDK_INT < 34) {
+                Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
             }
         }
     }
+    var roomData = previewGridViewModel.roomParamByIdsUiState.roomParamsDetails
+    var layerListDb: MutableList<LayerList> = ArrayList()
+    var layerListDisplay: MutableList<ImageFile> = ArrayList()
+    if (allImageFileListDb.isNotEmpty()){
+        allImageFileListDb.forEach { file ->
+            layerListDisplay.add(file)
+        }
+    }
+    var isButton2DExpandClicked by remember { mutableStateOf(false) }
+    var isButton3DExpandClicked by remember { mutableStateOf(false) }
+
     var gridPerLayer = if (allDbmListDb.dbmList.isEmpty()){
         1
     }else{
@@ -161,7 +165,7 @@ fun DownloadMapScreen(
                 )
                 if (gridCount == gridPerLayer) {
                     val layerNoDb = allDbmListDb.dbmList[i].layerNo
-                    layerListDisplay.add(
+                    layerListDb.add(
                         LayerList(
                             layerNo = layerNoDb,
                             dbmListPerLayer = dbmList.toMutableList(),
@@ -173,6 +177,13 @@ fun DownloadMapScreen(
                 }
             }
             gridCount++
+        }
+    }
+    var isScrollEnabled by remember { mutableStateOf(true) }
+    if (isPermissionGranted.value) {
+        isScrollEnabled = false
+        if (layerListDisplay.isNotEmpty()) {
+            isScrollEnabled = true
         }
     }
 
@@ -199,138 +210,146 @@ fun DownloadMapScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                 )
-                if (layerListDisplay.isNotEmpty() && roomData.id != 0) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(10.dp)
-                    ) {
-                        items(
-                            items = layerListDisplay,
-                            key = { layerList: LayerList ->
-                                layerList.layerNo
-                            }) {
+                if (layerListDb.isNotEmpty() && roomData.id != 0) {
+                    val configuration = LocalConfiguration.current
+                    layerListDb.forEachIndexed { index, layerList ->
+                        var isSaveImage = false
+                        LaunchedEffect(isPermissionGranted.value) {
+                            if (timestampSaveImage == 0.toLong()) {
+                                timestampSaveImage = System.currentTimeMillis()
+                            }
+                            val foundImageFileDb = allImageFileListDb.firstOrNull { file ->
+                                file.layerNo == layerList.layerNo
+                            }
+                            if (foundImageFileDb == null) {
+                                isSaveImage = true
+                            } else {
+                                isSaveImage = false
+                            }
+                            if (isSaveImage) {
+                                if (Build.VERSION.SDK_INT < 34) {
+                                    if (isPermissionGranted.value) {
+                                        saveGridCanvasAsImage(
+                                            context,
+                                            layerList,
+                                            roomData,
+                                            configuration,
+                                            timestampSaveImage,
+                                            imageFileViewModel
+                                        )
+                                    }
+                                }else{
+                                    saveGridCanvasAsImage(
+                                        context,
+                                        layerList,
+                                        roomData,
+                                        configuration,
+                                        timestampSaveImage,
+                                        imageFileViewModel
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp),
+                        ) {
+
                             Card(
                                 modifier = Modifier
                                     .padding(bottom = 8.dp)
                             ) {
-                                var imageBitmap by mutableStateOf(ImageBitmap(1, 1))
-                                val graphicsLayer = rememberGraphicsLayer()
-                                Column {
-                                    var isSaveImage = false
-                                    if (allImageFileListDb.isNotEmpty()) {
-                                        val foundImageFileDb =
-                                            allImageFileListDb.firstOrNull { file ->
-                                                file.layerNo == it.layerNo
-                                            }
-                                        if (foundImageFileDb == null) {
-                                            isSaveImage = true
-                                        } else {
-                                            it.filePath = getFilePath(foundImageFileDb.fileName)
-                                        }
-                                    } else {
-                                        isSaveImage = true
-                                    }
-                                    Column(
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .drawWithContent {
-                                                graphicsLayer.record {
-                                                    this@drawWithContent.drawContent()
-                                                }
-                                                drawLayer(graphicsLayer)
-                                                coroutineScope.launch {
-                                                    var canvasBitmap = graphicsLayer.toImageBitmap()
-                                                    imageBitmap = canvasBitmap
-                                                    it.imageBitmap = imageBitmap
-                                                }
-                                            }
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .background(Color.White)
-                                        ) {
-                                            Text(
-                                                text = "Layer ${it.layerNo}",
-                                                color = Color.Black,
-                                                modifier = Modifier
-                                                    .padding(start = 4.dp)
-                                            )
-                                            CanvasGrid(
-                                                length = roomData.length.toFloat(),
-                                                width = roomData.width.toFloat(),
-                                                grid = roomData.gridDistance.toInt(),
-                                                gridViewModel = gridViewModel,
-                                                gridListDb = it.gridListPerLayer,
-                                                dbmListDb = it.dbmListPerLayer,
-                                                saveIdGridRouterPosition = {},
-                                                screen = DownloadMapDestination.route,
-                                                addChosenIdList = { ssidId, gridId -> },
-                                                updateGridList = {}
-                                            )
-                                        }
-                                        if (isSaveImage) {
-                                            if (timestampSaveImage == 0.toLong()) {
-                                                timestampSaveImage = System.currentTimeMillis()
-                                            }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .clickable {
+                                            isButton2DExpandClicked = !isButton2DExpandClicked
                                             if (Build.VERSION.SDK_INT < 34) {
-                                                LaunchedEffect(isPermissionGranted.value) {
-                                                    if (isPermissionGranted.value == true) {
-                                                        coroutineScope.launch {
-                                                            if (it.imageBitmap != null) {
-                                                                val uriFilePath =
-                                                                    it.imageBitmap!!.asAndroidBitmap()
-                                                                        .saveToDisk(
-                                                                            context,
-                                                                            it.layerNo,
-                                                                            it.gridListPerLayer[0].idHistory,
-                                                                            imageFileViewModel,
-                                                                            timestampSaveImage
-                                                                        )
-                                                                it.filePath = uriFilePath.filePath
-                                                            }
-                                                        }
+                                                when {
+                                                    checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                    ) == PackageManager.PERMISSION_GRANTED -> {
+                                                        isPermissionGranted.value = true
+                                                    }
 
+                                                    else -> {
+                                                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                                     }
                                                 }
-                                            } else {
-                                                LaunchedEffect(allGridListDb) {
-                                                    coroutineScope.launch {
-                                                        if (it.imageBitmap != null) {
-                                                            val uriFilePath =
-                                                                it.imageBitmap!!.asAndroidBitmap()
-                                                                    .saveToDisk(
-                                                                        context,
-                                                                        it.layerNo,
-                                                                        it.gridListPerLayer[0].idHistory,
-                                                                        imageFileViewModel,
-                                                                        timestampSaveImage
-                                                                    )
-                                                            it.filePath = uriFilePath.filePath
-                                                        }
-                                                    }
+                                            }
+                                        },
+                                    horizontalArrangement = Arrangement.Start,
+                                ) {
+                                    Text("Peta 2D")
+                                    Icon(
+                                        imageVector = if (isButton2DExpandClicked) {
+                                            Icons.Filled.KeyboardArrowUp
+                                        } else {
+                                            Icons.Filled.KeyboardArrowDown
+                                        },
+                                        contentDescription = "expand button",
+                                        tint = Color(0xFF479AFF)
+                                    )
+                                }
+                                if (isButton2DExpandClicked) {
+                                    Column(
+                                        modifier = Modifier,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .padding(10.dp)
+                                                .height(500.dp),
+                                        ) {
+                                            items(
+                                                items = layerListDisplay,
+                                                key = { imageFile: ImageFile ->
+                                                    imageFile.layerNo
+                                                }) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .padding(10.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Layer ${it.layerNo}",
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(bottom = 4.dp),
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                    ImageFromFile(
+                                                        imageFileName = it.fileName,
+                                                        context = context,
+                                                        coroutineScope = coroutineScope
+                                                    )
                                                 }
+//                                            }
+                                                HorizontalDivider(
+                                                    color = Color.LightGray,
+                                                    modifier = Modifier
+                                                        .padding(bottom = 10.dp)
+                                                )
                                             }
                                         }
+
                                     }
-                                    Button(
-                                        modifier = Modifier
-                                            .padding(start = 8.dp),
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                if (Build.VERSION.SDK_INT < 34) {
-                                                    isSaveImage = false
-                                                    layerNoClicked = it.layerNo
-                                                    if (isShareImageButton == true) {
-                                                        val uriImage =
-                                                            scanFilePath(context, it.filePath)
-                                                        shareBitmap(context, uriImage)
-                                                    }
-                                                } else {
-                                                    val uriImage =
-                                                        scanFilePath(context, it.filePath)
-                                                    shareBitmap(context, uriImage)
-                                                }
-                                            }
+                                }
+                            }
+                            Card(
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .clickable {
+                                            isButton3DExpandClicked = !isButton3DExpandClicked
                                             when {
                                                 checkSelfPermission(
                                                     context,
@@ -343,10 +362,39 @@ fun DownloadMapScreen(
                                                     permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                                 }
                                             }
+                                        },
+                                    horizontalArrangement = Arrangement.Start,
+                                ) {
+                                    Text("Peta 3D")
+                                    Icon(
+                                        imageVector = if (isButton3DExpandClicked) {
+                                            Icons.Filled.KeyboardArrowUp
+                                        } else {
+                                            Icons.Filled.KeyboardArrowDown
+                                        },
+                                        contentDescription = "expand button",
+                                        tint = Color(0xFF479AFF)
+                                    )
+                                }
+                            }
+                        }
+                        if (!isScrollEnabled) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(Unit) {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                awaitPointerEvent() // Menangkap semua gesture
+                                            }
                                         }
-                                    ) {
-                                        Text("Download")
-                                    }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    CircularProgressIndicator()
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text("Tunggu sebentar sedang memproses gambar...")
                                 }
                             }
                         }
@@ -362,6 +410,156 @@ fun DownloadMapScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
+suspend fun saveGridCanvasAsImage(
+    context: Context,
+    layerList: LayerList,
+    roomData: RoomParamsDetails,
+    configuration: Configuration,
+    timestampSaveImage: Long,
+    imageFileViewModel: ImageFileViewModel
+) {
+    val idHistory = layerList.dbmListPerLayer[0].idHistory
+    val length = roomData.length.toFloat()
+    val width = roomData.width.toFloat()
+    val grid = roomData.gridDistance.toFloat()
+    var gridCmToM = grid.toFloat().div(100)
+    val screenWidth = configuration.screenWidthDp * 0.86
+    var canvasHeight = 0.0
+    var canvasWidth = 0.0
+    var aspectRatioWidth = 0.2F
+    var gridVerticalAmount = 0.0f
+    var gridHorizontalAmount = 0.0f
+    if (length > width) {
+        aspectRatioWidth = width / length
+        canvasHeight = screenWidth
+        canvasWidth = screenWidth * aspectRatioWidth
+        gridVerticalAmount = length / gridCmToM
+        gridHorizontalAmount = width / gridCmToM
+    } else {
+        aspectRatioWidth = length / width
+        canvasWidth = screenWidth
+        canvasHeight = screenWidth * aspectRatioWidth
+        gridVerticalAmount = width / gridCmToM
+        gridHorizontalAmount = length / gridCmToM
+    }
+    canvasWidth = ceil(canvasWidth)
+    val gridHeight = canvasWidth * gridCmToM / width
+    val gridWidth = canvasHeight * gridCmToM / length
+    val layerNo = layerList.layerNo
+    val cellSize = (gridWidth * 1) - 5
+    var repeatX = 0
+    var repeatY = 0
+    if (length > width) {
+        repeatX = gridVerticalAmount.toInt()
+        repeatY = gridHorizontalAmount.toInt()
+    } else {
+        repeatX = gridHorizontalAmount.toInt()
+        repeatY = gridVerticalAmount.toInt()
+    }
+
+    val bitmap = createBitmap(canvasHeight.toInt(), canvasWidth.toInt())
+    val canvas = Canvas(bitmap)
+
+
+    val whitePaint = Paint().apply {
+        color = "#FFFFFFFF".toColorInt()
+        style = Paint.Style.FILL
+    }
+    val greenPaint = Paint().apply {
+        color = "#FF1AFF00".toColorInt()
+        style = Paint.Style.FILL
+    }
+
+    val yellowPaint = Paint().apply {
+        color = "#FFFFEB3B".toColorInt()
+        style = Paint.Style.FILL
+    }
+
+    val orangePaint = Paint().apply {
+        color = "#FFFF9800".toColorInt()
+        style = Paint.Style.FILL
+    }
+
+    val redPaint = Paint().apply {
+        color = "#FFFF0000".toColorInt()
+        style = Paint.Style.FILL
+    }
+
+    val borderPaint = Paint().apply {
+        color = 0x00000000
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+    }
+    var dbmGridMap = HashMap<Int, Int>()
+    var gridListDb = layerList.gridListPerLayer
+    var dbmListDb = layerList.dbmListPerLayer
+
+    for (i in dbmListDb) {
+        dbmGridMap[i.idGrid] = i.dbm
+    }
+    val iconBitmap = BitmapFactory.decodeResource(context.resources, android.R.drawable.star_on)
+
+    for (i in gridListDb.indices) {
+        var count = 0
+        for (row in 0 until repeatY) {
+            for (col in 0 until repeatX) {
+                var dbm = dbmGridMap[gridListDb.get(i).id]
+                if (dbm != null) {
+                    if (count == i) {
+                        val left = col * cellSize.toFloat()
+                        val top = row * cellSize.toFloat()
+                        val right = left + cellSize
+                        val bottom = top + cellSize
+
+                        val fillPaint = if (dbm == 0) {
+                            whitePaint
+                        } else if (dbm >= -67) {
+                            greenPaint
+                        } else if (dbm >= -70 && dbm <= -68) {
+                            yellowPaint
+                        } else if (dbm >= -80 && dbm <= -71) {
+                            orangePaint
+                        } else if (dbm < -80) {
+                            redPaint
+                        } else {
+                            redPaint
+                        }
+                        canvas.drawRect(left, top, right.toFloat(), bottom.toFloat(), fillPaint)
+                        canvas.drawRect(left, top, right.toFloat(), bottom.toFloat(), borderPaint)
+                        if (gridListDb.get(i).idWifi != 0) {
+                            val scaledIcon = iconBitmap.scale(10, 10)
+                            canvas.drawBitmap(scaledIcon, left, top, null)
+                        }
+                    }
+                }
+                count += 1
+            }
+        }
+    }
+    val sb = StringBuilder()
+    for (i in 1..5){
+        sb.append(Random.nextInt(0, 9).toString())
+    }
+    val randomNumber = sb.toString()
+    val imageFileName = "${timestampSaveImage}_${idHistory}_${layerNo}_${randomNumber}.png"
+
+    val file = File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+        imageFileName
+    )
+    file.writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 100)
+    scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
+
+    imageFileViewModel.saveImageFile(ImageFile(
+        timestamp = timestampSaveImage,
+        fileName = imageFileName,
+        idHistory = idHistory,
+        layerNo = layerNo
+    ))
+}
+
+
 data class LayerList(
     val layerNo: Int = 0,
     val dbmListPerLayer: MutableList<Dbm>,
@@ -376,91 +574,9 @@ data class UriFilePath(
 )
 
 
-private fun shareBitmap(context: Context, uri: Uri?) {
-    if (uri != null) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "image/png"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(context, createChooser(intent, "Share your image"), null)
-    }
-}
-
 private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
     outputStream().use { out ->
         bitmap.compress(format, quality, out)
         out.flush()
     }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
-    return suspendCancellableCoroutine { continuation ->
-        MediaScannerConnection.scanFile(
-            context,
-            arrayOf(filePath),
-            arrayOf("image/png")
-        ) { _, scannedUri ->
-            if (scannedUri == null) {
-                continuation.cancel(Exception("File $filePath could not be scanned"))
-            } else {
-                continuation.resume(scannedUri, onCancellation = null)
-            }
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-private suspend fun Bitmap.saveToDisk(
-    context: Activity,
-    layerNo: Int,
-    idHistory: Int,
-    imageFileViewModel: ImageFileViewModel,
-    timestamp: Long
-): UriFilePath {
-    val sb = StringBuilder()
-    for (i in 1..5){
-        sb.append(Random.nextInt(0, 9).toString())
-    }
-    val randomNumber = sb.toString()
-
-    val imageFileName = "${timestamp}_${idHistory}_${layerNo}_${randomNumber}.png"
-
-    val file = File(
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-        imageFileName
-    )
-
-    file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
-
-    imageFileViewModel.saveImageFile(ImageFile(
-        timestamp = timestamp,
-        fileName = imageFileName,
-        idHistory = idHistory,
-        layerNo = layerNo
-    ))
-
-    return UriFilePath(
-        uri = scanFilePath(context, file.path) ?: throw Exception("File could not be saved"),
-        filePath = file.path
-    )
-}
-
-fun getFilePath(imageFileName: String): String{
-    val file = File(
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-        imageFileName
-    )
-    return file.path
-}
-
-fun requestWriteStoragePermission(activity: Activity) {
-    requestPermissions(
-        activity,
-        arrayOf(
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        ),
-        PERMISSIONS_REQUEST_CODE
-    )
 }
