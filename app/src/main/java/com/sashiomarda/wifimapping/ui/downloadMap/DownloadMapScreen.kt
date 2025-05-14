@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -85,6 +84,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat.checkSelfPermission
 import com.sashiomarda.wifimapping.components.ImageFromFile
 import com.sashiomarda.wifimapping.components.scanFilePath
+import com.sashiomarda.wifimapping.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 object DownloadMapDestination : NavigationDestination {
     override val route = "download_map"
@@ -186,6 +193,9 @@ fun DownloadMapScreen(
             isScrollEnabled = true
         }
     }
+
+    var isUploading2DImages by remember { mutableStateOf(false) }
+    var resultUploading2DImages by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -350,16 +360,55 @@ fun DownloadMapScreen(
                                         .padding(8.dp)
                                         .clickable {
                                             isButton3DExpandClicked = !isButton3DExpandClicked
-                                            when {
-                                                checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                ) == PackageManager.PERMISSION_GRANTED -> {
-                                                    isPermissionGranted.value = true
-                                                }
+                                            if (Build.VERSION.SDK_INT < 34) {
+                                                when {
+                                                    checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                    ) == PackageManager.PERMISSION_GRANTED -> {
+                                                        isPermissionGranted.value = true
+                                                    }
 
-                                                else -> {
-                                                    permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                                    else -> {
+                                                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                                    }
+                                                }
+                                                if (isPermissionGranted.value) {
+                                                    if (allImageFileListDb.isNotEmpty()) {
+                                                        val imageParts = getImageParts(allImageFileListDb = allImageFileListDb)
+                                                        CoroutineScope(Dispatchers.IO).launch {
+                                                            try {
+                                                                val response = RetrofitClient.instance.uploadImages(imageParts)
+                                                                withContext(Dispatchers.Main) {
+                                                                    isUploading2DImages = false
+                                                                    resultUploading2DImages = if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
+                                                                }
+                                                            } catch (e: Exception) {
+                                                                withContext(Dispatchers.Main) {
+                                                                    isUploading2DImages = false
+                                                                    resultUploading2DImages = "Error: ${e.localizedMessage}"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }else{
+                                                if (allImageFileListDb.isNotEmpty()) {
+                                                    val imageParts = getImageParts(allImageFileListDb = allImageFileListDb)
+                                                    CoroutineScope(Dispatchers.IO).launch {
+                                                        try {
+                                                            val response = RetrofitClient.instance.uploadImages(imageParts)
+                                                            withContext(Dispatchers.Main) {
+                                                                isUploading2DImages = false
+                                                                resultUploading2DImages = if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
+                                                            }
+                                                        } catch (e: Exception) {
+                                                            withContext(Dispatchers.Main) {
+                                                                isUploading2DImages = false
+                                                                resultUploading2DImages = "Error: ${e.localizedMessage}"
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         },
@@ -400,13 +449,24 @@ fun DownloadMapScreen(
                         }
                     }
                 }
-                Button(
-                    onClick = {}
-                ) {
-
-                }
             }
         }
+    }
+}
+
+fun getImageParts(allImageFileListDb: List<ImageFile>): List<MultipartBody.Part> {
+    var files : MutableList<File> = ArrayList()
+    allImageFileListDb.forEach { imageFile ->
+        files.add(
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                imageFile.fileName
+            )
+        )
+    }
+    return files.mapIndexed { index, file ->
+        val reqFile = file.asRequestBody("image/png".toMediaTypeOrNull())
+        MultipartBody.Part.createFormData("images", file.name, reqFile)
     }
 }
 
