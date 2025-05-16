@@ -95,9 +95,13 @@ dependencies {
 
     implementation ("androidx.compose.ui:ui-graphics:1.5.0")
 
+    // koneksi internet via http
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
 
+    // tampilkan file .gif dengan coil
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt:coil-gif:2.4.0")
 }
