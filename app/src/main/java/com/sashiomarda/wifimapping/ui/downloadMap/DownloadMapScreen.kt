@@ -49,7 +49,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -77,6 +76,7 @@ import androidx.core.graphics.createBitmap
 import kotlin.math.ceil
 import androidx.core.graphics.scale
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -84,6 +84,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -91,16 +95,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.ContextCompat.startActivity
+import coil.compose.AsyncImage
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
 import com.sashiomarda.wifimapping.components.ImageFromFile
-import com.sashiomarda.wifimapping.components.loadImageBitmapFromFile
 import com.sashiomarda.wifimapping.components.scanFilePath
 import com.sashiomarda.wifimapping.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -210,6 +218,7 @@ fun DownloadMapScreen(
 
     var isUploading2DImages by remember { mutableStateOf(true) }
     var resultUploading2DImages by remember { mutableStateOf<String?>(null) }
+    var remainingSecondsDownload3DImage by remember { mutableIntStateOf(300) }
 
     Scaffold(
         topBar = {
@@ -399,7 +408,10 @@ fun DownloadMapScreen(
                                                                     try {
                                                                         val response =
                                                                             RetrofitClient.instance.uploadImages(
-                                                                                imageParts
+                                                                                imageParts,
+                                                                                roomData.width.toRequestBody(),
+                                                                                roomData.length.toRequestBody(),
+                                                                                roomData.layerCount.toRequestBody()
                                                                             )
                                                                         withContext(Dispatchers.Main) {
                                                                             isUploading2DImages =
@@ -433,7 +445,10 @@ fun DownloadMapScreen(
                                                                 try {
                                                                     val response =
                                                                         RetrofitClient.instance.uploadImages(
-                                                                            imageParts
+                                                                            imageParts,
+                                                                            roomData.width.toRequestBody(),
+                                                                            roomData.length.toRequestBody(),
+                                                                            roomData.layerCount.toRequestBody()
                                                                         )
                                                                     withContext(Dispatchers.Main) {
                                                                         isUploading2DImages = false
@@ -482,16 +497,16 @@ fun DownloadMapScreen(
                                             }
 
                                             if (isUploading2DImages) {
-                                                Image(
-                                                    painter = loadingImage,
-                                                    contentDescription = "loading peta 3D",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier.wrapContentSize()
-                                                )
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                                     CircularProgressIndicator()
                                                     Spacer(modifier = Modifier.height(12.dp))
                                                     Text("Tunggu sebentar sedang memproses gambar...")
+                                                    ServerResponseTimer(
+                                                        remainingSecondsDownload3DImage,
+                                                        decreaseRemainingSecond = {
+                                                            remainingSecondsDownload3DImage--
+                                                        }
+                                                    )
                                                 }
                                             } else {
                                                 Column(
@@ -500,34 +515,26 @@ fun DownloadMapScreen(
                                                     val image3DFileName =
                                                         allImageFileListDb.firstOrNull { it.is3d == true }
                                                     if (image3DFileName != null) {
-                                                        val filePath = File(
+                                                        val file = File(
                                                             Environment.getExternalStoragePublicDirectory(
                                                                 Environment.DIRECTORY_PICTURES
                                                             ),
                                                             image3DFileName.fileName
-                                                        ).path
-                                                        val image3DBitmap = remember(filePath) {
-                                                            loadImageBitmapFromFile(filePath)
-                                                        }
-                                                        if (image3DBitmap != null) {
-                                                            Row(modifier = Modifier
+                                                        )
+                                                        if (file.exists()) {
+                                                            Column(modifier = Modifier
                                                                 .fillMaxWidth()
-                                                                .padding(10.dp),
-                                                                verticalAlignment = Alignment.CenterVertically,
-                                                                horizontalArrangement = Arrangement.Center,
+                                                                .padding(top = 10.dp, bottom = 10.dp),
+                                                                horizontalAlignment = Alignment.CenterHorizontally
                                                             ) {
-                                                                Image(
-                                                                    bitmap = image3DBitmap,
-                                                                    contentDescription = "Image from file",
-                                                                    modifier = Modifier
-                                                                )
+                                                                GifViewerFromFile(file)
                                                                 Button(
                                                                     modifier = Modifier
                                                                         .padding(start = 8.dp),
                                                                     onClick = {
                                                                         coroutineScope.launch {
                                                                             val uriImage =
-                                                                                scanFilePath(context, filePath)
+                                                                                scanFilePath(context, file.path)
                                                                             shareBitmap(context, uriImage)
                                                                         }
                                                                     }
@@ -578,6 +585,57 @@ fun DownloadMapScreen(
         }
     }
 }
+
+@Composable
+fun ServerResponseTimer(
+    remainingSecondsDownload3DImage: Int,
+    decreaseRemainingSecond: () -> Unit
+                        ) {
+    val totalSeconds = 300
+
+    // Start countdown timer
+    LaunchedEffect(Unit) {
+        while (remainingSecondsDownload3DImage > 0) {
+            delay(1000L)
+//            remainingSecondsDownload3DImage--
+            decreaseRemainingSecond()
+        }
+    }
+
+    // Hitung persentase progress
+    val progress = remainingSecondsDownload3DImage / totalSeconds.toFloat()
+
+    // Format waktu
+    val minutes = remainingSecondsDownload3DImage / 60
+    val seconds = remainingSecondsDownload3DImage % 60
+    val timeString = "$minutes menit, $seconds detik"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LinearProgressIndicator(
+        progress = { progress },
+        modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+        color = Color.Blue,
+        trackColor = Color.LightGray,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Estimasi waktu: $timeString",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+
+fun String.toRequestBody(): RequestBody =
+    RequestBody.create("text/plain".toMediaTypeOrNull(), this)
 
 @RequiresApi(Build.VERSION_CODES.O)
 suspend fun save3dImage(
@@ -805,6 +863,20 @@ suspend fun saveGridCanvasAsImage(
     ))
 }
 
+@RequiresApi(Build.VERSION_CODES.P)
+@Composable
+fun GifViewerFromFile(file: File) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(file)
+            .decoderFactory(ImageDecoderDecoder.Factory())
+            .build(),
+        contentDescription = "GIF from File",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+    )
+}
 
 data class LayerList(
     val layerNo: Int = 0,
