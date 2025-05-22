@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlin.also
 import kotlin.jvm.java
 
@@ -31,9 +33,18 @@ abstract class WifiMappingDatabase : RoomDatabase() {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, WifiMappingDatabase::class.java, "wifimapping_database")
                     .fallbackToDestructiveMigration()
+//                    .addMigrations(MIGRATION_4_5) // Tambahkan semua migrasi di sini
                     .build()
                     .also { Instance = it }
             }
         }
+
     }
 }
+
+//val MIGRATION_4_5 = object : Migration(4, 5) {
+//    override fun migrate(database: SupportSQLiteDatabase) {
+//        // Contoh: Menambah kolom baru
+//        database.execSQL("ALTER TABLE RoomParams ADD COLUMN new_column TEXT DEFAULT '' NOT NULL")
+//    }
+//}
