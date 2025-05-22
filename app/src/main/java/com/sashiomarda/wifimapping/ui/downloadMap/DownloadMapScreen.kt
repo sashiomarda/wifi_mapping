@@ -15,7 +15,6 @@ import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -504,7 +502,9 @@ fun DownloadMapScreen(
                                                     ServerResponseTimer(
                                                         remainingSecondsDownload3DImage,
                                                         decreaseRemainingSecond = {
-                                                            remainingSecondsDownload3DImage--
+                                                            if (remainingSecondsDownload3DImage > 0) {
+                                                                remainingSecondsDownload3DImage--
+                                                            }
                                                         }
                                                     )
                                                 }
@@ -535,7 +535,7 @@ fun DownloadMapScreen(
                                                                         coroutineScope.launch {
                                                                             val uriImage =
                                                                                 scanFilePath(context, file.path)
-                                                                            shareBitmap(context, uriImage)
+                                                                            shareBitmapGif(context, uriImage)
                                                                         }
                                                                     }
                                                                 ) {
@@ -544,13 +544,61 @@ fun DownloadMapScreen(
                                                             }
                                                         }
                                                     } else {
-                                                        Image(
-                                                            painter = brokenImage,
-                                                            contentDescription = "peta 3D",
-                                                            contentScale = ContentScale.Crop,
-                                                            modifier = Modifier
-                                                                .size(200.dp)
-                                                        )
+                                                        Column(modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(top = 10.dp, bottom = 10.dp),
+                                                            horizontalAlignment = Alignment.CenterHorizontally
+                                                        ) {
+                                                            Image(
+                                                                painter = brokenImage,
+                                                                contentDescription = "peta 3D",
+                                                                contentScale = ContentScale.Crop,
+                                                                modifier = Modifier
+                                                                    .size(200.dp)
+                                                            )
+                                                            Button(
+                                                                modifier = Modifier
+                                                                    .padding(start = 8.dp),
+                                                                onClick = {
+                                                                    isUploading2DImages = true
+                                                                    remainingSecondsDownload3DImage = 300
+                                                                    if (allImageFileListDb.isNotEmpty()) {
+                                                                        val imageParts =
+                                                                            getImageParts(allImageFileListDb = allImageFileListDb)
+                                                                        CoroutineScope(Dispatchers.IO).launch {
+                                                                            try {
+                                                                                val response =
+                                                                                    RetrofitClient.instance.uploadImages(
+                                                                                        imageParts,
+                                                                                        roomData.width.toRequestBody(),
+                                                                                        roomData.length.toRequestBody(),
+                                                                                        roomData.layerCount.toRequestBody()
+                                                                                    )
+                                                                                withContext(Dispatchers.Main) {
+                                                                                    isUploading2DImages = false
+                                                                                    resultUploading2DImages =
+                                                                                        if (response.isSuccessful) "Upload berhasil" else "Upload gagal: ${response.code()}"
+                                                                                    if (response.isSuccessful) {
+                                                                                        save3dImage(response = response,
+                                                                                            allImageFileListDb = allImageFileListDb,
+                                                                                            imageFileViewModel = imageFileViewModel
+                                                                                        )
+                                                                                    }
+                                                                                }
+                                                                            } catch (e: Exception) {
+                                                                                withContext(Dispatchers.Main) {
+                                                                                    isUploading2DImages = false
+                                                                                    resultUploading2DImages =
+                                                                                        "Error: ${e.localizedMessage}"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ) {
+                                                                Text("Refresh gambar")
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -653,20 +701,12 @@ suspend fun save3dImage(
             allImageFileListDb[0].idHistory
         val layerNo = 0
 
-        val sb =
-            StringBuilder()
-        for (i in 1..5) {
-            sb.append(
-                Random.nextInt(
-                    0,
-                    9
-                ).toString()
-            )
-        }
-        val randomNumber =
-            sb.toString()
-        val outputFileName =
-            "${timestamp}_${idHistory}_${layerNo}_${randomNumber}_3d.png"
+        val firstLayerImageName = allImageFileListDb[0].fileName
+        val parts = firstLayerImageName.split("_").toMutableList()
+        parts[2] = "0"
+        val randomNumber = parts[3].split(".")[0]
+        parts[3] = "$randomNumber.gif"
+        val outputFileName = parts.joinToString("_")
 
         val outputFile =
             File(
@@ -893,10 +933,10 @@ private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, qual
     }
 }
 
-private fun shareBitmap(context: Context, uri: Uri?) {
+private fun shareBitmapGif(context: Context, uri: Uri?) {
     if (uri != null) {
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "image/png"
+            type = "image/gif"
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

@@ -68,7 +68,7 @@ fun ImageFromFile(
                     coroutineScope.launch {
                         val uriImage =
                             scanFilePath(context, filePath)
-                        shareBitmap(context, uriImage)
+                        shareBitmapPng(context, uriImage)
                     }
                 }
             ) {
@@ -115,7 +115,7 @@ suspend fun scanFilePath(context: Context, filePath: String): Uri? {
     }
 }
 
-private fun shareBitmap(context: Context, uri: Uri?) {
+private fun shareBitmapPng(context: Context, uri: Uri?) {
     if (uri != null) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "image/png"
