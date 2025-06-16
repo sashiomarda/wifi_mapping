@@ -12,7 +12,12 @@
           "package_name": "com.example.wifimapping"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDh680tAhqPuwMrZ0z99o30E22WoVFyfWw"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,20 @@
           "package_name": "com.sashiomarda.wifimapping"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "483953150293-kd6b8f8jl31fg0trt3jfte2pb0duv87d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sashiomarda.wifimapping",
+            "certificate_hash": "8389d16b8bcf057a1c9450ed410a5059ec0140d9"
+          }
+        },
+        {
+          "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDh680tAhqPuwMrZ0z99o30E22WoVFyfWw"
@@ -39,7 +62,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -25,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.firebase.auth.FirebaseAuth
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiScreen
 import com.sashiomarda.wifimapping.ui.collectData.CollectDataDestination
@@ -39,6 +40,8 @@ import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputScreen
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterDestination
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterScreen
+import com.sashiomarda.wifimapping.ui.login.LoginDestination
+import com.sashiomarda.wifimapping.ui.login.LoginScreen
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridScreen
 import com.sashiomarda.wifimapping.ui.roomList.RoomListDestination
@@ -52,16 +55,29 @@ import com.sashiomarda.wifimapping.ui.roomList.RoomListScreen
 fun WifiMappingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    firebaseAuth: FirebaseAuth,
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeDestination.route,
+        startDestination = if (firebaseAuth.currentUser != null) HomeDestination.route
+        else LoginDestination.route,
         modifier = modifier
     ) {
+        composable(route = LoginDestination.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(HomeDestination.route)
+                },
+                onLoginFailed = {
+                    navController.navigate(LoginDestination.route)
+                }
+            )
+        }
         composable(route = HomeDestination.route) {
             HomeScreen(
                 navigateToNextMenu = {navController.navigate("$it/0")},
-                onNavigateUp = { navController.navigateUp() }
+                onNavigateUp = { navController.navigateUp() },
+                displayName = firebaseAuth.currentUser?.displayName
             )
         }
 

@@ -79,6 +79,7 @@ fun HomeScreen(
     navigateToNextMenu: (String) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
+    displayName: String?,
 ) {
     var isShowOnboarding by remember { mutableStateOf(true) }
 
@@ -101,6 +102,11 @@ fun HomeScreen(
                     .padding(start = 20.dp, end = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    "Halo, ${displayName}!",
+                    modifier = Modifier
+                        .padding(bottom = 15.dp)
+                )
                 Text(
                     "Beranda",
                     style = MaterialTheme.typography.headlineLarge,
