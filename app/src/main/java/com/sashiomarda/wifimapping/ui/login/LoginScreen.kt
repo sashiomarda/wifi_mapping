@@ -1,5 +1,6 @@
 package com.sashiomarda.wifimapping.ui.login
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -10,8 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,18 +26,23 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.sashiomarda.wifimapping.R
+import com.sashiomarda.wifimapping.WifiMappingTopAppBar
+import com.sashiomarda.wifimapping.ui.home.HomeDestination
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
+import kotlinx.coroutines.delay
 
 object LoginDestination : NavigationDestination {
     override val route = "login"
     override val titleRes = R.string.room_params_entry_title
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onLoginFailed: (Exception?) -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateUp: () -> Unit,
+    canNavigateBack: Boolean = false,
 ) {
     val context = LocalContext.current
     val auth: FirebaseAuth = Firebase.auth
@@ -45,6 +51,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     var isLoadingGoogle by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Konfigurasi Google Sign-In
     val googleSignInOptions = remember {
@@ -71,99 +78,112 @@ fun LoginScreen(
                     if (taskAuth.isSuccessful) {
                         onLoginSuccess()
                     } else {
+                        errorMessage = taskAuth.exception?.message.toString()
                         onLoginFailed(taskAuth.exception)
                     }
                 }
         } catch (e: ApiException) {
+            errorMessage = e.toString()
             isLoadingGoogle = false
             onLoginFailed(e)
         }
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Scaffold(
+        topBar = {
+            WifiMappingTopAppBar(
+                title = stringResource(HomeDestination.titleRes),
+                canNavigateBack = canNavigateBack,
+                navigateUp = onNavigateUp
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) {innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
         ) {
-            Text("Login", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Login", fontSize = 28.sp, fontWeight = FontWeight.Bold)
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-            )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-
-            errorMessage?.let {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(it, color = Color.Red, fontSize = 14.sp)
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
 
+                Spacer(modifier = Modifier.height(18.dp))
 
-            if (isLoading) {
-                CircularProgressIndicator()
-            } else {
-                Button(
-                    onClick = {
-                        if (email.isNotBlank() && password.isNotBlank()) {
-                            isLoading = true
-                            auth.signInWithEmailAndPassword(email, password)
-                                .addOnCompleteListener { task ->
-                                    isLoading = false
-                                    if (task.isSuccessful) {
-                                        onLoginSuccess()
-                                    } else {
-                                        errorMessage = "Email dan Password salah"
+                if (isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Button(
+                        onClick = {
+                            if (email.isNotBlank() && password.isNotBlank()) {
+                                isLoading = true
+                                auth.signInWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener { task ->
+                                        isLoading = false
+                                        if (task.isSuccessful) {
+                                            onLoginSuccess()
+                                        } else {
+                                            errorMessage = "Email dan Password salah"
+                                        }
                                     }
-                                }
-                        } else {
-                            errorMessage = "Email dan password tidak boleh kosong"
-                        }
-                    },
-                ) {
-                    Text("Login")
+                            } else {
+                                errorMessage = "Email dan password tidak boleh kosong"
+                            }
+                        },
+                    ) {
+                        Text("Login")
+                    }
+                }
+
+                TextButton(onClick = onNavigateToRegister) {
+                    Text("Belum punya akun? Daftar di sini")
+                }
+
+                Text("atau", fontSize = 12.sp)
+
+                if (isLoadingGoogle) {
+                    CircularProgressIndicator()
+                } else {
+                    Button(
+                        onClick = {
+                            isLoadingGoogle = true
+                            signInLauncher.launch(googleSignInClient.signInIntent)
+                        },
+                    ) {
+                        Text("Login dengan Google")
+                    }
                 }
             }
-
-            TextButton(onClick = onNavigateToRegister) {
-                Text("Belum punya akun? Daftar di sini")
-            }
-
-            Text("atau", fontSize = 12.sp)
-
-            if (isLoadingGoogle) {
-                CircularProgressIndicator()
-            } else {
-                Button(
-                    onClick = {
-                        isLoadingGoogle = true
-                        signInLauncher.launch(googleSignInClient.signInIntent)
-                    },
-                ) {
-                    Text("Login dengan Google")
-                }
-            }
+        }
+    }
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context,it, Toast.LENGTH_LONG).show()
+            delay(2000)
+            errorMessage = null
         }
     }
 }

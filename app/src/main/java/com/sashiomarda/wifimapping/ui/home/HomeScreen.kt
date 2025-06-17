@@ -39,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -80,6 +81,7 @@ fun HomeScreen(
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
     displayName: String?,
+    navigateToProfile: () -> Unit,
 ) {
     var isShowOnboarding by remember { mutableStateOf(true) }
 
@@ -102,11 +104,20 @@ fun HomeScreen(
                     .padding(start = 20.dp, end = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Halo, ${displayName}!",
-                    modifier = Modifier
-                        .padding(bottom = 15.dp)
-                )
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = navigateToProfile
+                    ) {
+                        Icon(Icons.Filled.Person, contentDescription = "profile")
+                    }
+                    Text(
+                        "Halo, ${displayName}!",
+                        modifier = Modifier
+                            .padding(bottom = 15.dp)
+                    )
+                }
                 Text(
                     "Beranda",
                     style = MaterialTheme.typography.headlineLarge,

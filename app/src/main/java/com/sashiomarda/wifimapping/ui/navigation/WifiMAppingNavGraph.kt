@@ -44,6 +44,8 @@ import com.sashiomarda.wifimapping.ui.login.LoginDestination
 import com.sashiomarda.wifimapping.ui.login.LoginScreen
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridScreen
+import com.sashiomarda.wifimapping.ui.profile.ProfileDestination
+import com.sashiomarda.wifimapping.ui.profile.ProfileScreen
 import com.sashiomarda.wifimapping.ui.register.RegisterDestination
 import com.sashiomarda.wifimapping.ui.register.RegisterScreen
 import com.sashiomarda.wifimapping.ui.roomList.RoomListDestination
@@ -75,7 +77,8 @@ fun WifiMappingNavHost(
                 },
                 onNavigateToRegister = {
                     navController.navigate(RegisterDestination.route)
-                }
+                },
+                onNavigateUp = { navController.navigateUp() },
             )
         }
         composable(route = RegisterDestination.route) {
@@ -88,9 +91,17 @@ fun WifiMappingNavHost(
         }
         composable(route = HomeDestination.route) {
             HomeScreen(
-                navigateToNextMenu = {navController.navigate("$it/0")},
+                navigateToNextMenu = { navController.navigate("$it/0") },
                 onNavigateUp = { navController.navigateUp() },
-                displayName = firebaseAuth.currentUser?.displayName
+                displayName = firebaseAuth.currentUser?.email,
+                navigateToProfile = {navController.navigate(ProfileDestination.route)}
+            )
+        }
+
+
+        composable(route = ProfileDestination.route) {
+            ProfileScreen(
+                onNavigateUp = { navController.navigateUp() },
             )
         }
 
