@@ -44,6 +44,8 @@ import com.sashiomarda.wifimapping.ui.login.LoginDestination
 import com.sashiomarda.wifimapping.ui.login.LoginScreen
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridScreen
+import com.sashiomarda.wifimapping.ui.register.RegisterDestination
+import com.sashiomarda.wifimapping.ui.register.RegisterScreen
 import com.sashiomarda.wifimapping.ui.roomList.RoomListDestination
 import com.sashiomarda.wifimapping.ui.roomList.RoomListScreen
 
@@ -70,7 +72,18 @@ fun WifiMappingNavHost(
                 },
                 onLoginFailed = {
                     navController.navigate(LoginDestination.route)
+                },
+                onNavigateToRegister = {
+                    navController.navigate(RegisterDestination.route)
                 }
+            )
+        }
+        composable(route = RegisterDestination.route) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(LoginDestination.route)
+                },
+                onNavigateBack = { navController.navigateUp() },
             )
         }
         composable(route = HomeDestination.route) {
