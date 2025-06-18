@@ -7,35 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:483953150293:android:e8dcd92e8d0e3605dfc7dc",
-        "android_client_info": {
-          "package_name": "com.example.wifimapping"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDh680tAhqPuwMrZ0z99o30E22WoVFyfWw"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:483953150293:android:3c730a8a6b87038edfc7dc",
         "android_client_info": {
           "package_name": "com.sashiomarda.wifimapping"
