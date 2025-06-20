@@ -88,6 +88,9 @@ fun LoginScreen(
             onLoginFailed(e)
         }
     }
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    var forgotEmail by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = {
             WifiMappingTopAppBar(
@@ -104,6 +107,54 @@ fun LoginScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
+            if (showForgotPasswordDialog) {
+                AlertDialog(
+                    onDismissRequest = { showForgotPasswordDialog = false },
+                    title = { Text("Reset Password") },
+                    text = {
+                        Column {
+                            Text("Masukkan email untuk menerima link reset password.")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = forgotEmail,
+                                onValueChange = { forgotEmail = it },
+                                label = { Text("Email") },
+                                singleLine = true
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            if (forgotEmail.isNotEmpty()) {
+                                sendPasswordResetEmail(
+                                    email = forgotEmail,
+                                    onSuccess = {
+                                        Toast.makeText(
+                                            context,
+                                            "Email reset password telah dikirim",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        showForgotPasswordDialog = false
+                                    },
+                                    onError = { error ->
+                                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            }
+                        }) {
+                            Text("Kirim")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showForgotPasswordDialog = false
+                        }) {
+                            Text("Batal")
+                        }
+                    }
+                )
+            }
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -131,7 +182,11 @@ fun LoginScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                TextButton(onClick = {
+                    showForgotPasswordDialog = true
+                }) {
+                    Text("Lupa Password?")
+                }
 
                 if (isLoading) {
                     CircularProgressIndicator()
@@ -186,4 +241,20 @@ fun LoginScreen(
             errorMessage = null
         }
     }
+}
+
+fun sendPasswordResetEmail(
+    email: String,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val auth = FirebaseAuth.getInstance()
+    auth.sendPasswordResetEmail(email)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                onSuccess()
+            } else {
+                onError(task.exception?.message ?: "Gagal mengirim email reset password")
+            }
+        }
 }
