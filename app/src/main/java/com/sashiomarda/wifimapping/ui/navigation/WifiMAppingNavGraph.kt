@@ -25,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiScreen
@@ -60,6 +61,7 @@ fun WifiMappingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     firebaseAuth: FirebaseAuth,
+    googleSignInClient: GoogleSignInClient,
 ) {
     NavHost(
         navController = navController,
@@ -93,8 +95,13 @@ fun WifiMappingNavHost(
             HomeScreen(
                 navigateToNextMenu = { navController.navigate("$it/0") },
                 onNavigateUp = { navController.navigateUp() },
-                displayName = firebaseAuth.currentUser?.email,
-                navigateToProfile = {navController.navigate(ProfileDestination.route)}
+                firebaseAuth = firebaseAuth,
+                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+                googleSignInClient = googleSignInClient,
+                canNavigateBack = false,
+                onLogout = {navController.navigate(LoginDestination.route) {
+                    popUpTo(LoginDestination.route) { inclusive = true }
+                }}
             )
         }
 

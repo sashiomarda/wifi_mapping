@@ -1,6 +1,7 @@
 package com.sashiomarda.wifimapping.ui.profile
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.ui.home.HomeDestination
+import com.sashiomarda.wifimapping.ui.login.sendPasswordResetEmail
 import com.sashiomarda.wifimapping.ui.navigation.NavigationDestination
 
 object ProfileDestination : NavigationDestination {
@@ -61,6 +66,10 @@ fun ProfileScreen(
     val fullNameState = remember { mutableStateOf("") }
     val phoneState = remember { mutableStateOf("") }
     val addressState = remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    var forgotEmail by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -97,94 +106,149 @@ fun ProfileScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Profil Pengguna", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Email: ${user?.email ?: "-"}")
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (isEditing) {
-                OutlinedTextField(
-                    value = fullNameState.value,
-                    onValueChange = { fullNameState.value = it },
-                    label = { Text("Nama Lengkap") },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = phoneState.value,
-                    onValueChange = { phoneState.value = it },
-                    label = { Text("Nomor HP") },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = addressState.value,
-                    onValueChange = { addressState.value = it },
-                    label = { Text("Alamat") }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row {
-                    Button(onClick = {
-                        val updated = UserProfile(
-                            fullName = fullNameState.value,
-                            phone = phoneState.value,
-                            address = addressState.value
-                        )
-                        userId?.let {
-                            db.collection("users").document(it).set(updated)
-                                .addOnSuccessListener {
-                                    profile = updated
-                                    isEditing = false
-                                    message = "Profil berhasil diperbarui"
-                                }
-                                .addOnFailureListener {it ->
-                                    message = "Gagal menyimpan profil"
-                                }
+        Box {
+            if (showForgotPasswordDialog) {
+                AlertDialog(
+                    onDismissRequest = { showForgotPasswordDialog = false },
+                    title = { Text("Reset Password") },
+                    text = {
+                        Column {
+                            Text("Masukkan email untuk menerima link reset password.")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = forgotEmail,
+                                onValueChange = { forgotEmail = it },
+                                label = { Text("Email") },
+                                singleLine = true
+                            )
                         }
-                    }) {
-                        Text("Simpan")
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            if (forgotEmail.isNotEmpty()) {
+                                sendPasswordResetEmail(
+                                    email = forgotEmail,
+                                    onSuccess = {
+                                        Toast.makeText(
+                                            context,
+                                            "Email reset password telah dikirim",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        showForgotPasswordDialog = false
+                                    },
+                                    onError = { error ->
+                                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            }
+                        }) {
+                            Text("Kirim")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showForgotPasswordDialog = false
+                        }) {
+                            Text("Batal")
+                        }
                     }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    OutlinedButton(onClick = {
-                        isEditing = false
-                    }) {
-                        Text("Batal")
-                    }
-                }
-            } else {
-                Text("Nama: ${profile.fullName}")
-                Text("HP: ${profile.phone}")
-                Text("Alamat: ${profile.address}")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(onClick = {
-                    isEditing = true
-                }) {
-                    Text("Edit Profil")
-                }
+                )
             }
-
-            message?.let {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Profil Pengguna", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(it, color = Color.Green)
+
+                Text("Email: ${user?.email ?: "-"}")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (isEditing) {
+                    OutlinedTextField(
+                        value = fullNameState.value,
+                        onValueChange = { fullNameState.value = it },
+                        label = { Text("Nama Lengkap") },
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = phoneState.value,
+                        onValueChange = { phoneState.value = it },
+                        label = { Text("Nomor HP") },
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = addressState.value,
+                        onValueChange = { addressState.value = it },
+                        label = { Text("Alamat") }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row {
+                        Button(onClick = {
+                            val updated = UserProfile(
+                                fullName = fullNameState.value,
+                                phone = phoneState.value,
+                                address = addressState.value
+                            )
+                            userId?.let {
+                                db.collection("users").document(it).set(updated)
+                                    .addOnSuccessListener {
+                                        profile = updated
+                                        isEditing = false
+                                        message = "Profil berhasil diperbarui"
+                                    }
+                                    .addOnFailureListener { it ->
+                                        message = "Gagal menyimpan profil"
+                                    }
+                            }
+                        }) {
+                            Text("Simpan")
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        OutlinedButton(onClick = {
+                            isEditing = false
+                        }) {
+                            Text("Batal")
+                        }
+                    }
+                } else {
+                    Text("Nama: ${profile.fullName}")
+                    Text("HP: ${profile.phone}")
+                    Text("Alamat: ${profile.address}")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(onClick = {
+                        isEditing = true
+                    }) {
+                        Text("Edit Profil")
+                    }
+                }
+
+                TextButton(onClick = {
+                    showForgotPasswordDialog = true
+                }) {
+                    Text("Reset Password")
+                }
+
+                message?.let {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(it, color = Color.Green)
+                }
             }
         }
     }
