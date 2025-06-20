@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "483953150293-kd6b8f8jl31fg0trt3jfte2pb0duv87d.apps.googleusercontent.com",
+          "client_id": "483953150293-cdppd6f0rf0vlntnvv35um2v7b57454g.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.sashiomarda.wifimapping",
-            "certificate_hash": "8389d16b8bcf057a1c9450ed410a5059ec0140d9"
+            "certificate_hash": "ae21f19ea7e815686e3f6f4913d7e87875ef7d23"
           }
         },
         {
