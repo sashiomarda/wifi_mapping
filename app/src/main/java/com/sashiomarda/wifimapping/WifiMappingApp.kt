@@ -57,7 +57,8 @@ fun WifiMappingApp(navController: NavHostController = rememberNavController()) {
     googleSignInClient = GoogleSignIn.getClient(context, gso)
     WifiMappingNavHost(
         navController,
-        firebaseAuth = firebaseAuth
+        firebaseAuth = firebaseAuth,
+        googleSignInClient = googleSignInClient
     )
 }
 

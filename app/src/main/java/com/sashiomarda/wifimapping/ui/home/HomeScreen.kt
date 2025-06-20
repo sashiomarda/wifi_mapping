@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -47,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +64,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.FirebaseAuth
 import com.sashiomarda.wifimapping.WifiMappingTopAppBar
 import com.sashiomarda.wifimapping.R
 import com.sashiomarda.wifimapping.ui.history.HistoryDestination
@@ -80,8 +84,10 @@ fun HomeScreen(
     navigateToNextMenu: (String) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateBack: Boolean = false,
-    displayName: String?,
+    firebaseAuth: FirebaseAuth,
     navigateToProfile: () -> Unit,
+    googleSignInClient: GoogleSignInClient,
+    onLogout: () -> Unit
 ) {
     var isShowOnboarding by remember { mutableStateOf(true) }
 
@@ -104,26 +110,34 @@ fun HomeScreen(
                     .padding(start = 20.dp, end = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = navigateToProfile
-                    ) {
-                        Icon(Icons.Filled.Person, contentDescription = "profile")
-                    }
-                    Text(
-                        "Halo, ${displayName}!",
-                        modifier = Modifier
-                            .padding(bottom = 15.dp)
-                    )
-                }
                 Text(
                     "Beranda",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier
                         .padding(bottom = 15.dp)
                 )
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                ) {
+                    val username = firebaseAuth.currentUser?.email
+                    Text(
+                        "Halo, ${username}!",
+                    )
+                    TextButton(onClick = {
+                        navigateToProfile()
+                    }) {
+                        Icon(Icons.Filled.Person, contentDescription = "profile")
+                        Text("Profile")
+                    }
+                    TextButton(onClick = {
+                        googleSignInClient.signOut()
+                        firebaseAuth.signOut()
+                        onLogout()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
+                        Text("Logout")
+                    }
+                }
                 val menuNameList = listOf<String>(
                     "Ruangan",
                     "Riwayat"
