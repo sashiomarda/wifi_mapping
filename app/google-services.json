@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "483953150293-r9ju8oaqfkcjjvhkkoi42476q4n9eq9o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sashiomarda.wifimapping",
+            "certificate_hash": "1fa344f1e1631b2603ea99209a0bdf84c7fc6dd8"
+          }
+        },
+        {
           "client_id": "483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com",
           "client_type": 3
         }
