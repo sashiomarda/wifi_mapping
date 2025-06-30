@@ -227,7 +227,7 @@ fun ProfileScreen(
                     }
                 } else {
                     Text("Nama: ${profile.fullName}")
-                    Text("HP: ${profile.phone}")
+                    Text("No Telepon: ${profile.phone}")
                     Text("Alamat: ${profile.address}")
 
                     Spacer(modifier = Modifier.height(16.dp))
