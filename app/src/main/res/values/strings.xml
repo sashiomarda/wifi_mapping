@@ -30,4 +30,5 @@
     <string name="yes">Yes</string>
     <string name="required_fields">*required fields</string>
     <string name="download_map_title">Download Map</string>
+    <string name="default_web_client_id">483953150293-2ntmhc7elmqb7nir80j701ne2gi1grpc.apps.googleusercontent.com</string>
 </resources>

@@ -25,6 +25,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.FirebaseAuth
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiDestination
 import com.sashiomarda.wifimapping.ui.chooseWifi.ChooseWifiScreen
 import com.sashiomarda.wifimapping.ui.collectData.CollectDataDestination
@@ -39,8 +41,14 @@ import com.sashiomarda.wifimapping.ui.roomInput.RoomInputDestination
 import com.sashiomarda.wifimapping.ui.roomInput.RoomInputScreen
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterDestination
 import com.sashiomarda.wifimapping.ui.locateRouter.LocateRouterScreen
+import com.sashiomarda.wifimapping.ui.login.LoginDestination
+import com.sashiomarda.wifimapping.ui.login.LoginScreen
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridDestination
 import com.sashiomarda.wifimapping.ui.previewGrid.PreviewGridScreen
+import com.sashiomarda.wifimapping.ui.profile.ProfileDestination
+import com.sashiomarda.wifimapping.ui.profile.ProfileScreen
+import com.sashiomarda.wifimapping.ui.register.RegisterDestination
+import com.sashiomarda.wifimapping.ui.register.RegisterScreen
 import com.sashiomarda.wifimapping.ui.roomList.RoomListDestination
 import com.sashiomarda.wifimapping.ui.roomList.RoomListScreen
 
@@ -52,16 +60,55 @@ import com.sashiomarda.wifimapping.ui.roomList.RoomListScreen
 fun WifiMappingNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    firebaseAuth: FirebaseAuth,
+    googleSignInClient: GoogleSignInClient,
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeDestination.route,
+        startDestination = if (firebaseAuth.currentUser != null) HomeDestination.route
+        else LoginDestination.route,
         modifier = modifier
     ) {
+        composable(route = LoginDestination.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(HomeDestination.route)
+                },
+                onLoginFailed = {
+                    navController.navigate(LoginDestination.route)
+                },
+                onNavigateToRegister = {
+                    navController.navigate(RegisterDestination.route)
+                },
+                onNavigateUp = { navController.navigateUp() },
+            )
+        }
+        composable(route = RegisterDestination.route) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(LoginDestination.route)
+                },
+                onNavigateBack = { navController.navigateUp() },
+            )
+        }
         composable(route = HomeDestination.route) {
             HomeScreen(
-                navigateToNextMenu = {navController.navigate("$it/0")},
-                onNavigateUp = { navController.navigateUp() }
+                navigateToNextMenu = { navController.navigate("$it/0") },
+                onNavigateUp = { navController.navigateUp() },
+                firebaseAuth = firebaseAuth,
+                navigateToProfile = { navController.navigate(ProfileDestination.route) },
+                googleSignInClient = googleSignInClient,
+                canNavigateBack = false,
+                onLogout = {navController.navigate(LoginDestination.route) {
+                    popUpTo(LoginDestination.route) { inclusive = true }
+                }}
+            )
+        }
+
+
+        composable(route = ProfileDestination.route) {
+            ProfileScreen(
+                onNavigateUp = { navController.navigateUp() },
             )
         }
 

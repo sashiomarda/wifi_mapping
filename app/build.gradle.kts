@@ -14,8 +14,8 @@ android {
         applicationId = "com.sashiomarda.wifimapping"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "8.0"
+        versionCode = 17
+        versionName = "17.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -84,6 +84,9 @@ dependencies {
     //firebase
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Add the dependencies for the Remote Config and Analytics libraries
     // When using the BoM, you don't specify versions in Firebase library dependencies
