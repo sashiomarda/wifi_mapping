@@ -30,18 +30,36 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.sashiomarda.wifimapping.ui.navigation.WifiMappingNavHost
 
 /**
  * Top level composable that represents screens for the application.
  */
+
+private lateinit var googleSignInClient: GoogleSignInClient
+private val firebaseAuth = FirebaseAuth.getInstance()
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun WifiMappingApp(navController: NavHostController = rememberNavController()) {
-    WifiMappingNavHost(navController = navController)
+    val context = LocalContext.current
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    googleSignInClient = GoogleSignIn.getClient(context, gso)
+    WifiMappingNavHost(
+        navController,
+        firebaseAuth = firebaseAuth,
+        googleSignInClient = googleSignInClient
+    )
 }
 
 /**
