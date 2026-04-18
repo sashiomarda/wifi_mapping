@@ -190,7 +190,7 @@ fun ProfileScreen(
                     OutlinedTextField(
                         value = addressState.value,
                         onValueChange = { addressState.value = it },
-                        label = { Text("Alamat") }
+                        label = { Text("Alamat Lengkap") }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
