@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "com.sashiomarda.wifimapping"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.sashiomarda.wifimapping"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 17
-        versionName = "17.0"
+        targetSdk = 36
+        versionCode = 19
+        versionName = "19.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -30,6 +30,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
     compileOptions {
@@ -95,8 +98,6 @@ dependencies {
 
     //splashscreen
     implementation ("androidx.core:core-splashscreen:1.0.1")
-
-    implementation ("androidx.compose.ui:ui-graphics:1.5.0")
 
     // koneksi internet via http
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
