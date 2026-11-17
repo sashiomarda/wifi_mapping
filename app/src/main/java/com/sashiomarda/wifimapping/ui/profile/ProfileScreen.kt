@@ -2,6 +2,7 @@ package com.sashiomarda.wifimapping.ui.profile
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -254,6 +255,7 @@ fun ProfileScreen(
     }
 }
 
+@Keep
 data class UserProfile(
     val fullName: String = "",
     val phone: String = "",
